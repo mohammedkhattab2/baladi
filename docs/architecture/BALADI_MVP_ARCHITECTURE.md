@@ -107,7 +107,7 @@ Baladi is a realistic, buildable MVP for daily needs delivery in a small communi
 | Component | Technology | Cost |
 |-----------|------------|------|
 | Mobile App | Flutter | Free |
-| State Management | Riverpod | Free |
+| State Management | Cubit (flutter_bloc) | Free |
 | Backend | Node.js + Express | Free |
 | Database | PostgreSQL | Free (self-hosted) |
 | Push Notifications | Firebase Cloud Messaging | Free |
@@ -1045,13 +1045,25 @@ lib/
 │           └── close_week.dart
 │
 ├── presentation/
-│   ├── providers/
-│   │   ├── auth_provider.dart
-│   │   ├── customer_provider.dart
-│   │   ├── shop_provider.dart
-│   │   ├── rider_provider.dart
-│   │   ├── order_provider.dart
-│   │   └── admin_provider.dart
+│   ├── cubits/
+│   │   ├── auth/
+│   │   │   ├── auth_cubit.dart
+│   │   │   └── auth_state.dart
+│   │   ├── customer/
+│   │   │   ├── customer_cubit.dart
+│   │   │   └── customer_state.dart
+│   │   ├── shop/
+│   │   │   ├── shop_cubit.dart
+│   │   │   └── shop_state.dart
+│   │   ├── rider/
+│   │   │   ├── rider_cubit.dart
+│   │   │   └── rider_state.dart
+│   │   ├── order/
+│   │   │   ├── order_cubit.dart
+│   │   │   └── order_state.dart
+│   │   └── admin/
+│   │       ├── admin_cubit.dart
+│   │       └── admin_state.dart
 │   │
 │   ├── common/
 │   │   ├── widgets/

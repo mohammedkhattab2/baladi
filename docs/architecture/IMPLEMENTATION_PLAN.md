@@ -117,10 +117,9 @@ lib/
 │       └── settlement_repository_impl.dart
 │
 └── presentation/                      # UI Layer (Flutter)
-    ├── core/
-    │   ├── base_view_model.dart       # Base ViewModel class
-    │   ├── ui_state.dart              # Generic UI state wrapper
-    │   └── view_model_provider.dart   # ViewModel provider helper
+    ├── base/
+    │   ├── base_state.dart            # Base immutable state with status enum
+    │   └── base_cubit.dart            # Base Cubit class with convenience emitters
     │
     ├── theme/
     │   ├── app_theme.dart
@@ -135,10 +134,27 @@ lib/
     │
     └── features/
         ├── auth/
+        │   ├── cubits/
+        │   │   ├── auth_cubit.dart
+        │   │   └── auth_state.dart
+        │   ├── screens/
+        │   └── widgets/
         ├── customer/
+        │   ├── cubits/
+        │   ├── screens/
+        │   └── widgets/
         ├── store/
+        │   ├── cubits/
+        │   ├── screens/
+        │   └── widgets/
         ├── delivery/
+        │   ├── cubits/
+        │   ├── screens/
+        │   └── widgets/
         └── admin/
+            ├── cubits/
+            ├── screens/
+            └── widgets/
 ```
 
 ---
@@ -698,96 +714,144 @@ Future<void> initializeDependencies(Environment environment) async {
     ),
   );
   
-  // ViewModels
-  sl.registerFactory<CartViewModel>(
-    () => CartViewModel(
+  // Cubits (registered as factory — new instance per screen)
+  sl.registerFactory<CartCubit>(
+    () => CartCubit(
       placeOrder: sl(),
       getPointsBalance: sl(),
+      getCartSummary: sl(),
     ),
   );
 }
 ```
 
-### 2.6 Clean ViewModel (No Business Calculations)
+### 2.6 Clean Cubit (No Business Calculations)
 
 ```dart
-// lib/presentation/features/customer/viewmodels/cart_viewmodel.dart
+// lib/presentation/features/customer/cubits/cart_state.dart
 
-/// ViewModel for the cart screen.
-/// NO business calculations - delegates everything to use cases.
-class CartViewModel extends BaseViewModel<CartState> {
+/// Immutable state for the cart screen.
+class CartState extends Equatable {
+  final BaseStatus status;
+  final String? errorMessage;
+  final List<CartItem> items;
+  final CartSummary? summary;
+  final int availablePoints;
+  final int pointsToUse;
+  final Order? placedOrder;
+
+  const CartState({
+    this.status = BaseStatus.initial,
+    this.errorMessage,
+    this.items = const [],
+    this.summary,
+    this.availablePoints = 0,
+    this.pointsToUse = 0,
+    this.placedOrder,
+  });
+
+  const CartState.initial() : this();
+
+  CartState copyWith({
+    BaseStatus? status,
+    String? errorMessage,
+    List<CartItem>? items,
+    CartSummary? summary,
+    int? availablePoints,
+    int? pointsToUse,
+    Order? placedOrder,
+    bool clearError = false,
+    bool clearSummary = false,
+    bool clearOrder = false,
+  }) {
+    return CartState(
+      status: status ?? this.status,
+      errorMessage: clearError ? null : errorMessage ?? this.errorMessage,
+      items: items ?? this.items,
+      summary: clearSummary ? null : summary ?? this.summary,
+      availablePoints: availablePoints ?? this.availablePoints,
+      pointsToUse: pointsToUse ?? this.pointsToUse,
+      placedOrder: clearOrder ? null : placedOrder ?? this.placedOrder,
+    );
+  }
+
+  @override
+  List<Object?> get props => [status, errorMessage, items, summary, availablePoints, pointsToUse, placedOrder];
+}
+```
+
+```dart
+// lib/presentation/features/customer/cubits/cart_cubit.dart
+
+/// Cubit for the cart screen.
+/// NO business calculations — delegates everything to use cases.
+/// Emits immutable CartState on every change.
+class CartCubit extends Cubit<CartState> {
   final PlaceOrder _placeOrder;
   final GetPointsBalance _getPointsBalance;
-  final GetCartSummary _getCartSummary; // New use case for summary
+  final GetCartSummary _getCartSummary;
 
-  CartViewModel({
+  CartCubit({
     required PlaceOrder placeOrder,
     required GetPointsBalance getPointsBalance,
     required GetCartSummary getCartSummary,
   })  : _placeOrder = placeOrder,
         _getPointsBalance = getPointsBalance,
-        _getCartSummary = getCartSummary;
-
-  final List<CartItem> _items = [];
-  CartSummary? _summary;
-  int _availablePoints = 0;
-  int _pointsToUse = 0;
-
-  List<CartItem> get items => List.unmodifiable(_items);
-  CartSummary? get summary => _summary;
-  int get availablePoints => _availablePoints;
-  int get pointsToUse => _pointsToUse;
+        _getCartSummary = getCartSummary,
+        super(const CartState.initial());
 
   void addItem(CartItem item) {
-    final existingIndex = _items.indexWhere((i) => i.productId == item.productId);
+    final items = List<CartItem>.from(state.items);
+    final existingIndex = items.indexWhere((i) => i.productId == item.productId);
     if (existingIndex >= 0) {
-      _items[existingIndex] = _items[existingIndex].copyWith(
-        quantity: _items[existingIndex].quantity + item.quantity,
+      items[existingIndex] = items[existingIndex].copyWith(
+        quantity: items[existingIndex].quantity + item.quantity,
       );
     } else {
-      _items.add(item);
+      items.add(item);
     }
-    _recalculateSummary();
+    emit(state.copyWith(items: items));
+    _recalculateSummary(items);
   }
 
   void removeItem(String productId) {
-    _items.removeWhere((item) => item.productId == productId);
-    _recalculateSummary();
+    final items = state.items.where((item) => item.productId != productId).toList();
+    emit(state.copyWith(items: items));
+    _recalculateSummary(items);
   }
 
   void updateQuantity(String productId, int quantity) {
-    final index = _items.indexWhere((item) => item.productId == productId);
+    final items = List<CartItem>.from(state.items);
+    final index = items.indexWhere((item) => item.productId == productId);
     if (index >= 0) {
       if (quantity <= 0) {
-        _items.removeAt(index);
+        items.removeAt(index);
       } else {
-        _items[index] = _items[index].copyWith(quantity: quantity);
+        items[index] = items[index].copyWith(quantity: quantity);
       }
-      _recalculateSummary();
+      emit(state.copyWith(items: items));
+      _recalculateSummary(items);
     }
   }
 
-  /// Recalculate summary using domain use case - NOT in ViewModel
-  Future<void> _recalculateSummary() async {
-    if (_items.isEmpty) {
-      _summary = null;
-      notifyListeners();
+  /// Recalculate summary using domain use case — NOT in Cubit
+  Future<void> _recalculateSummary(List<CartItem> items) async {
+    if (items.isEmpty) {
+      emit(state.copyWith(clearSummary: true));
       return;
     }
 
     final result = await _getCartSummary(GetCartSummaryParams(
-      items: _items,
-      pointsToUse: _pointsToUse,
+      items: items,
+      pointsToUse: state.pointsToUse,
     ));
 
     result.fold(
-      onSuccess: (summary) {
-        _summary = summary;
-        notifyListeners();
-      },
-      onFailure: (failure) {
-        setError(failure.message);
-      },
+      onSuccess: (summary) => emit(state.copyWith(summary: summary)),
+      onFailure: (failure) => emit(state.copyWith(
+        status: BaseStatus.failure,
+        errorMessage: failure.message,
+      )),
     );
   }
 
@@ -796,20 +860,14 @@ class CartViewModel extends BaseViewModel<CartState> {
       GetPointsBalanceParams(customerId: customerId),
     );
     result.fold(
-      onSuccess: (balance) {
-        _availablePoints = balance;
-        notifyListeners();
-      },
-      onFailure: (_) {
-        _availablePoints = 0;
-        notifyListeners();
-      },
+      onSuccess: (balance) => emit(state.copyWith(availablePoints: balance)),
+      onFailure: (_) => emit(state.copyWith(availablePoints: 0)),
     );
   }
 
   Future<void> setPointsToUse(int points) async {
-    _pointsToUse = points;
-    await _recalculateSummary();
+    emit(state.copyWith(pointsToUse: points));
+    await _recalculateSummary(state.items);
   }
 
   Future<void> placeOrder({
@@ -821,17 +879,17 @@ class CartViewModel extends BaseViewModel<CartState> {
     required double deliveryFee,
     bool isFreeDelivery = false,
   }) async {
-    if (_items.isEmpty) {
-      setError('Cart is empty');
+    if (state.items.isEmpty) {
+      emit(state.copyWith(status: BaseStatus.failure, errorMessage: 'Cart is empty'));
       return;
     }
 
-    setLoading();
+    emit(state.copyWith(status: BaseStatus.loading));
 
     final result = await _placeOrder(PlaceOrderParams(
       customerId: customerId,
       storeId: storeId,
-      items: _items.map((item) => OrderItemInput(
+      items: state.items.map((item) => OrderItemInput(
         productId: item.productId,
         productName: item.productName,
         price: item.price,
@@ -840,29 +898,25 @@ class CartViewModel extends BaseViewModel<CartState> {
       deliveryAddress: deliveryAddress,
       deliveryLandmark: deliveryLandmark,
       customerNotes: customerNotes,
-      pointsToUse: _pointsToUse,
+      pointsToUse: state.pointsToUse,
       deliveryFee: deliveryFee,
       isFreeDelivery: isFreeDelivery,
     ));
 
     result.fold(
-      onSuccess: (order) {
-        _items.clear();
-        _pointsToUse = 0;
-        _summary = null;
-        setData(CartState.orderPlaced(order));
-      },
-      onFailure: (failure) {
-        setError(failure.message);
-      },
+      onSuccess: (order) => emit(CartState(
+        status: BaseStatus.success,
+        placedOrder: order,
+      )),
+      onFailure: (failure) => emit(state.copyWith(
+        status: BaseStatus.failure,
+        errorMessage: failure.message,
+      )),
     );
   }
 
   void clearCart() {
-    _items.clear();
-    _pointsToUse = 0;
-    _summary = null;
-    setInitial();
+    emit(const CartState.initial());
   }
 }
 ```
@@ -893,10 +947,10 @@ class CartViewModel extends BaseViewModel<CartState> {
 4. `data/repositories/` - Offline-first repository implementations
 
 ### Phase 4: Presentation Layer
-1. `presentation/core/` - Base classes
+1. `presentation/base/` - BaseCubit, BaseState with status enum
 2. `presentation/theme/` - Theme configuration
 3. `presentation/common/` - Shared widgets
-4. `presentation/features/` - Feature modules (ViewModels with NO calculations)
+4. `presentation/features/` - Feature modules (Cubits with immutable states, NO calculations)
 
 ### Phase 5: Integration
 1. `injection_container.dart` - Environment-aware DI setup
@@ -912,35 +966,37 @@ dependencies:
   flutter:
     sdk: flutter
   
-  # State Management (MVVM)
-  provider: ^6.1.1
+  # State Management (Cubit / BLoC)
+  flutter_bloc: ^9.1.0
   
   # Dependency Injection
-  get_it: ^7.6.7
+  get_it: ^8.0.3
   
   # Networking
-  http: ^1.2.0
-  connectivity_plus: ^5.0.2
+  http: ^1.2.2
+  connectivity_plus: ^6.1.1
   
   # Local Storage
-  shared_preferences: ^2.2.2
+  shared_preferences: ^2.3.3
   hive: ^2.2.3
   hive_flutter: ^1.1.0
   
   # Utilities
-  uuid: ^4.3.3
+  uuid: ^4.5.1
   intl: ^0.19.0
+  equatable: ^2.0.5
   
   # Firebase (Push Notifications)
-  firebase_core: ^2.24.2
-  firebase_messaging: ^14.7.10
+  firebase_core: ^3.8.0
+  firebase_messaging: ^15.1.5
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  flutter_lints: ^3.0.1
-  mockito: ^5.4.4
-  build_runner: ^2.4.8
+  flutter_lints: ^6.0.0
+  mocktail: ^1.0.4
+  bloc_test: ^9.1.7
+  build_runner: ^2.4.13
   hive_generator: ^2.0.1
 ```
 
@@ -951,10 +1007,14 @@ dev_dependencies:
 | Original | Adjusted |
 |----------|----------|
 | Business rules in `core/constants/` | Moved to `domain/rules/` |
+| Provider + ChangeNotifier ViewModels | Cubit + immutable State classes (flutter_bloc) |
 | Calculations in ViewModels | Delegated to use cases and domain services |
 | PlaceOrder does all calculations | PlaceOrder orchestrates domain services |
 | No offline strategy | Explicit offline-first (local-first, remote sync) |
 | Single environment | Environment config (dev/staging/prod) |
+| `notifyListeners()` for UI updates | `emit(newState)` with Equatable-based rebuilds |
+| Consumer / Provider.of in widgets | BlocBuilder / BlocListener in widgets |
+| ChangeNotifierProvider DI | BlocProvider + GetIt factory registration |
 
 ---
 

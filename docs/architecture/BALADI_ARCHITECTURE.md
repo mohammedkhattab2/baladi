@@ -35,8 +35,8 @@ graph TB
     end
     
     subgraph Presentation Layer - Flutter
-        VM[ViewModels]
-        ST[State Management - Riverpod]
+        CB[Cubits]
+        ST[State Management - Cubit / flutter_bloc]
         RT[Router - GoRouter]
     end
     
@@ -63,12 +63,12 @@ graph TB
         RD[(Redis Cache)]
     end
     
-    CA --> VM
-    SA --> VM
-    RA --> VM
-    AA --> VM
+    CA --> CB
+    SA --> CB
+    RA --> CB
+    AA --> CB
     
-    VM --> UC
+    CB --> UC
     UC --> RP
     RP --> RI
     RI --> DS
@@ -86,7 +86,7 @@ graph TB
 graph LR
     subgraph Presentation
         V[Views/Screens]
-        VM[ViewModels]
+        CB[Cubits]
         W[Widgets]
     end
     
@@ -110,8 +110,8 @@ graph LR
         CONST[Constants]
     end
     
-    V --> VM
-    VM --> UC
+    V --> CB
+    CB --> UC
     UC --> RI
     RI -.-> R
     R --> RDS
@@ -125,7 +125,7 @@ graph LR
 | Layer | Technology | Purpose |
 |-------|------------|---------|
 | Frontend | Flutter 3.x | Cross-platform mobile development |
-| State Management | Riverpod | Reactive state management |
+| State Management | Cubit (flutter_bloc) | Reactive state management with immutable states |
 | Navigation | GoRouter | Declarative routing |
 | Local Storage | Hive/SharedPreferences | Offline data & preferences |
 | Backend | Node.js + Express | REST API server |
@@ -1439,8 +1439,9 @@ lib/
 │   │   │       └── logout.dart
 │   │   │
 │   │   └── presentation/
-│   │       ├── providers/
-│   │       │   └── auth_provider.dart
+│   │       ├── cubits/
+│   │       │   ├── auth_cubit.dart
+│   │       │   └── auth_state.dart
 │   │       ├── screens/
 │   │       │   ├── login_screen.dart
 │   │       │   ├── register_screen.dart
@@ -1454,7 +1455,7 @@ lib/
 │   │   ├── data/
 │   │   ├── domain/
 │   │   └── presentation/
-│   │       ├── providers/
+│   │       ├── cubits/
 │   │       ├── screens/
 │   │       │   ├── customer_home_screen.dart
 │   │       │   ├── categories_screen.dart
@@ -1474,7 +1475,7 @@ lib/
 │   │   ├── data/
 │   │   ├── domain/
 │   │   └── presentation/
-│   │       ├── providers/
+│   │       ├── cubits/
 │   │       ├── screens/
 │   │       │   ├── shop_dashboard_screen.dart
 │   │       │   ├── shop_orders_screen.dart
@@ -1491,7 +1492,7 @@ lib/
 │   │   ├── data/
 │   │   ├── domain/
 │   │   └── presentation/
-│   │       ├── providers/
+│   │       ├── cubits/
 │   │       ├── screens/
 │   │       │   ├── rider_dashboard_screen.dart
 │   │       │   ├── available_orders_screen.dart
@@ -1506,7 +1507,7 @@ lib/
 │   │   ├── data/
 │   │   ├── domain/
 │   │   └── presentation/
-│   │       ├── providers/
+│   │       ├── cubits/
 │   │       ├── screens/
 │   │       │   ├── admin_dashboard_screen.dart
 │   │       │   ├── users_management_screen.dart
@@ -1543,7 +1544,7 @@ lib/
 │   │   │       └── cancel_order.dart
 │   │   │
 │   │   └── presentation/
-│   │       └── providers/
+│   │       └── cubits/
 │   │
 │   ├── points/
 │   │   ├── data/
@@ -1602,54 +1603,49 @@ dependencies:
   flutter:
     sdk: flutter
   
-  # State Management
-  flutter_riverpod: ^2.4.9
-  riverpod_annotation: ^2.3.3
+  # State Management (Cubit / BLoC)
+  flutter_bloc: ^9.1.0
+  
+  # Dependency Injection
+  get_it: ^8.0.3
   
   # Navigation
-  go_router: ^13.0.1
+  go_router: ^14.6.2
   
   # Network
-  dio: ^5.4.0
-  retrofit: ^4.0.3
+  http: ^1.2.2
+  connectivity_plus: ^6.1.1
   
   # Local Storage
   hive: ^2.2.3
   hive_flutter: ^1.1.0
-  shared_preferences: ^2.2.2
-  flutter_secure_storage: ^9.0.0
+  shared_preferences: ^2.3.3
+  flutter_secure_storage: ^9.2.2
   
   # Firebase
-  firebase_core: ^2.24.2
-  firebase_messaging: ^14.7.10
+  firebase_core: ^3.8.0
+  firebase_messaging: ^15.1.5
   
   # UI Components
-  flutter_svg: ^2.0.9
-  cached_network_image: ^3.3.1
+  cached_network_image: ^3.4.1
   shimmer: ^3.0.0
-  lottie: ^3.0.0
   
   # Utilities
   intl: ^0.19.0
-  uuid: ^4.3.1
+  uuid: ^4.5.1
   equatable: ^2.0.5
-  dartz: ^0.10.1
-  json_annotation: ^4.8.1
-  
-  # Maps (Optional)
-  google_maps_flutter: ^2.5.3
-  geolocator: ^10.1.0
+  json_annotation: ^4.9.0
+  formz: ^0.7.0
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  flutter_lints: ^3.0.1
-  build_runner: ^2.4.8
-  riverpod_generator: ^2.3.9
-  retrofit_generator: ^8.0.6
-  json_serializable: ^6.7.1
+  flutter_lints: ^6.0.0
+  build_runner: ^2.4.13
+  json_serializable: ^6.8.0
   hive_generator: ^2.0.1
-  mockito: ^5.4.4
+  mocktail: ^1.0.4
+  bloc_test: ^9.1.7
 ```
 
 ---
