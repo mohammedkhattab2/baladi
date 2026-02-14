@@ -17,10 +17,7 @@ class AuthTokens {
   final String refreshToken;
 
   /// Creates an [AuthTokens] instance.
-  const AuthTokens({
-    required this.accessToken,
-    required this.refreshToken,
-  });
+  const AuthTokens({required this.accessToken, required this.refreshToken});
 }
 
 /// Combined result of a successful login operation.
@@ -35,11 +32,7 @@ class AuthResult {
   final Customer? customer;
 
   /// Creates an [AuthResult].
-  const AuthResult({
-    required this.user,
-    required this.tokens,
-    this.customer,
-  });
+  const AuthResult({required this.user, required this.tokens, this.customer});
 }
 
 /// Repository contract for authentication operations.
@@ -58,6 +51,8 @@ abstract class AuthRepository {
     required String pin,
     required String fullName,
     String? referralCode,
+    required String securityQuestion,
+    required String securityAnswer,
   });
 
   /// Logs in a customer with phone and PIN.
@@ -67,9 +62,7 @@ abstract class AuthRepository {
   });
 
   /// Recovers a customer's PIN (sends reset via backend logic).
-  Future<Result<void>> recoverCustomerPin({
-    required String phone,
-  });
+  Future<Result<void>> recoverCustomerPin({required String phone});
 
   /// Logs in a staff user (shop/rider/admin) with username and password.
   Future<Result<AuthResult>> loginUser({
@@ -104,4 +97,14 @@ abstract class AuthRepository {
 
   /// Returns the stored user role, or `null` if not logged in.
   Future<UserRole?> getStoredUserRole();
+
+  /// Returns the security question for the given phone number.
+  Future<Result<String>> getSecurityQuestion({required String phone});
+
+  /// Verifies security answer and resets the PIN.
+  Future<Result<void>> resetPin({
+    required String phone,
+    required String securityAnswer,
+    required String newPin,
+  });
 }

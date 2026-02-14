@@ -31,6 +31,12 @@ class ApiEndpoints {
   /// PUT — Update the device FCM token for push notifications.
   static const String updateFcmToken = '/auth/fcm-token';
 
+  /// POST — Get security question for a customer by phone.
+  static const String securityQuestion = '/auth/customer/security-question';
+
+  /// POST — Reset customer PIN after verifying security answer.
+  static const String resetPin = '/auth/customer/reset-pin';
+
   // ─── Customer ─────────────────────────────────────────────────────────
 
   /// GET/PUT — Customer profile.

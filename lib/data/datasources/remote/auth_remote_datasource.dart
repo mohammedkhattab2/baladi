@@ -12,12 +12,14 @@ import '../../models/auth_token_model.dart';
 
 /// Remote datasource contract for authentication operations.
 abstract class AuthRemoteDatasource {
-  /// Registers a new customer with phone, PIN, and name.
+  /// Registers a new customer with phone, PIN, name, and security Q&A.
   Future<AuthResultModel> registerCustomer({
     required String phone,
     required String pin,
     required String fullName,
     String? referralCode,
+    required String securityQuestion,
+    required String securityAnswer,
   });
 
   /// Logs in a customer with phone and PIN.
@@ -44,6 +46,16 @@ abstract class AuthRemoteDatasource {
 
   /// Updates the device FCM token on the server.
   Future<void> updateFcmToken(String fcmToken);
+
+  /// Returns the security question for the given phone number.
+  Future<String> getSecurityQuestion({required String phone});
+
+  /// Verifies security answer and resets the PIN.
+  Future<void> resetPin({
+    required String phone,
+    required String securityAnswer,
+    required String newPin,
+  });
 }
 
 /// Implementation of [AuthRemoteDatasource] using [ApiClient].
@@ -61,6 +73,8 @@ class AuthRemoteDatasourceImpl implements AuthRemoteDatasource {
     required String pin,
     required String fullName,
     String? referralCode,
+    required String securityQuestion,
+    required String securityAnswer,
   }) async {
     final response = await _apiClient.post(
       ApiEndpoints.customerRegister,
@@ -69,6 +83,8 @@ class AuthRemoteDatasourceImpl implements AuthRemoteDatasource {
         'pin': pin,
         'full_name': fullName,
         if (referralCode != null) 'referral_code': referralCode,
+        'security_question': securityQuestion,
+        'security_answer': securityAnswer,
       },
       fromJson: (json) => AuthResultModel.fromJson(json),
     );
@@ -140,6 +156,32 @@ class AuthRemoteDatasourceImpl implements AuthRemoteDatasource {
     await _apiClient.put(
       ApiEndpoints.updateFcmToken,
       body: {'fcm_token': fcmToken},
+    );
+  }
+
+  @override
+  Future<String> getSecurityQuestion({required String phone}) async {
+    final response = await _apiClient.post(
+      ApiEndpoints.securityQuestion,
+      body: {'phone': phone},
+      fromJson: (json) => json['security_question'] as String,
+    );
+    return response.data!;
+  }
+
+  @override
+  Future<void> resetPin({
+    required String phone,
+    required String securityAnswer,
+    required String newPin,
+  }) async {
+    await _apiClient.post(
+      ApiEndpoints.resetPin,
+      body: {
+        'phone': phone,
+        'security_answer': securityAnswer,
+        'new_pin': newPin,
+      },
     );
   }
 }

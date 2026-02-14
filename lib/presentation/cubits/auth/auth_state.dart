@@ -85,3 +85,28 @@ class AuthPinRecoverySent extends AuthState {
   @override
   List<Object?> get props => [message];
 }
+class AuthRecoveryQuestionLoaded extends AuthState {
+  /// The registered phone number.
+  final String phone;
+
+  /// The security question to display.
+  final String securityQuestion;
+
+  const AuthRecoveryQuestionLoaded({
+    required this.phone,
+    required this.securityQuestion,
+  });
+
+  @override
+  List<Object?> get props => [phone, securityQuestion];
+}
+
+/// PIN was reset successfully.
+class AuthPinResetSuccess extends AuthState {
+  final String message;
+
+  const AuthPinResetSuccess({required this.message});
+
+  @override
+  List<Object?> get props => [message];
+}

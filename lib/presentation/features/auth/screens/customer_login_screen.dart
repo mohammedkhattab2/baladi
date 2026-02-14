@@ -8,7 +8,7 @@ import 'package:baladi/presentation/common/widgets/app_button.dart';
 import 'package:baladi/presentation/common/widgets/app_text_field.dart';
 import 'package:baladi/presentation/cubits/auth/auth_cubit.dart';
 import 'package:baladi/presentation/cubits/auth/auth_state.dart';
-import 'package:baladi/widgets/auth_header.dart';
+import 'package:baladi/presentation/features/auth/widgets/auth_header.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';

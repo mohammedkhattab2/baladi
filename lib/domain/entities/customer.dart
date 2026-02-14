@@ -40,6 +40,11 @@ class Customer extends Equatable {
 
   /// Last update timestamp.
   final DateTime updatedAt;
+  /// Security question chosen during registration.
+final String? securityQuestion;
+
+/// Hashed security answer (never displayed, only used for verification).
+final String? securityAnswer;
 
   const Customer({
     required this.id,
@@ -53,6 +58,8 @@ class Customer extends Equatable {
     this.referredById,
     required this.createdAt,
     required this.updatedAt,
+    this.securityQuestion,
+    this.securityAnswer,
   });
 
   /// Returns `true` if the customer has a delivery address set.
@@ -75,5 +82,7 @@ class Customer extends Equatable {
         referredById,
         createdAt,
         updatedAt,
+        securityQuestion,
+        securityAnswer,
       ];
 }

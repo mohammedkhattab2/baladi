@@ -39,6 +39,8 @@ class AuthRepositoryImpl implements AuthRepository {
     required String pin,
     required String fullName,
     String? referralCode,
+    required String securityQuestion,
+    required String securityAnswer,
   }) async {
     if (!await _networkInfo.isConnected) {
       return const ResultFailure(
@@ -51,6 +53,8 @@ class AuthRepositoryImpl implements AuthRepository {
         pin: pin,
         fullName: fullName,
         referralCode: referralCode,
+        securityQuestion: securityQuestion,
+        securityAnswer: securityAnswer,
       );
       await _persistAuthResult(result);
       return result;
@@ -179,6 +183,38 @@ class AuthRepositoryImpl implements AuthRepository {
   @override
   Future<UserRole?> getStoredUserRole() =>
       _localDatasource.getStoredUserRole();
+
+  @override
+  Future<Result<String>> getSecurityQuestion({required String phone}) async {
+    if (!await _networkInfo.isConnected) {
+      return const ResultFailure(
+        NetworkFailure(message: 'لا يوجد اتصال بالإنترنت'),
+      );
+    }
+    return Result.guard(() async {
+      return await _remoteDatasource.getSecurityQuestion(phone: phone);
+    });
+  }
+
+  @override
+  Future<Result<void>> resetPin({
+    required String phone,
+    required String securityAnswer,
+    required String newPin,
+  }) async {
+    if (!await _networkInfo.isConnected) {
+      return const ResultFailure(
+        NetworkFailure(message: 'لا يوجد اتصال بالإنترنت'),
+      );
+    }
+    return Result.guard(() async {
+      await _remoteDatasource.resetPin(
+        phone: phone,
+        securityAnswer: securityAnswer,
+        newPin: newPin,
+      );
+    });
+  }
 
   /// Persists tokens, user metadata, and optional customer profile locally.
   Future<void> _persistAuthResult(AuthResult result) async {

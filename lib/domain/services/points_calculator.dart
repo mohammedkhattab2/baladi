@@ -3,6 +3,8 @@
 // Injectable service that wraps PointsRules for calculating
 // earned points, discount values, and validating redemptions.
 
+import 'package:injectable/injectable.dart';
+
 import '../rules/points_rules.dart';
 
 /// Domain service for loyalty points calculations.
@@ -10,6 +12,7 @@ import '../rules/points_rules.dart';
 /// Wraps [PointsRules] to provide an injectable, testable interface
 /// for points-related business logic. Use cases delegate to this
 /// service rather than calling rules directly.
+@injectable
 class PointsCalculator {
   /// Creates a [PointsCalculator] instance.
   const PointsCalculator();

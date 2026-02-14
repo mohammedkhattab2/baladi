@@ -24,16 +24,28 @@ class RegisterCustomerParams extends Equatable {
   /// Optional referral code from another customer.
   final String? referralCode;
 
+  final String securityQuestion;
+  final String securityAnswer;
+
   /// Creates [RegisterCustomerParams].
   const RegisterCustomerParams({
     required this.phone,
     required this.pin,
     required this.fullName,
     this.referralCode,
+    required this.securityQuestion,
+    required this.securityAnswer,
   });
 
   @override
-  List<Object?> get props => [phone, pin, fullName, referralCode];
+  List<Object?> get props => [
+    phone,
+    pin,
+    fullName,
+    referralCode,
+    securityQuestion,
+    securityAnswer,
+  ];
 }
 
 /// Registers a new customer account.
@@ -54,6 +66,8 @@ class RegisterCustomer extends UseCase<AuthResult, RegisterCustomerParams> {
       pin: params.pin,
       fullName: params.fullName,
       referralCode: params.referralCode,
+      securityQuestion: params.securityQuestion,
+      securityAnswer: params.securityAnswer,
     );
   }
 }

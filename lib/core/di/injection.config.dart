@@ -78,9 +78,15 @@ import 'package:baladi/domain/repositories/product_repository.dart' as _i1055;
 import 'package:baladi/domain/repositories/rider_repository.dart' as _i562;
 import 'package:baladi/domain/repositories/settlement_repository.dart' as _i524;
 import 'package:baladi/domain/repositories/shop_repository.dart' as _i368;
+import 'package:baladi/domain/services/commission_calculator.dart' as _i303;
+import 'package:baladi/domain/services/points_calculator.dart' as _i390;
 import 'package:baladi/domain/usecases/admin/adjust_points.dart' as _i186;
 import 'package:baladi/domain/usecases/admin/close_week.dart' as _i52;
 import 'package:baladi/domain/usecases/admin/get_admin_dashboard.dart' as _i19;
+import 'package:baladi/domain/usecases/admin/get_settlement_report.dart'
+    as _i789;
+import 'package:baladi/domain/usecases/admin/manage_users.dart' as _i1048;
+import 'package:baladi/domain/usecases/admin/settle_period.dart' as _i516;
 import 'package:baladi/domain/usecases/auth/login_customer.dart' as _i851;
 import 'package:baladi/domain/usecases/auth/login_user.dart' as _i211;
 import 'package:baladi/domain/usecases/auth/logout.dart' as _i968;
@@ -101,16 +107,22 @@ import 'package:baladi/domain/usecases/order/place_order.dart' as _i566;
 import 'package:baladi/domain/usecases/order/update_order_status.dart' as _i6;
 import 'package:baladi/domain/usecases/points/get_points_balance.dart' as _i7;
 import 'package:baladi/domain/usecases/points/get_points_history.dart' as _i894;
+import 'package:baladi/domain/usecases/points/redeem_points.dart' as _i550;
+import 'package:baladi/domain/usecases/rider/accept_delivery.dart' as _i273;
 import 'package:baladi/domain/usecases/rider/get_available_orders.dart'
     as _i594;
 import 'package:baladi/domain/usecases/rider/get_rider_dashboard.dart' as _i302;
+import 'package:baladi/domain/usecases/rider/get_rider_earnings.dart' as _i122;
 import 'package:baladi/domain/usecases/rider/get_rider_orders.dart' as _i228;
 import 'package:baladi/domain/usecases/rider/toggle_availability.dart' as _i91;
+import 'package:baladi/domain/usecases/shop/confirm_cash_received.dart'
+    as _i683;
 import 'package:baladi/domain/usecases/shop/get_shop_dashboard.dart' as _i506;
 import 'package:baladi/domain/usecases/shop/get_shop_orders.dart' as _i493;
 import 'package:baladi/domain/usecases/shop/get_shop_settlements.dart'
     as _i1033;
 import 'package:baladi/domain/usecases/shop/manage_product.dart' as _i840;
+import 'package:baladi/domain/usecases/shop/toggle_shop_status.dart' as _i351;
 import 'package:baladi/presentation/cubits/ad/ad_cubit.dart' as _i954;
 import 'package:baladi/presentation/cubits/admin/admin_cubit.dart' as _i520;
 import 'package:baladi/presentation/cubits/auth/auth_cubit.dart' as _i99;
@@ -119,6 +131,8 @@ import 'package:baladi/presentation/cubits/catalog/categories_cubit.dart'
     as _i615;
 import 'package:baladi/presentation/cubits/catalog/shop_products_cubit.dart'
     as _i354;
+import 'package:baladi/presentation/cubits/checkout/checkout_cubit.dart'
+    as _i511;
 import 'package:baladi/presentation/cubits/customer/customer_profile_cubit.dart'
     as _i786;
 import 'package:baladi/presentation/cubits/notification/notification_cubit.dart'
@@ -126,6 +140,8 @@ import 'package:baladi/presentation/cubits/notification/notification_cubit.dart'
 import 'package:baladi/presentation/cubits/order/order_cubit.dart' as _i517;
 import 'package:baladi/presentation/cubits/points/points_cubit.dart' as _i580;
 import 'package:baladi/presentation/cubits/rider/rider_cubit.dart' as _i116;
+import 'package:baladi/presentation/cubits/settlement/settlement_cubit.dart'
+    as _i1015;
 import 'package:baladi/presentation/cubits/shop/shop_management_cubit.dart'
     as _i221;
 import 'package:connectivity_plus/connectivity_plus.dart' as _i895;
@@ -148,6 +164,9 @@ extension GetItInjectableX on _i174.GetIt {
       environmentFilter,
     );
     final registerModule = _$RegisterModule();
+    gh.factory<_i303.CommissionCalculator>(
+        () => const _i303.CommissionCalculator());
+    gh.factory<_i390.PointsCalculator>(() => const _i390.PointsCalculator());
     gh.lazySingleton<_i519.Client>(() => registerModule.httpClient);
     gh.lazySingleton<_i895.Connectivity>(() => registerModule.connectivity);
     gh.lazySingleton<_i892.FirebaseMessaging>(
@@ -206,6 +225,8 @@ extension GetItInjectableX on _i174.GetIt {
         () => _i594.GetAvailableOrders(gh<_i562.RiderRepository>()));
     gh.lazySingleton<_i302.GetRiderDashboard>(
         () => _i302.GetRiderDashboard(gh<_i562.RiderRepository>()));
+    gh.lazySingleton<_i122.GetRiderEarnings>(
+        () => _i122.GetRiderEarnings(gh<_i562.RiderRepository>()));
     gh.lazySingleton<_i228.GetRiderOrders>(
         () => _i228.GetRiderOrders(gh<_i562.RiderRepository>()));
     gh.lazySingleton<_i91.ToggleAvailability>(
@@ -216,6 +237,10 @@ extension GetItInjectableX on _i174.GetIt {
               localDatasource: gh<_i894.CategoryLocalDatasource>(),
               networkInfo: gh<_i725.NetworkInfo>(),
             ));
+    gh.lazySingleton<_i789.GetSettlementReport>(
+        () => _i789.GetSettlementReport(gh<_i524.SettlementRepository>()));
+    gh.lazySingleton<_i516.GetShopSettlementDetail>(
+        () => _i516.GetShopSettlementDetail(gh<_i524.SettlementRepository>()));
     gh.lazySingleton<_i1073.AdminRemoteDatasource>(() =>
         _i1073.AdminRemoteDatasourceImpl(apiClient: gh<_i547.ApiClient>()));
     gh.lazySingleton<_i108.AppRouter>(() => _i108.AppRouter(
@@ -261,6 +286,8 @@ extension GetItInjectableX on _i174.GetIt {
         () => _i840.UpdateProduct(gh<_i368.ShopRepository>()));
     gh.lazySingleton<_i840.DeleteProduct>(
         () => _i840.DeleteProduct(gh<_i368.ShopRepository>()));
+    gh.lazySingleton<_i351.ToggleShopStatus>(
+        () => _i351.ToggleShopStatus(gh<_i368.ShopRepository>()));
     gh.lazySingleton<_i1037.PointsRepository>(() => _i928.PointsRepositoryImpl(
           remoteDatasource: gh<_i350.PointsRemoteDatasource>(),
           networkInfo: gh<_i725.NetworkInfo>(),
@@ -273,6 +300,10 @@ extension GetItInjectableX on _i174.GetIt {
         () => _i52.CloseWeek(gh<_i788.AdminRepository>()));
     gh.lazySingleton<_i19.GetAdminDashboard>(
         () => _i19.GetAdminDashboard(gh<_i788.AdminRepository>()));
+    gh.lazySingleton<_i1048.GetUsers>(
+        () => _i1048.GetUsers(gh<_i788.AdminRepository>()));
+    gh.lazySingleton<_i1048.ToggleUserStatus>(
+        () => _i1048.ToggleUserStatus(gh<_i788.AdminRepository>()));
     gh.lazySingleton<_i959.CustomerRepository>(
         () => _i398.CustomerRepositoryImpl(
               remoteDatasource: gh<_i71.CustomerRemoteDatasource>(),
@@ -300,6 +331,12 @@ extension GetItInjectableX on _i174.GetIt {
           localDatasource: gh<_i779.AuthLocalDatasource>(),
           networkInfo: gh<_i725.NetworkInfo>(),
         ));
+    gh.factory<_i1015.SettlementCubit>(() => _i1015.SettlementCubit(
+          settlementRepository: gh<_i524.SettlementRepository>(),
+          getSettlementReport: gh<_i789.GetSettlementReport>(),
+          getShopSettlementDetail: gh<_i516.GetShopSettlementDetail>(),
+          closeWeek: gh<_i52.CloseWeek>(),
+        ));
     gh.lazySingleton<_i256.OrderRepository>(() => _i28.OrderRepositoryImpl(
           remoteDatasource: gh<_i952.OrderRemoteDatasource>(),
           localDatasource: gh<_i867.OrderLocalDatasource>(),
@@ -324,6 +361,10 @@ extension GetItInjectableX on _i174.GetIt {
           closeWeek: gh<_i52.CloseWeek>(),
           adjustPoints: gh<_i186.AdjustPoints>(),
           adminRepository: gh<_i788.AdminRepository>(),
+        ));
+    gh.lazySingleton<_i550.RedeemPoints>(() => _i550.RedeemPoints(
+          gh<_i1037.PointsRepository>(),
+          gh<_i390.PointsCalculator>(),
         ));
     gh.factory<_i48.NotificationCubit>(() => _i48.NotificationCubit(
         notificationRepository: gh<_i279.NotificationRepository>()));
@@ -355,8 +396,18 @@ extension GetItInjectableX on _i174.GetIt {
         () => _i566.PlaceOrder(gh<_i256.OrderRepository>()));
     gh.lazySingleton<_i6.UpdateOrderStatus>(
         () => _i6.UpdateOrderStatus(gh<_i256.OrderRepository>()));
+    gh.lazySingleton<_i273.AcceptDelivery>(
+        () => _i273.AcceptDelivery(gh<_i256.OrderRepository>()));
+    gh.lazySingleton<_i683.ConfirmCashReceived>(
+        () => _i683.ConfirmCashReceived(gh<_i256.OrderRepository>()));
     gh.lazySingleton<_i493.GetShopOrders>(
         () => _i493.GetShopOrders(gh<_i256.OrderRepository>()));
+    gh.factory<_i511.CheckoutCubit>(() => _i511.CheckoutCubit(
+          placeOrder: gh<_i566.PlaceOrder>(),
+          getPointsBalance: gh<_i7.GetPointsBalance>(),
+          pointsCalculator: gh<_i390.PointsCalculator>(),
+          commissionCalculator: gh<_i303.CommissionCalculator>(),
+        ));
     gh.factory<_i99.AuthCubit>(() => _i99.AuthCubit(
           registerCustomer: gh<_i304.RegisterCustomer>(),
           loginCustomer: gh<_i851.LoginCustomer>(),

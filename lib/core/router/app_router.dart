@@ -7,7 +7,9 @@
 import 'package:baladi/presentation/features/auth/screens/customer_login_screen.dart';
 import 'package:baladi/presentation/features/auth/screens/customer_register_screen.dart';
 import 'package:baladi/presentation/features/auth/screens/pin_recovery_screen.dart';
+import 'package:baladi/presentation/features/auth/screens/staff_login_screen.dart';
 import 'package:baladi/presentation/features/auth/screens/welcome_screen.dart';
+import 'package:baladi/presentation/features/customer/screens/customer_home_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:injectable/injectable.dart';
@@ -67,18 +69,16 @@ class AppRouter {
           builder: (context, state) => const PinRecoveryScreen(),
         ),
         GoRoute(
-          path: RouteNames.staffLoginPath,
           name: RouteNames.staffLogin,
-          builder: (context, state) =>
-              const _PlaceholderScreen(title: 'Staff Login'),
+          path: RouteNames.staffLoginPath,
+          builder: (context, state) => const StaffLoginScreen(),
         ),
 
         // ─── Customer Routes ──────────────────────────────────────
         GoRoute(
           path: RouteNames.customerHomePath,
           name: RouteNames.customerHome,
-          builder: (context, state) =>
-              const _PlaceholderScreen(title: 'Customer Home'),
+          builder: (context, state) => const CustomerHomeScreen(),
           routes: [
             GoRoute(
               path: RouteNames.categoryShopsPath,

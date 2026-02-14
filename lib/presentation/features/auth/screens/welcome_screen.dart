@@ -1,11 +1,17 @@
-import 'dart:ffi';
-
 import 'package:baladi/core/config/app_config.dart';
+import 'package:baladi/core/constants/mock_credentials.dart';
+import 'package:baladi/core/di/injection.dart';
 import 'package:baladi/core/router/route_names.dart';
 import 'package:baladi/core/theme/app_colors.dart';
 import 'package:baladi/core/theme/app_text_styles.dart';
-import 'package:baladi/widgets/role_selection_card.dart';
+import 'package:baladi/core/utils/extensions.dart';
+import 'package:baladi/domain/enums/user_role.dart';
+import 'package:baladi/presentation/cubits/auth/auth_cubit.dart';
+import 'package:baladi/presentation/cubits/auth/auth_state.dart';
+import 'package:baladi/presentation/features/auth/widgets/role_selection_card.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 
@@ -14,31 +20,66 @@ class WelcomeScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      body: Stack(
-        children: [
-          const GradientBackground(),
-          SafeArea(
-            child: Column(
+    return BlocProvider(
+      create: (_) => getIt<AuthCubit>(),
+      child: BlocConsumer<AuthCubit, AuthState>(
+        listener: _onAuthStateChanged,
+        builder: (context, state) {
+          final isLoading = state is AuthLoading;
+          return Scaffold(
+            backgroundColor: AppColors.background,
+            body: Stack(
               children: [
-                const Spacer(flex: 2),
-                const _BrandSection(),
-                const Spacer(flex: 3),
-                _RoleSelection(
-                  onCustomerTap: () =>
-                      context.goNamed(RouteNames.customerLogin),
-                  onStaffTap: () => context.goNamed(RouteNames.staffLogin),
+                const GradientBackground(),
+                SafeArea(
+                  child: Column(
+                    children: [
+                      const Spacer(flex: 2),
+                      const _BrandSection(),
+                      const Spacer(flex: 3),
+                      _RoleSelection(
+                        onCustomerTap: () =>
+                            context.pushNamed(RouteNames.customerLogin),
+                        onStaffTap: () =>
+                            context.pushNamed(RouteNames.staffLogin),
+                      ),
+                      if (kDebugMode) ...[
+                        SizedBox(height: 16.h),
+                        _DevQuickLoginPanel(isLoading: isLoading),
+                      ],
+                      const Spacer(),
+                      const _Footer(),
+                      SizedBox(height: 16.h),
+                    ],
+                  ),
                 ),
-                const Spacer(),
-                const _Footer(),
-                SizedBox(height: 16.h),
+                if (isLoading)
+                  Container(
+                    color: Colors.black26,
+                    child: const Center(
+                      child: CircularProgressIndicator(),
+                    ),
+                  ),
               ],
             ),
-          ),
-        ],
+          );
+        },
       ),
     );
+  }
+
+  static void _onAuthStateChanged(BuildContext context, AuthState state) {
+    if (state is AuthAuthenticated) {
+      final routeName = switch (state.role) {
+        UserRole.customer => RouteNames.customerHome,
+        UserRole.shop => RouteNames.shopDashboard,
+        UserRole.rider => RouteNames.riderDashboard,
+        UserRole.admin => RouteNames.adminDashboard,
+      };
+      context.goNamed(routeName);
+    } else if (state is AuthError) {
+      context.showErrorSnackBar(state.message);
+    }
   }
 }
 
@@ -236,6 +277,105 @@ class _DecorativeCircle extends StatelessWidget {
       decoration: BoxDecoration(
         shape: BoxShape.circle,
         color: Colors.white.withValues(alpha: 0.07),
+      ),
+    );
+  }
+}
+
+
+/// Dev-only quick login panel — shown only in debug mode.
+/// Allows tapping a role to instantly log in with mock credentials.
+class _DevQuickLoginPanel extends StatelessWidget {
+  final bool isLoading;
+  const _DevQuickLoginPanel({required this.isLoading});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: 24.w),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.bug_report_outlined, size: 16.r, color: AppColors.warning),
+              SizedBox(width: 6.w),
+              Text(
+                'تسجيل دخول سريع (تجريبي)',
+                style: TextStyle(
+                  fontFamily: AppTextStyles.fontFamily,
+                  fontSize: 13.sp,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.warning,
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: 10.h),
+          Wrap(
+            spacing: 8.w,
+            runSpacing: 8.h,
+            children: MockCredentials.all.map((account) {
+              return _MockLoginChip(
+                account: account,
+                isLoading: isLoading,
+                onTap: () => _quickLogin(context, account),
+              );
+            }).toList(),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _quickLogin(BuildContext context, MockAccount account) {
+    if (isLoading) return;
+    context.read<AuthCubit>().devMockLogin(account: account);
+  }
+}
+
+class _MockLoginChip extends StatelessWidget {
+  final MockAccount account;
+  final bool isLoading;
+  final VoidCallback onTap;
+
+  const _MockLoginChip({
+    required this.account,
+    required this.isLoading,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: AppColors.surface,
+      borderRadius: BorderRadius.circular(10.r),
+      child: InkWell(
+        onTap: isLoading ? null : onTap,
+        borderRadius: BorderRadius.circular(10.r),
+        child: Container(
+          padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 10.h),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(10.r),
+            border: Border.all(color: AppColors.border),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(account.emoji, style: TextStyle(fontSize: 18.sp)),
+              SizedBox(width: 6.w),
+              Text(
+                account.label,
+                style: TextStyle(
+                  fontFamily: AppTextStyles.fontFamily,
+                  fontSize: 12.sp,
+                  fontWeight: FontWeight.w500,
+                  color: AppColors.textPrimary,
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

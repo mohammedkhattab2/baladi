@@ -4,6 +4,7 @@
 // shop commissions, platform commissions, and shop earnings.
 
 import 'package:equatable/equatable.dart';
+import 'package:injectable/injectable.dart';
 
 import '../rules/commission_rules.dart';
 
@@ -48,6 +49,7 @@ class CommissionBreakdown extends Equatable {
 /// Wraps [CommissionRules] to provide an injectable, testable interface
 /// for commission-related business logic. Returns a [CommissionBreakdown]
 /// containing all financial details for an order.
+@injectable
 class CommissionCalculator {
   /// Creates a [CommissionCalculator] instance.
   const CommissionCalculator();
