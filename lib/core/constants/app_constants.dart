@@ -72,4 +72,11 @@ class AppConstants {
 
   /// Character length of generated referral codes.
   static const int referralCodeLength = 8;
+  // ─── Business Rules ─────────────────────────────────────────────
+static const double defaultCommissionRate = 0.10;
+static const double defaultDeliveryFee = 10.0;
+static const int pointsPerEgp = 100;
+static const double pointValue = 1.0;
+static const int referralBonus = 2; 
+  
 }

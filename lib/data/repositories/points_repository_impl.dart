@@ -69,4 +69,26 @@ class PointsRepositoryImpl implements PointsRepository {
       ),
     );
   }
+
+  @override
+  Future<Result<void>> redeemPoints({
+    required String customerId,
+    required String orderId,
+    required int points,
+  }) async {
+    if (!await _networkInfo.isConnected) {
+      return const ResultFailure(
+        NetworkFailure(message: 'لا يوجد اتصال بالإنترنت'),
+      );
+    }
+    return Result.guard(
+      () async {
+        await _remoteDatasource.redeemPoints(
+          customerId: customerId,
+          orderId: orderId,
+          points: points,
+        );
+      },
+    );
+  }
 }

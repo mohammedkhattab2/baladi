@@ -1,8 +1,5 @@
-// Baladi - Entry point for the application.
-//
-// Initializes all core services (Firebase, Hive, DI container,
-// environment config) before launching the root widget.
 
+import 'package:baladi/firebase_options.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -44,7 +41,9 @@ void main() async {
   await Hive.initFlutter();
 
   // Initialize Firebase
-  await Firebase.initializeApp();
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
 
   // Set environment (default to dev for MVP)
   EnvironmentConfig.initialize(Environment.dev);

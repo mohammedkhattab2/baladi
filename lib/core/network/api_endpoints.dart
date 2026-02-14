@@ -45,6 +45,9 @@ class ApiEndpoints {
   /// GET — Customer loyalty points transaction history.
   static const String customerPointsHistory = '/customer/points/history';
 
+  /// POST — Redeem customer loyalty points on an order.
+  static const String customerPointsRedeem = '/customer/points/redeem';
+
   /// GET — Customer referral info (own code, stats).
   static const String customerReferral = '/customer/referral';
 

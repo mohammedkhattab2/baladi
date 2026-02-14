@@ -26,6 +26,13 @@ abstract class PointsRemoteDatasource {
     int page = 1,
     int perPage = 20,
   });
+
+  /// Redeems loyalty points on a specific order.
+  Future<bool> redeemPoints({
+    required String customerId,
+    required String orderId,
+    required int points,
+  });
 }
 
 /// Implementation of [PointsRemoteDatasource] using [ApiClient].
@@ -78,6 +85,24 @@ class PointsRemoteDatasourceImpl implements PointsRemoteDatasource {
       fromJson: (json) => _parseList(json, PointsTransactionModel.fromJson),
     );
     return response.data ?? [];
+  }
+
+  @override
+  Future<bool> redeemPoints({
+    required String customerId,
+    required String orderId,
+    required int points,
+  }) async {
+    final response = await _apiClient.post(
+      ApiEndpoints.customerPointsRedeem,
+      body: {
+        'customer_id': customerId,
+        'order_id': orderId,
+        'points': points,
+      },
+      fromJson: (json) => json['success'] as bool? ?? true,
+    );
+    return response.data ?? false;
   }
 
   /// Parses a list of items from the standard API list response format.

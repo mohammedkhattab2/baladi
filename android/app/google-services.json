@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "706777644047",
+    "project_id": "baladi-bd390",
+    "storage_bucket": "baladi-bd390.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:706777644047:android:f2007f21b94fafc8adb77a",
+        "android_client_info": {
+          "package_name": "com.example.baladi"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyARZKHwT58ypGmKOXW4xPnSWx5DGTgZd1c"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

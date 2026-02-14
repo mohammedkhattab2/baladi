@@ -4,6 +4,10 @@
 // shop, rider, admin). Includes redirect logic for authentication
 // guards and role-based access control.
 
+import 'package:baladi/presentation/features/auth/screens/customer_login_screen.dart';
+import 'package:baladi/presentation/features/auth/screens/customer_register_screen.dart';
+import 'package:baladi/presentation/features/auth/screens/pin_recovery_screen.dart';
+import 'package:baladi/presentation/features/auth/screens/welcome_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:injectable/injectable.dart';
@@ -29,8 +33,8 @@ class AppRouter {
   AppRouter({
     required LocalStorageService localStorage,
     required SecureStorageService secureStorage,
-  })  : _localStorage = localStorage,
-        _secureStorage = secureStorage {
+  }) : _localStorage = localStorage,
+       _secureStorage = secureStorage {
     router = _createRouter();
   }
 
@@ -42,27 +46,25 @@ class AppRouter {
       routes: [
         // ─── Auth Routes ──────────────────────────────────────────
         GoRoute(
-          path: RouteNames.welcomePath,
           name: RouteNames.welcome,
-          builder: (context, state) => const _PlaceholderScreen(title: 'Welcome'),
+          path: RouteNames.welcomePath,
+          builder: (context, state) => const WelcomeScreen(),
         ),
+
         GoRoute(
-          path: RouteNames.customerLoginPath,
           name: RouteNames.customerLogin,
-          builder: (context, state) =>
-              const _PlaceholderScreen(title: 'Customer Login'),
+          path: RouteNames.customerLoginPath,
+          builder: (context, state) => const CustomerLoginScreen(),
         ),
         GoRoute(
-          path: RouteNames.customerRegisterPath,
           name: RouteNames.customerRegister,
-          builder: (context, state) =>
-              const _PlaceholderScreen(title: 'Customer Register'),
+          path: RouteNames.customerRegisterPath,
+          builder: (context, state) => const CustomerRegisterScreen(),
         ),
         GoRoute(
-          path: RouteNames.pinRecoveryPath,
           name: RouteNames.pinRecovery,
-          builder: (context, state) =>
-              const _PlaceholderScreen(title: 'PIN Recovery'),
+          path: RouteNames.pinRecoveryPath,
+          builder: (context, state) => const PinRecoveryScreen(),
         ),
         GoRoute(
           path: RouteNames.staffLoginPath,
@@ -107,8 +109,7 @@ class AppRouter {
         GoRoute(
           path: RouteNames.cartPath,
           name: RouteNames.cart,
-          builder: (context, state) =>
-              const _PlaceholderScreen(title: 'Cart'),
+          builder: (context, state) => const _PlaceholderScreen(title: 'Cart'),
         ),
         GoRoute(
           path: RouteNames.checkoutPath,
@@ -291,8 +292,8 @@ class AppRouter {
     final currentPath = state.matchedLocation;
 
     // Auth page paths
-    final isOnAuthPage = currentPath.startsWith('/welcome') ||
-        currentPath.startsWith('/auth');
+    final isOnAuthPage =
+        currentPath.startsWith('/welcome') || currentPath.startsWith('/auth');
 
     if (!isAuthenticated && !isOnAuthPage) {
       // Not authenticated and not on auth page → go to welcome
@@ -333,10 +334,7 @@ class _PlaceholderScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(title: Text(title)),
       body: Center(
-        child: Text(
-          title,
-          style: Theme.of(context).textTheme.headlineMedium,
-        ),
+        child: Text(title, style: Theme.of(context).textTheme.headlineMedium),
       ),
     );
   }

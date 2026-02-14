@@ -33,4 +33,15 @@ abstract class PointsRepository {
     int page = 1,
     int perPage = 20,
   });
+
+  /// Redeems points on an order, deducting from the customer's balance.
+  ///
+  /// - [customerId]: The customer redeeming points.
+  /// - [orderId]: The order to apply the discount to.
+  /// - [points]: Number of points to redeem.
+  Future<Result<void>> redeemPoints({
+    required String customerId,
+    required String orderId,
+    required int points,
+  });
 }
