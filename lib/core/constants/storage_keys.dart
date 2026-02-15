@@ -41,6 +41,18 @@ class StorageKeys {
   /// Key for the user's selected language code.
   static const String selectedLanguage = 'selected_language';
 
+  /// Key for the "remember me" preference (auto-login on app start).
+  static const String rememberMe = 'remember_me';
+
+  /// Key for the remembered customer phone number.
+  static const String rememberedPhone = 'remembered_phone';
+
+  /// Key for the remembered staff username.
+  static const String rememberedUsername = 'remembered_username';
+
+  /// Key for the remembered staff role.
+  static const String rememberedStaffRole = 'remembered_staff_role';
+
   // ─── Hive Box Names ───────────────────────────────────────────────────
 
   /// Hive box name for cached orders.

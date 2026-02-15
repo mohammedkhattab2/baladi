@@ -80,9 +80,9 @@ class EnvironmentConfig {
     _current = switch (env) {
       Environment.dev => const EnvironmentConfig._(
           environment: Environment.dev,
-          apiBaseUrl: 'http://10.0.2.2:3000/api/v1',
+          apiBaseUrl: 'http://192.168.1.6:5000/api',
           enableLogging: true,
-          useMockData: true,
+          useMockData: false,
           cacheTimeout: Duration(minutes: 5),
           syncInterval: Duration(seconds: 30),
           connectTimeout: Duration(seconds: 10),

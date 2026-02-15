@@ -34,9 +34,9 @@ class CategoryRemoteDatasourceImpl implements CategoryRemoteDatasource {
 
   @override
   Future<List<CategoryModel>> getCategories() async {
-    final response = await _apiClient.get<List<CategoryModel>>(
+    final response = await _apiClient.getList<CategoryModel>(
       ApiEndpoints.categories,
-      fromJson: (json) => _parseList(json, CategoryModel.fromJson),
+      fromJson: CategoryModel.fromJson,
     );
     return response.data ?? [];
   }
@@ -47,27 +47,14 @@ class CategoryRemoteDatasourceImpl implements CategoryRemoteDatasource {
     int page = 1,
     int perPage = 20,
   }) async {
-    final response = await _apiClient.get<List<ShopModel>>(
+    final response = await _apiClient.getList<ShopModel>(
       ApiEndpoints.categoryShops(categorySlug),
       queryParameters: {
         'page': page.toString(),
         'per_page': perPage.toString(),
       },
-      fromJson: (json) => _parseList(json, ShopModel.fromJson),
+      fromJson: ShopModel.fromJson,
     );
     return response.data ?? [];
-  }
-
-  /// Parses a list of items from the standard API list response format.
-  ///
-  /// Expects `json` to contain an `items` key with a list of objects.
-  static List<T> _parseList<T>(
-    Map<String, dynamic> json,
-    T Function(Map<String, dynamic>) fromJson,
-  ) {
-    final items = json['items'] as List<dynamic>? ?? [];
-    return items
-        .map((e) => fromJson(e as Map<String, dynamic>))
-        .toList();
   }
 }

@@ -67,6 +67,33 @@ class AuthRemoteDatasourceImpl implements AuthRemoteDatasource {
   AuthRemoteDatasourceImpl({required ApiClient apiClient})
       : _apiClient = apiClient;
 
+  /// Normalizes a local Egyptian phone number to international format.
+  ///
+  /// Backend expects `+201xxxxxxxxx` format. Converts:
+  /// - `01012345678` → `+2001012345678`  (wrong — 12 digits)
+  ///
+  /// Actually the backend expects exactly `+20` + 10 digits:
+  /// - `01012345678` → `+201012345678`
+  /// - `+201012345678` → `+201012345678` (no change)
+  /// - `201012345678` → `+201012345678`
+  static String _normalizePhone(String phone) {
+    // Already in international format
+    if (phone.startsWith('+20')) return phone;
+
+    // Has country code without +
+    if (phone.startsWith('20') && phone.length == 12) {
+      return '+$phone';
+    }
+
+    // Local format: 01xxxxxxxxx (11 digits)
+    if (phone.startsWith('0') && phone.length == 11) {
+      return '+2$phone';
+    }
+
+    // Fallback — return as-is and let backend validate
+    return phone;
+  }
+
   @override
   Future<AuthResultModel> registerCustomer({
     required String phone,
@@ -79,12 +106,14 @@ class AuthRemoteDatasourceImpl implements AuthRemoteDatasource {
     final response = await _apiClient.post(
       ApiEndpoints.customerRegister,
       body: {
-        'phone': phone,
+        'phone': _normalizePhone(phone),
         'pin': pin,
         'full_name': fullName,
-        if (referralCode != null) 'referral_code': referralCode,
-        'security_question': securityQuestion,
         'security_answer': securityAnswer,
+        if (referralCode != null && referralCode.isNotEmpty)
+          'referral_code': referralCode,
+        // Note: security_question is NOT sent — the backend only stores
+        // the answer for verification. The question is displayed client-side.
       },
       fromJson: (json) => AuthResultModel.fromJson(json),
     );
@@ -99,7 +128,7 @@ class AuthRemoteDatasourceImpl implements AuthRemoteDatasource {
     final response = await _apiClient.post(
       ApiEndpoints.customerLogin,
       body: {
-        'phone': phone,
+        'phone': _normalizePhone(phone),
         'pin': pin,
       },
       fromJson: (json) => AuthResultModel.fromJson(json),
@@ -111,7 +140,7 @@ class AuthRemoteDatasourceImpl implements AuthRemoteDatasource {
   Future<void> recoverCustomerPin({required String phone}) async {
     await _apiClient.post(
       ApiEndpoints.customerRecover,
-      body: {'phone': phone},
+      body: {'phone': _normalizePhone(phone)},
     );
   }
 
@@ -126,7 +155,9 @@ class AuthRemoteDatasourceImpl implements AuthRemoteDatasource {
       body: {
         'username': username,
         'password': password,
-        'role': role,
+        // Note: role is NOT sent — the backend determines the user's role
+        // from their account record. The role parameter is kept in the
+        // interface for potential future use / client-side pre-validation.
       },
       fromJson: (json) => AuthResultModel.fromJson(json),
     );
@@ -163,7 +194,7 @@ class AuthRemoteDatasourceImpl implements AuthRemoteDatasource {
   Future<String> getSecurityQuestion({required String phone}) async {
     final response = await _apiClient.post(
       ApiEndpoints.securityQuestion,
-      body: {'phone': phone},
+      body: {'phone': _normalizePhone(phone)},
       fromJson: (json) => json['security_question'] as String,
     );
     return response.data!;
@@ -178,7 +209,7 @@ class AuthRemoteDatasourceImpl implements AuthRemoteDatasource {
     await _apiClient.post(
       ApiEndpoints.resetPin,
       body: {
-        'phone': phone,
+        'phone': _normalizePhone(phone),
         'security_answer': securityAnswer,
         'new_pin': newPin,
       },

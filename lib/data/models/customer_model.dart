@@ -21,19 +21,28 @@ class CustomerModel extends Customer {
   });
 
   /// Creates a [CustomerModel] from a JSON map.
+  ///
+  /// Handles both full customer objects (from profile endpoints) and minimal
+  /// customer objects returned by the auth endpoints (id, full_name,
+  /// referral_code, total_points only).
   factory CustomerModel.fromJson(Map<String, dynamic> json) {
+    final now = DateTime.now();
     return CustomerModel(
       id: json['id'] as String,
-      userId: json['user_id'] as String,
+      userId: json['user_id'] as String? ?? '',
       fullName: json['full_name'] as String,
       addressText: json['address_text'] as String?,
       landmark: json['landmark'] as String?,
       area: json['area'] as String?,
       totalPoints: json['total_points'] as int? ?? 0,
-      referralCode: json['referral_code'] as String,
+      referralCode: json['referral_code'] as String? ?? '',
       referredById: json['referred_by_id'] as String?,
-      createdAt: DateTime.parse(json['created_at'] as String),
-      updatedAt: DateTime.parse(json['updated_at'] as String),
+      createdAt: json['created_at'] != null
+          ? DateTime.parse(json['created_at'] as String)
+          : now,
+      updatedAt: json['updated_at'] != null
+          ? DateTime.parse(json['updated_at'] as String)
+          : now,
     );
   }
 

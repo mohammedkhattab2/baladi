@@ -86,6 +86,57 @@ class ApiResponse<T> {
     );
   }
 
+  /// Constructs an [ApiResponse] containing a list from a decoded JSON map.
+  ///
+  /// Expects the `data` field to be a JSON array. Each element is parsed
+  /// using [fromJson]. If [fromJson] is null, [data] will be `null`.
+  factory ApiResponse.fromListJson(
+    Map<String, dynamic> json,
+    T Function(Map<String, dynamic>)? fromJson,
+  ) {
+    // Parse list data
+    List<T>? listData;
+    if (fromJson != null && json['data'] != null && json['data'] is List) {
+      final rawList = json['data'] as List;
+      listData = rawList
+          .whereType<Map<String, dynamic>>()
+          .map((item) => fromJson(item))
+          .toList();
+    }
+
+    // Parse field errors
+    Map<String, String>? errors;
+    if (json['errors'] != null && json['errors'] is Map) {
+      final rawErrors = json['errors'] as Map;
+      errors = {};
+      for (final entry in rawErrors.entries) {
+        final key = entry.key.toString();
+        final value = entry.value;
+        if (value is List && value.isNotEmpty) {
+          errors[key] = value.first.toString();
+        } else {
+          errors[key] = value.toString();
+        }
+      }
+    }
+
+    // Parse pagination
+    PaginationMeta? pagination;
+    if (json['pagination'] != null && json['pagination'] is Map) {
+      pagination = PaginationMeta.fromJson(
+        json['pagination'] as Map<String, dynamic>,
+      );
+    }
+
+    return ApiResponse(
+      success: json['success'] as bool? ?? false,
+      data: listData as dynamic,
+      message: json['message'] as String?,
+      errors: errors,
+      pagination: pagination,
+    );
+  }
+
   /// Whether this response contains pagination metadata.
   bool get hasPagination => pagination != null;
 

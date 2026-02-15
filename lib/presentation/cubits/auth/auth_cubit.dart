@@ -6,10 +6,8 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:injectable/injectable.dart';
 
-import '../../../core/constants/mock_credentials.dart';
 import '../../../core/error/failures.dart';
 import '../../../core/usecase/usecase.dart';
-import '../../../domain/entities/customer.dart';
 import '../../../domain/entities/user.dart';
 import '../../../domain/enums/user_role.dart';
 import '../../../domain/repositories/auth_repository.dart';
@@ -76,6 +74,8 @@ class AuthCubit extends Cubit<AuthState> {
     required String phone,
     required String pin,
     required String fullName,
+    required String securityQuestion,
+    required String securityAnswer,
     String? referralCode,
   }) async {
     emit(const AuthLoading());
@@ -84,8 +84,8 @@ class AuthCubit extends Cubit<AuthState> {
       pin: pin,
       fullName: fullName,
       referralCode: referralCode,
-      securityQuestion: 'ما اسم مدرستك الأولى؟', // Default question for demo
-      securityAnswer: 'مدرستي', // Default answer for demo
+      securityQuestion: securityQuestion,
+      securityAnswer: securityAnswer,
     ));
     result.fold(
       onSuccess: (authResult) {
@@ -147,9 +147,11 @@ class AuthCubit extends Cubit<AuthState> {
     ));
     result.fold(
       onSuccess: (authResult) {
+        // Use role from backend response — the server determines the
+        // user's actual role from their account, not the UI selection.
         emit(AuthAuthenticated(
           user: authResult.user,
-          role: role,
+          role: authResult.user.role,
           customer: authResult.customer,
         ));
       },
@@ -198,93 +200,56 @@ class AuthCubit extends Cubit<AuthState> {
       updatedAt: now,
     );
   }
-  /// Dev-only: bypasses backend and emits [AuthAuthenticated] with fake data.
-  ///
-  /// Use this when no backend is available yet. Creates fake [User] and
-  /// optionally [Customer] objects entirely in memory.
-  Future<void> devMockLogin({required MockAccount account}) async {
+
+  /// Step 1: Verify phone and get security question.
+  Future<void> verifyPhoneForRecovery({required String phone}) async {
     emit(const AuthLoading());
-    // Simulate a brief network delay for realistic feel
-    await Future.delayed(const Duration(milliseconds: 500));
-
-    final now = DateTime.now();
-    final user = User(
-      id: 'mock-${account.role.value}-id',
-      role: account.role,
-      phone: account.phone,
-      username: account.username,
-      isActive: true,
-      createdAt: now,
-      updatedAt: now,
+    final result = await _authRepository.getSecurityQuestion(phone: phone);
+    result.fold(
+      onSuccess: (question) {
+        emit(AuthRecoveryQuestionLoaded(
+            phone: phone, securityQuestion: question));
+      },
+      onFailure: (failure) {
+        // Show a user-friendly message if the endpoint is not implemented
+        if (failure is NotFoundFailure) {
+          emit(const AuthError(
+            message: 'خاصية استعادة رمز الدخول غير متاحة حالياً',
+          ));
+        } else {
+          emit(AuthError(message: failure.message));
+        }
+      },
     );
-
-    // Persist fake tokens so the router's redirect guard passes.
-    // Without this, GoRouter's _globalRedirect sees no token in
-    // secure storage and redirects back to the welcome screen.
-    await _authRepository.saveTokens(
-      const AuthTokens(
-        accessToken: 'mock-access-token-dev',
-        refreshToken: 'mock-refresh-token-dev',
-      ),
-    );
-
-    Customer? customer;
-    if (account.role == UserRole.customer) {
-      customer = Customer(
-        id: 'mock-customer-id',
-        userId: user.id,
-        fullName: account.label,
-        totalPoints: 150,
-        referralCode: 'MOCK123',
-        createdAt: now,
-        updatedAt: now,
-      );
-    }
-
-    emit(AuthAuthenticated(
-      user: user,
-      role: account.role,
-      customer: customer,
-    ));
   }
 
-  // أضف الـ methods دي في AuthCubit:
-
-/// Step 1: Verify phone and get security question.
-Future<void> verifyPhoneForRecovery({required String phone}) async {
-  emit(const AuthLoading());
-  final result = await _authRepository.getSecurityQuestion(phone: phone);
-  result.fold(
-    onSuccess: (question) {
-      emit(AuthRecoveryQuestionLoaded(phone: phone, securityQuestion: question));
-    },
-    onFailure: (failure) {
-      emit(AuthError(message: failure.message));
-    },
-  );
-}
-
-/// Step 2: Verify answer + set new PIN in one call.
-Future<void> resetPin({
-  required String phone,
-  required String securityAnswer,
-  required String newPin,
-}) async {
-  emit(const AuthLoading());
-  final result = await _authRepository.resetPin(
-    phone: phone,
-    securityAnswer: securityAnswer,
-    newPin: newPin,
-  );
-  result.fold(
-    onSuccess: (_) {
-      emit(const AuthPinResetSuccess(
-        message: 'تم تغيير رمز الدخول بنجاح',
-      ));
-    },
-    onFailure: (failure) {
-      emit(AuthError(message: failure.message));
-    },
-  );
-}
+  /// Step 2: Verify answer + set new PIN in one call.
+  Future<void> resetPin({
+    required String phone,
+    required String securityAnswer,
+    required String newPin,
+  }) async {
+    emit(const AuthLoading());
+    final result = await _authRepository.resetPin(
+      phone: phone,
+      securityAnswer: securityAnswer,
+      newPin: newPin,
+    );
+    result.fold(
+      onSuccess: (_) {
+        emit(const AuthPinResetSuccess(
+          message: 'تم تغيير رمز الدخول بنجاح',
+        ));
+      },
+      onFailure: (failure) {
+        if (failure is NotFoundFailure) {
+          emit(const AuthError(
+            message: 'خاصية استعادة رمز الدخول غير متاحة حالياً',
+          ));
+        } else {
+          emit(AuthError(message: failure.message));
+        }
+      },
+    );
+  }
 }

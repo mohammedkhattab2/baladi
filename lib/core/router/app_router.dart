@@ -4,6 +4,7 @@
 // shop, rider, admin). Includes redirect logic for authentication
 // guards and role-based access control.
 
+import 'package:baladi/presentation/features/admin/screens/admin_dashboard_screen.dart';
 import 'package:baladi/presentation/features/auth/screens/customer_login_screen.dart';
 import 'package:baladi/presentation/features/auth/screens/customer_register_screen.dart';
 import 'package:baladi/presentation/features/auth/screens/pin_recovery_screen.dart';
@@ -14,7 +15,6 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:injectable/injectable.dart';
 
-import '../services/local_storage_service.dart';
 import '../services/secure_storage_service.dart';
 import 'route_names.dart';
 
@@ -26,17 +26,13 @@ import 'route_names.dart';
 /// - Deep linking from push notifications
 @lazySingleton
 class AppRouter {
-  final LocalStorageService _localStorage;
   final SecureStorageService _secureStorage;
 
   late final GoRouter router;
 
   /// Creates an [AppRouter] with required storage services for auth checks.
-  AppRouter({
-    required LocalStorageService localStorage,
-    required SecureStorageService secureStorage,
-  }) : _localStorage = localStorage,
-       _secureStorage = secureStorage {
+  AppRouter({required SecureStorageService secureStorage})
+    : _secureStorage = secureStorage {
     router = _createRouter();
   }
 
@@ -222,8 +218,7 @@ class AppRouter {
         GoRoute(
           path: RouteNames.adminDashboardPath,
           name: RouteNames.adminDashboard,
-          builder: (context, state) =>
-              const _PlaceholderScreen(title: 'Admin Dashboard'),
+          builder: (context, state) => const AdminDashboardScreen(),
         ),
         GoRoute(
           path: RouteNames.adminUsersPath,
@@ -282,7 +277,8 @@ class AppRouter {
   /// Global redirect logic for authentication and role-based routing.
   ///
   /// - Unauthenticated users are sent to the welcome screen.
-  /// - Authenticated users on auth pages are sent to their role-specific home.
+  /// - Auth pages (welcome, login, register) are always accessible — never
+  ///   auto-redirect away from them so the app always starts at welcome.
   Future<String?> _globalRedirect(
     BuildContext context,
     GoRouterState state,
@@ -300,24 +296,9 @@ class AppRouter {
       return RouteNames.welcomePath;
     }
 
-    if (isAuthenticated && isOnAuthPage) {
-      // Authenticated but on auth page → redirect to role home
-      return await _getRoleHomePath();
-    }
-
-    return null; // No redirect needed
-  }
-
-  /// Returns the home path for the currently authenticated user's role.
-  Future<String> _getRoleHomePath() async {
-    final role = await _localStorage.getUserRole();
-    return switch (role) {
-      'customer' => RouteNames.customerHomePath,
-      'shop' => RouteNames.shopDashboardPath,
-      'rider' => RouteNames.riderDashboardPath,
-      'admin' => RouteNames.adminDashboardPath,
-      _ => RouteNames.welcomePath,
-    };
+    // Never auto-redirect from auth pages — always show welcome/login screens.
+    // "Remember me" only pre-fills credentials; the user must still tap login.
+    return null;
   }
 }
 

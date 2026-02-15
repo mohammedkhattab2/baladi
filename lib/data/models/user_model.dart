@@ -19,7 +19,11 @@ class UserModel extends User {
   });
 
   /// Creates a [UserModel] from a JSON map.
+  ///
+  /// Handles both full user objects (from profile endpoints) and minimal
+  /// user objects returned by the auth endpoints (id, phone/username, role only).
   factory UserModel.fromJson(Map<String, dynamic> json) {
+    final now = DateTime.now();
     return UserModel(
       id: json['id'] as String,
       role: UserRole.values.firstWhere(
@@ -30,8 +34,12 @@ class UserModel extends User {
       username: json['username'] as String?,
       fcmToken: json['fcm_token'] as String?,
       isActive: json['is_active'] as bool? ?? true,
-      createdAt: DateTime.parse(json['created_at'] as String),
-      updatedAt: DateTime.parse(json['updated_at'] as String),
+      createdAt: json['created_at'] != null
+          ? DateTime.parse(json['created_at'] as String)
+          : now,
+      updatedAt: json['updated_at'] != null
+          ? DateTime.parse(json['updated_at'] as String)
+          : now,
     );
   }
 

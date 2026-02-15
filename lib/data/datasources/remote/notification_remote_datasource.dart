@@ -41,13 +41,13 @@ class NotificationRemoteDatasourceImpl implements NotificationRemoteDatasource {
     int page = 1,
     int perPage = 20,
   }) async {
-    final response = await _apiClient.get<List<NotificationModel>>(
+    final response = await _apiClient.getList<NotificationModel>(
       ApiEndpoints.notifications,
       queryParameters: {
         'page': page.toString(),
         'per_page': perPage.toString(),
       },
-      fromJson: (json) => _parseList(json, NotificationModel.fromJson),
+      fromJson: NotificationModel.fromJson,
     );
     return response.data ?? [];
   }
@@ -72,14 +72,4 @@ class NotificationRemoteDatasourceImpl implements NotificationRemoteDatasource {
     return response.data ?? 0;
   }
 
-  /// Parses a list of items from the standard API list response format.
-  static List<T> _parseList<T>(
-    Map<String, dynamic> json,
-    T Function(Map<String, dynamic>) fromJson,
-  ) {
-    final items = json['items'] as List<dynamic>? ?? [];
-    return items
-        .map((e) => fromJson(e as Map<String, dynamic>))
-        .toList();
-  }
 }

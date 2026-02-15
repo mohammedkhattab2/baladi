@@ -45,9 +45,9 @@ class AdRemoteDatasourceImpl implements AdRemoteDatasource {
 
   @override
   Future<List<AdModel>> getActiveAds() async {
-    final response = await _apiClient.get<List<AdModel>>(
+    final response = await _apiClient.getList<AdModel>(
       ApiEndpoints.activeAds,
-      fromJson: (json) => _parseList(json, AdModel.fromJson),
+      fromJson: AdModel.fromJson,
     );
     return response.data ?? [];
   }
@@ -57,13 +57,13 @@ class AdRemoteDatasourceImpl implements AdRemoteDatasource {
     int page = 1,
     int perPage = 20,
   }) async {
-    final response = await _apiClient.get<List<AdModel>>(
+    final response = await _apiClient.getList<AdModel>(
       ApiEndpoints.shopAds,
       queryParameters: {
         'page': page.toString(),
         'per_page': perPage.toString(),
       },
-      fromJson: (json) => _parseList(json, AdModel.fromJson),
+      fromJson: AdModel.fromJson,
     );
     return response.data ?? [];
   }
@@ -101,14 +101,4 @@ class AdRemoteDatasourceImpl implements AdRemoteDatasource {
     return response.data!;
   }
 
-  /// Parses a list of items from the standard API list response format.
-  static List<T> _parseList<T>(
-    Map<String, dynamic> json,
-    T Function(Map<String, dynamic>) fromJson,
-  ) {
-    final items = json['items'] as List<dynamic>? ?? [];
-    return items
-        .map((e) => fromJson(e as Map<String, dynamic>))
-        .toList();
-  }
 }
