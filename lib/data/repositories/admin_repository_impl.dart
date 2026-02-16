@@ -42,10 +42,15 @@ class AdminRepositoryImpl implements AdminRepository {
       final json = await _remoteDatasource.getAdminDashboard();
 
       WeeklyPeriod? currentPeriod;
-      if (json['current_period'] != null) {
-        currentPeriod = WeeklyPeriodModel.fromJson(
-          json['current_period'] as Map<String, dynamic>,
-        );
+      if (json['current_period'] != null &&
+          json['current_period'] is Map<String, dynamic>) {
+        try {
+          currentPeriod = WeeklyPeriodModel.fromJson(
+            json['current_period'] as Map<String, dynamic>,
+          );
+        } catch (_) {
+          currentPeriod = null;
+        }
       }
 
       return AdminDashboard(

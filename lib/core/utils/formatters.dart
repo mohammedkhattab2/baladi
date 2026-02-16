@@ -184,4 +184,22 @@ class Formatters {
     final percent = (rate * 100).round();
     return '$percent%';
   }
+
+  /// Formats a number with thousand separators for display.
+  ///
+  /// Example: `formatNumber(1500)` → `"1,500"`
+  static String formatNumber(int number) {
+    if (number < 0) {
+      return '-${formatNumber(-number)}';
+    }
+    final str = number.toString();
+    final buffer = StringBuffer();
+    for (var i = 0; i < str.length; i++) {
+      if (i > 0 && (str.length - i) % 3 == 0) {
+        buffer.write(',');
+      }
+      buffer.write(str[i]);
+    }
+    return buffer.toString();
+  }
 }

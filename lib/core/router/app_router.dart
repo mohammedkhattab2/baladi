@@ -5,6 +5,7 @@
 // guards and role-based access control.
 
 import 'package:baladi/presentation/features/admin/screens/admin_dashboard_screen.dart';
+import 'package:baladi/presentation/features/admin/screens/admin_users_screen.dart';
 import 'package:baladi/presentation/features/auth/screens/customer_login_screen.dart';
 import 'package:baladi/presentation/features/auth/screens/customer_register_screen.dart';
 import 'package:baladi/presentation/features/auth/screens/pin_recovery_screen.dart';
@@ -223,8 +224,7 @@ class AppRouter {
         GoRoute(
           path: RouteNames.adminUsersPath,
           name: RouteNames.adminUsers,
-          builder: (context, state) =>
-              const _PlaceholderScreen(title: 'Admin Users'),
+          builder: (context, state) => const AdminUsersScreen(),
         ),
         GoRoute(
           path: RouteNames.adminShopsPath,

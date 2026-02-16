@@ -22,11 +22,15 @@ class WeeklyPeriodModel extends WeeklyPeriod {
   /// Creates a [WeeklyPeriodModel] from a JSON map.
   factory WeeklyPeriodModel.fromJson(Map<String, dynamic> json) {
     return WeeklyPeriodModel(
-      id: json['id'] as String,
-      year: json['year'] as int,
-      weekNumber: json['week_number'] as int,
-      startDate: DateTime.parse(json['start_date'] as String),
-      endDate: DateTime.parse(json['end_date'] as String),
+      id: (json['id'] as String?) ?? '',
+      year: (json['year'] as int?) ?? 0,
+      weekNumber: (json['week_number'] as int?) ?? 0,
+      startDate: json['start_date'] != null
+          ? DateTime.parse(json['start_date'] as String)
+          : DateTime.now(),
+      endDate: json['end_date'] != null
+          ? DateTime.parse(json['end_date'] as String)
+          : DateTime.now(),
       status: json['status'] != null
           ? PeriodStatus.fromValue(json['status'] as String)
           : PeriodStatus.active,
@@ -34,7 +38,9 @@ class WeeklyPeriodModel extends WeeklyPeriod {
           ? DateTime.parse(json['closed_at'] as String)
           : null,
       closedBy: json['closed_by'] as String?,
-      createdAt: DateTime.parse(json['created_at'] as String),
+      createdAt: json['created_at'] != null
+          ? DateTime.parse(json['created_at'] as String)
+          : DateTime.now(),
     );
   }
 
