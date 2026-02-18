@@ -80,7 +80,7 @@ class EnvironmentConfig {
     _current = switch (env) {
       Environment.dev => const EnvironmentConfig._(
           environment: Environment.dev,
-          apiBaseUrl: 'http://192.168.1.38:5000/api',
+          apiBaseUrl: 'http://192.168.1.9:5000/api',
           enableLogging: true,
           useMockData: false,
           cacheTimeout: Duration(minutes: 5),

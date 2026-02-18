@@ -92,16 +92,54 @@ class AdminRemoteDatasourceImpl implements AdminRemoteDatasource {
     int page = 1,
     int perPage = 20,
   }) async {
-    final response = await _apiClient.get<List<UserModel>>(
-      ApiEndpoints.adminUsers,
-      queryParameters: {
-        'page': page.toString(),
-        'per_page': perPage.toString(),
-        if (role != null) 'role': role,
-      },
-      fromJson: (json) => _parseList(json, UserModel.fromJson),
-    );
-    return response.data ?? [];
+    try {
+      final response = await _apiClient.dio.get(
+        ApiEndpoints.adminUsers,
+        queryParameters: {
+          if (role != null) 'role': role,
+        },
+      );
+      print('✅ Backend response type: ${response.data.runtimeType}');
+      print('✅ Backend response data: ${response.data}');
+      
+      final data = response.data;
+      
+      // Handle direct list response
+      if (data is List) {
+        print('✅ Response is List with ${data.length} items');
+        final users = data
+            .map((item) => UserModel.fromJson(item as Map<String, dynamic>))
+            .toList();
+        print('✅ Parsed ${users.length} users');
+        return users;
+      }
+      
+      // Handle wrapped response (Map)
+      if (data is Map<String, dynamic>) {
+        print('✅ Response is Map, checking for data field');
+        // Try different possible field names
+        final List<dynamic>? usersList =
+            data['data'] as List<dynamic>? ??
+            data['users'] as List<dynamic>? ??
+            data['items'] as List<dynamic>?;
+        
+        if (usersList != null) {
+          print('✅ Found users list with ${usersList.length} items');
+          final users = usersList
+              .map((item) => UserModel.fromJson(item as Map<String, dynamic>))
+              .toList();
+          print('✅ Parsed ${users.length} users');
+          return users;
+        }
+        print('❌ Map does not contain data/users/items field');
+      }
+      
+      print('❌ Response format not recognized, returning empty');
+      return [];
+    } catch (e) {
+      print('❌ Admin getUsers error: $e');
+      rethrow;
+    }
   }
 
   @override
@@ -109,15 +147,17 @@ class AdminRemoteDatasourceImpl implements AdminRemoteDatasource {
     int page = 1,
     int perPage = 20,
   }) async {
-    final response = await _apiClient.get<List<ShopModel>>(
+    final response = await _apiClient.dio.get(
       ApiEndpoints.adminShops,
-      queryParameters: {
-        'page': page.toString(),
-        'per_page': perPage.toString(),
-      },
-      fromJson: (json) => _parseList(json, ShopModel.fromJson),
+      queryParameters: {},
     );
-    return response.data ?? [];
+    final data = response.data;
+    if (data is List) {
+      return data
+          .map((item) => ShopModel.fromJson(item as Map<String, dynamic>))
+          .toList();
+    }
+    return [];
   }
 
   @override
@@ -125,15 +165,17 @@ class AdminRemoteDatasourceImpl implements AdminRemoteDatasource {
     int page = 1,
     int perPage = 20,
   }) async {
-    final response = await _apiClient.get<List<RiderModel>>(
+    final response = await _apiClient.dio.get(
       ApiEndpoints.adminRiders,
-      queryParameters: {
-        'page': page.toString(),
-        'per_page': perPage.toString(),
-      },
-      fromJson: (json) => _parseList(json, RiderModel.fromJson),
+      queryParameters: {},
     );
-    return response.data ?? [];
+    final data = response.data;
+    if (data is List) {
+      return data
+          .map((item) => RiderModel.fromJson(item as Map<String, dynamic>))
+          .toList();
+    }
+    return [];
   }
 
   @override
@@ -142,16 +184,19 @@ class AdminRemoteDatasourceImpl implements AdminRemoteDatasource {
     int page = 1,
     int perPage = 20,
   }) async {
-    final response = await _apiClient.get<List<OrderModel>>(
+    final response = await _apiClient.dio.get(
       ApiEndpoints.adminOrders,
       queryParameters: {
-        'page': page.toString(),
-        'per_page': perPage.toString(),
         if (status != null) 'status': status,
       },
-      fromJson: (json) => _parseList(json, OrderModel.fromJson),
     );
-    return response.data ?? [];
+    final data = response.data;
+    if (data is List) {
+      return data
+          .map((item) => OrderModel.fromJson(item as Map<String, dynamic>))
+          .toList();
+    }
+    return [];
   }
 
   @override
@@ -159,15 +204,17 @@ class AdminRemoteDatasourceImpl implements AdminRemoteDatasource {
     int page = 1,
     int perPage = 20,
   }) async {
-    final response = await _apiClient.get<List<WeeklyPeriodModel>>(
+    final response = await _apiClient.dio.get(
       ApiEndpoints.adminPeriods,
-      queryParameters: {
-        'page': page.toString(),
-        'per_page': perPage.toString(),
-      },
-      fromJson: (json) => _parseList(json, WeeklyPeriodModel.fromJson),
+      queryParameters: {},
     );
-    return response.data ?? [];
+    final data = response.data;
+    if (data is List) {
+      return data
+          .map((item) => WeeklyPeriodModel.fromJson(item as Map<String, dynamic>))
+          .toList();
+    }
+    return [];
   }
 
   @override

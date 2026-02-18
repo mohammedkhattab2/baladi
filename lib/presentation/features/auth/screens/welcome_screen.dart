@@ -149,38 +149,48 @@ class _WelcomeScreenState extends State<WelcomeScreen>
                   child: AnimatedBuilder(
                     animation: _entranceController,
                     builder: (context, child) {
-                      return Column(
-                        children: [
-                          const Spacer(flex: 2),
-                          // Brand section with glow
-                          _LuxuryBrandSection(
-                            fadeIn: _brandFadeIn.value,
-                            scale: _brandScale.value,
-                            titleOffset: _titleSlide.value,
-                            pulseAnimation: _pulseAnimation,
+                      return SingleChildScrollView(
+                        physics: const BouncingScrollPhysics(),
+                        child: ConstrainedBox(
+                          constraints: BoxConstraints(
+                            minHeight: MediaQuery.of(context).size.height -
+                                MediaQuery.of(context).padding.top -
+                                MediaQuery.of(context).padding.bottom,
                           ),
-                          const Spacer(flex: 3),
-                          // Role selection cards
-                          Transform.translate(
-                            offset: Offset(0, _cardsSlide.value),
-                            child: Opacity(
-                              opacity: (1 - _cardsSlide.value / 100).clamp(0.0, 1.0),
-                              child: _LuxuryRoleSelection(
-                                onCustomerTap: () =>
-                                    context.pushNamed(RouteNames.customerLogin),
-                                onStaffTap: () =>
-                                    context.pushNamed(RouteNames.staffLogin),
+                          child: Column(
+                            children: [
+                              SizedBox(height: 60.h),
+                              // Brand section with glow
+                              _LuxuryBrandSection(
+                                fadeIn: _brandFadeIn.value,
+                                scale: _brandScale.value,
+                                titleOffset: _titleSlide.value,
+                                pulseAnimation: _pulseAnimation,
                               ),
-                            ),
+                              SizedBox(height: 80.h),
+                              // Role selection cards
+                              Transform.translate(
+                                offset: Offset(0, _cardsSlide.value),
+                                child: Opacity(
+                                  opacity: (1 - _cardsSlide.value / 100).clamp(0.0, 1.0),
+                                  child: _LuxuryRoleSelection(
+                                    onCustomerTap: () =>
+                                        context.pushNamed(RouteNames.customerLogin),
+                                    onStaffTap: () =>
+                                        context.pushNamed(RouteNames.staffLogin),
+                                  ),
+                                ),
+                              ),
+                              SizedBox(height: 40.h),
+                              // Footer
+                              Opacity(
+                                opacity: _footerFade.value,
+                                child: const _LuxuryFooter(),
+                              ),
+                              SizedBox(height: 16.h),
+                            ],
                           ),
-                          const Spacer(),
-                          // Footer
-                          Opacity(
-                            opacity: _footerFade.value,
-                            child: const _LuxuryFooter(),
-                          ),
-                          SizedBox(height: 16.h),
-                        ],
+                        ),
                       );
                     },
                   ),
