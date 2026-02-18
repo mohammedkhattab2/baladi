@@ -41,6 +41,22 @@ class AdminRepositoryImpl implements AdminRepository {
     return Result.guard(() async {
       final json = await _remoteDatasource.getAdminDashboard();
 
+      // Backend "data" payload shape:
+      // {
+      //   "overview": { ... },
+      //   "orders": { ... },
+      //   "current_period": { ... },
+      //   "revenue": { ... }
+      // }
+      final overview =
+          (json['overview'] as Map<String, dynamic>?) ?? <String, dynamic>{};
+      final orders =
+          (json['orders'] as Map<String, dynamic>?) ?? <String, dynamic>{};
+      final revenue =
+          (json['revenue'] as Map<String, dynamic>?) ?? <String, dynamic>{};
+      final byStatus =
+          (orders['by_status'] as Map<String, dynamic>?) ?? <String, dynamic>{};
+
       WeeklyPeriod? currentPeriod;
       if (json['current_period'] != null &&
           json['current_period'] is Map<String, dynamic>) {
@@ -53,19 +69,39 @@ class AdminRepositoryImpl implements AdminRepository {
         }
       }
 
-      return AdminDashboard(
-        totalUsers: json['total_users'] as int? ?? 0,
-        totalCustomers: json['total_customers'] as int? ?? 0,
-        totalShops: json['total_shops'] as int? ?? 0,
-        totalRiders: json['total_riders'] as int? ?? 0,
-        totalOrders: json['total_orders'] as int? ?? 0,
-        completedOrders: json['completed_orders'] as int? ?? 0,
-        cancelledOrders: json['cancelled_orders'] as int? ?? 0,
-        totalRevenue: (json['total_revenue'] as num?)?.toDouble() ?? 0,
-        totalPointsIssued: json['total_points_issued'] as int? ?? 0,
-        totalPointsRedeemed: json['total_points_redeemed'] as int? ?? 0,
+      final totalPointsRedeemed =
+          revenue['total_points_redeemed'] as int? ?? 0;
+
+      final dashboard = AdminDashboard(
+        totalUsers: overview['total_users'] as int? ?? 0,
+        totalCustomers: overview['total_customers'] as int? ?? 0,
+        totalShops: overview['total_shops'] as int? ?? 0,
+        totalRiders: overview['total_riders'] as int? ?? 0,
+        // Use period_orders as the main orders count for the current period
+        totalOrders: revenue['period_orders'] as int? ?? 0,
+        // Pull completed / cancelled from orders.by_status when available
+        completedOrders: byStatus['completed'] as int? ?? 0,
+        cancelledOrders: byStatus['cancelled'] as int? ?? 0,
+        // Platform revenue = admin_net_commission from the revenue block
+        totalRevenue:
+            (revenue['admin_net_commission'] as num?)?.toDouble() ?? 0,
+        // Backend currently only exposes redeemed points; use them for both
+        // issued and redeemed so that active points don't go negative.
+        totalPointsIssued: totalPointsRedeemed,
+        totalPointsRedeemed: totalPointsRedeemed,
         currentPeriod: currentPeriod,
       );
+
+      // Debug log to verify mapping in development
+      // ignore: avoid_print
+      print(
+        'AdminDashboard mapped: users=${dashboard.totalUsers}, '
+        'customers=${dashboard.totalCustomers}, shops=${dashboard.totalShops}, '
+        'riders=${dashboard.totalRiders}, orders=${dashboard.totalOrders}, '
+        'revenue=${dashboard.totalRevenue}',
+      );
+
+      return dashboard;
     });
   }
 

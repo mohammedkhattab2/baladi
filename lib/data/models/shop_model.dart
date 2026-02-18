@@ -25,12 +25,52 @@ class ShopModel extends Shop {
 
   /// Creates a [ShopModel] from a JSON map.
   factory ShopModel.fromJson(Map<String, dynamic> json) {
+    // Support both flat and nested shapes used by the backend.
+    //
+    // ID: "id" or "_id"
+    final String id = (json['id'] ?? json['_id'])?.toString() ?? '';
+
+    // user_id: can be a String or an embedded user object.
+    final dynamic rawUser = json['user_id'];
+    String userId;
+    if (rawUser is String) {
+      userId = rawUser;
+    } else if (rawUser is Map<String, dynamic>) {
+      userId = (rawUser['id'] ?? rawUser['_id'])?.toString() ?? '';
+    } else {
+      userId = '';
+    }
+
+    // category_id: can be a String or an embedded category object.
+    final dynamic rawCategory = json['category_id'];
+    String categoryId;
+    if (rawCategory is String) {
+      categoryId = rawCategory;
+    } else if (rawCategory is Map<String, dynamic>) {
+      categoryId = (rawCategory['id'] ?? rawCategory['_id'])?.toString() ?? '';
+    } else {
+      categoryId = '';
+    }
+
+    // createdAt / updatedAt: support both snake_case and camelCase.
+    final String? createdAtRaw =
+        (json['created_at'] ?? json['createdAt']) as String?;
+    final String? updatedAtRaw =
+        (json['updated_at'] ?? json['updatedAt']) as String?;
+
+    final DateTime createdAt = createdAtRaw != null
+        ? DateTime.parse(createdAtRaw)
+        : DateTime.now();
+    final DateTime updatedAt = updatedAtRaw != null
+        ? DateTime.parse(updatedAtRaw)
+        : createdAt;
+
     return ShopModel(
-      id: json['id'] as String,
-      userId: json['user_id'] as String,
-      name: json['name'] as String,
+      id: id,
+      userId: userId,
+      name: json['name'] as String? ?? '',
       nameAr: json['name_ar'] as String?,
-      categoryId: json['category_id'] as String,
+      categoryId: categoryId,
       description: json['description'] as String?,
       phone: json['phone'] as String?,
       address: json['address'] as String?,
@@ -38,8 +78,8 @@ class ShopModel extends Shop {
       minOrderAmount: (json['min_order_amount'] as num?)?.toDouble() ?? 0,
       isOpen: json['is_open'] as bool? ?? true,
       isActive: json['is_active'] as bool? ?? true,
-      createdAt: DateTime.parse(json['created_at'] as String),
-      updatedAt: DateTime.parse(json['updated_at'] as String),
+      createdAt: createdAt,
+      updatedAt: updatedAt,
     );
   }
 

@@ -18,12 +18,24 @@ class OrderItemModel extends OrderItem {
   });
 
   /// Creates an [OrderItemModel] from a JSON map.
+  ///
+  /// Supports both `id` and `_id` for the item identifier and ensures
+  /// `order_id` is present (it may be injected by [OrderModel.fromJson]).
   factory OrderItemModel.fromJson(Map<String, dynamic> json) {
+    final String id =
+        (json['id'] ?? json['_id'])?.toString() ?? '';
+
+    final String orderId =
+        (json['order_id'] ?? json['orderId'])?.toString() ?? '';
+
+    final String productName =
+        (json['product_name'] ?? json['product_name_ar'] ?? '').toString();
+
     return OrderItemModel(
-      id: json['id'] as String,
-      orderId: json['order_id'] as String,
-      productId: json['product_id'] as String?,
-      productName: json['product_name'] as String,
+      id: id,
+      orderId: orderId,
+      productId: json['product_id']?.toString(),
+      productName: productName,
       price: (json['price'] as num).toDouble(),
       quantity: json['quantity'] as int,
       subtotal: (json['subtotal'] as num).toDouble(),

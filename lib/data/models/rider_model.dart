@@ -21,17 +21,44 @@ class RiderModel extends Rider {
 
   /// Creates a [RiderModel] from a JSON map.
   factory RiderModel.fromJson(Map<String, dynamic> json) {
+    // Support both flat and nested shapes used by the backend.
+    //
+    // ID: "id" or "_id"
+    final String id = (json['id'] ?? json['_id'])?.toString() ?? '';
+
+    // user_id: can be a String or an embedded user object.
+    final dynamic rawUser = json['user_id'];
+    String userId;
+    if (rawUser is String) {
+      userId = rawUser;
+    } else if (rawUser is Map<String, dynamic>) {
+      userId = (rawUser['id'] ?? rawUser['_id'])?.toString() ?? '';
+    } else {
+      userId = '';
+    }
+
+    // createdAt / updatedAt: support both snake_case and camelCase.
+    final String? createdAtRaw =
+        (json['created_at'] ?? json['createdAt']) as String?;
+    final String? updatedAtRaw =
+        (json['updated_at'] ?? json['updatedAt']) as String?;
+
+    final DateTime createdAt =
+        createdAtRaw != null ? DateTime.parse(createdAtRaw) : DateTime.now();
+    final DateTime updatedAt =
+        updatedAtRaw != null ? DateTime.parse(updatedAtRaw) : createdAt;
+
     return RiderModel(
-      id: json['id'] as String,
-      userId: json['user_id'] as String,
-      fullName: json['full_name'] as String,
-      phone: json['phone'] as String,
+      id: id,
+      userId: userId,
+      fullName: json['full_name'] as String? ?? '',
+      phone: json['phone'] as String? ?? '',
       deliveryFee: (json['delivery_fee'] as num?)?.toDouble() ?? 10.0,
       isAvailable: json['is_available'] as bool? ?? false,
       isActive: json['is_active'] as bool? ?? true,
       totalDeliveries: json['total_deliveries'] as int? ?? 0,
-      createdAt: DateTime.parse(json['created_at'] as String),
-      updatedAt: DateTime.parse(json['updated_at'] as String),
+      createdAt: createdAt,
+      updatedAt: updatedAt,
     );
   }
 

@@ -5,6 +5,11 @@
 // guards and role-based access control.
 
 import 'package:baladi/presentation/features/admin/screens/admin_dashboard_screen.dart';
+import 'package:baladi/presentation/features/admin/screens/admin_orders_screen.dart';
+import 'package:baladi/presentation/features/admin/screens/admin_periods_screen.dart';
+import 'package:baladi/presentation/features/admin/screens/admin_points_screen.dart';
+import 'package:baladi/presentation/features/admin/screens/admin_riders_screen.dart';
+import 'package:baladi/presentation/features/admin/screens/admin_shops_screen.dart';
 import 'package:baladi/presentation/features/admin/screens/admin_users_screen.dart';
 import 'package:baladi/presentation/features/auth/screens/customer_login_screen.dart';
 import 'package:baladi/presentation/features/auth/screens/customer_register_screen.dart';
@@ -229,26 +234,22 @@ class AppRouter {
         GoRoute(
           path: RouteNames.adminShopsPath,
           name: RouteNames.adminShops,
-          builder: (context, state) =>
-              const _PlaceholderScreen(title: 'Admin Shops'),
+          builder: (context, state) => const AdminShopsScreen(),
         ),
         GoRoute(
           path: RouteNames.adminRidersPath,
           name: RouteNames.adminRiders,
-          builder: (context, state) =>
-              const _PlaceholderScreen(title: 'Admin Riders'),
+          builder: (context, state) => const AdminRidersScreen(),
         ),
         GoRoute(
           path: RouteNames.adminOrdersPath,
           name: RouteNames.adminOrders,
-          builder: (context, state) =>
-              const _PlaceholderScreen(title: 'Admin Orders'),
+          builder: (context, state) => const AdminOrdersScreen(),
         ),
         GoRoute(
           path: RouteNames.adminPeriodsPath,
           name: RouteNames.adminPeriods,
-          builder: (context, state) =>
-              const _PlaceholderScreen(title: 'Admin Periods'),
+          builder: (context, state) => const AdminPeriodsScreen(),
         ),
         GoRoute(
           path: RouteNames.adminSettlementsPath,
@@ -259,8 +260,7 @@ class AppRouter {
         GoRoute(
           path: RouteNames.adminPointsPath,
           name: RouteNames.adminPoints,
-          builder: (context, state) =>
-              const _PlaceholderScreen(title: 'Admin Points'),
+          builder: (context, state) => const AdminPointsScreen(),
         ),
 
         // ─── Common Routes ────────────────────────────────────────

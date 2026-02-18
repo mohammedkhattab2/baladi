@@ -47,31 +47,74 @@ class OrderModel extends Order {
 
   /// Creates an [OrderModel] from a JSON map.
   factory OrderModel.fromJson(Map<String, dynamic> json) {
-    final itemsList = json['items'] as List<dynamic>?;
-    final List<OrderItem> items = itemsList != null
-        ? itemsList
-            .map((e) => OrderItemModel.fromJson(e as Map<String, dynamic>))
-            .toList()
-        : const [];
+    // Support both `id` and `_id` for the order identifier.
+    final String orderId =
+        (json['id'] ?? json['_id'])?.toString() ?? '';
+
+    // customer_id can be a String or an embedded object.
+    final dynamic rawCustomer = json['customer_id'];
+    final String customerId = rawCustomer is String
+        ? rawCustomer
+        : rawCustomer is Map<String, dynamic>
+            ? (rawCustomer['id'] ?? rawCustomer['_id'])?.toString() ?? ''
+            : '';
+
+    // shop_id can be a String or an embedded object.
+    final dynamic rawShop = json['shop_id'];
+    final String shopId = rawShop is String
+        ? rawShop
+        : rawShop is Map<String, dynamic>
+            ? (rawShop['id'] ?? rawShop['_id'])?.toString() ?? ''
+            : '';
+
+    // rider_id can be a String, an embedded object, or null.
+    final dynamic rawRider = json['rider_id'];
+    final String? riderId = rawRider == null
+        ? null
+        : rawRider is String
+            ? rawRider
+            : rawRider is Map<String, dynamic>
+                ? (rawRider['id'] ?? rawRider['_id'])?.toString()
+                : null;
+
+    // Items list; ensure each item gets an order_id so OrderItemModel works.
+    final itemsList = json['items'] as List<dynamic>? ?? const [];
+    final List<OrderItem> items = itemsList
+        .map((e) {
+          final itemJson = e as Map<String, dynamic>;
+          final merged = <String, dynamic>{
+            ...itemJson,
+            'order_id': itemJson['order_id'] ?? orderId,
+          };
+          return OrderItemModel.fromJson(merged);
+        })
+        .toList();
+
+    // createdAt may be `created_at` or `createdAt`.
+    final String? createdAtRaw =
+        (json['created_at'] ?? json['createdAt']) as String?;
+    final DateTime createdAt = createdAtRaw != null
+        ? DateTime.parse(createdAtRaw)
+        : DateTime.now();
 
     return OrderModel(
-      id: json['id'] as String,
-      orderNumber: json['order_number'] as String,
-      customerId: json['customer_id'] as String,
-      shopId: json['shop_id'] as String,
-      riderId: json['rider_id'] as String?,
-      periodId: json['period_id'] as String?,
+      id: orderId,
+      orderNumber: json['order_number'] as String? ?? '',
+      customerId: customerId,
+      shopId: shopId,
+      riderId: riderId,
+      periodId: json['period_id']?.toString(),
       status: OrderStatus.fromValue(json['status'] as String),
-      deliveryAddress: json['delivery_address'] as String,
+      deliveryAddress: json['delivery_address'] as String? ?? '',
       deliveryLandmark: json['delivery_landmark'] as String?,
       deliveryArea: json['delivery_area'] as String?,
       customerNotes: json['customer_notes'] as String?,
-      subtotal: (json['subtotal'] as num).toDouble(),
+      subtotal: (json['subtotal'] as num?)?.toDouble() ?? 0,
       deliveryFee: (json['delivery_fee'] as num?)?.toDouble() ?? 0,
       isFreeDelivery: json['is_free_delivery'] as bool? ?? false,
       pointsUsed: json['points_used'] as int? ?? 0,
       pointsDiscount: (json['points_discount'] as num?)?.toDouble() ?? 0,
-      totalAmount: (json['total_amount'] as num).toDouble(),
+      totalAmount: (json['total_amount'] as num?)?.toDouble() ?? 0,
       shopCommission: (json['shop_commission'] as num?)?.toDouble() ?? 0,
       adminCommission: (json['admin_commission'] as num?)?.toDouble() ?? 0,
       pointsEarned: json['points_earned'] as int? ?? 0,
@@ -80,7 +123,7 @@ class OrderModel extends Order {
       shopConfirmedCash: json['shop_confirmed_cash'] as bool? ?? false,
       cancellationReason: json['cancellation_reason'] as String?,
       items: items,
-      createdAt: DateTime.parse(json['created_at'] as String),
+      createdAt: createdAt,
       acceptedAt: json['accepted_at'] != null
           ? DateTime.parse(json['accepted_at'] as String)
           : null,

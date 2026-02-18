@@ -149,14 +149,34 @@ class AdminRemoteDatasourceImpl implements AdminRemoteDatasource {
   }) async {
     final response = await _apiClient.dio.get(
       ApiEndpoints.adminShops,
-      queryParameters: {},
+      // Backend does not accept "per_page" as a query param, so we only send page.
+      queryParameters: {
+        'page': page,
+      },
     );
     final data = response.data;
+
+    // Handle direct list response
     if (data is List) {
       return data
           .map((item) => ShopModel.fromJson(item as Map<String, dynamic>))
           .toList();
     }
+
+    // Handle wrapped response: { success, data: [...], meta: {...} }
+    if (data is Map<String, dynamic>) {
+      final List<dynamic>? shopsList =
+          data['data'] as List<dynamic>? ??
+          data['shops'] as List<dynamic>? ??
+          data['items'] as List<dynamic>?;
+
+      if (shopsList != null) {
+        return shopsList
+            .map((item) => ShopModel.fromJson(item as Map<String, dynamic>))
+            .toList();
+      }
+    }
+
     return [];
   }
 
@@ -167,14 +187,33 @@ class AdminRemoteDatasourceImpl implements AdminRemoteDatasource {
   }) async {
     final response = await _apiClient.dio.get(
       ApiEndpoints.adminRiders,
-      queryParameters: {},
+      queryParameters: {
+        'page': page,
+      },
     );
     final data = response.data;
+
+    // Handle direct list response
     if (data is List) {
       return data
           .map((item) => RiderModel.fromJson(item as Map<String, dynamic>))
           .toList();
     }
+
+    // Handle wrapped response: { success, data: [...], meta: {...} }
+    if (data is Map<String, dynamic>) {
+      final List<dynamic>? ridersList =
+          data['data'] as List<dynamic>? ??
+          data['riders'] as List<dynamic>? ??
+          data['items'] as List<dynamic>?;
+
+      if (ridersList != null) {
+        return ridersList
+            .map((item) => RiderModel.fromJson(item as Map<String, dynamic>))
+            .toList();
+      }
+    }
+
     return [];
   }
 
@@ -186,16 +225,36 @@ class AdminRemoteDatasourceImpl implements AdminRemoteDatasource {
   }) async {
     final response = await _apiClient.dio.get(
       ApiEndpoints.adminOrders,
+      // Backend accepts page (and optionally status), but list is wrapped:
+      // { success: true, data: [...], meta: {...} }
       queryParameters: {
+        'page': page,
         if (status != null) 'status': status,
       },
     );
     final data = response.data;
+
+    // Handle direct list response
     if (data is List) {
       return data
           .map((item) => OrderModel.fromJson(item as Map<String, dynamic>))
           .toList();
     }
+
+    // Handle wrapped response: { success, data: [...], meta: {...} }
+    if (data is Map<String, dynamic>) {
+      final List<dynamic>? ordersList =
+          data['data'] as List<dynamic>? ??
+          data['orders'] as List<dynamic>? ??
+          data['items'] as List<dynamic>?;
+
+      if (ordersList != null) {
+        return ordersList
+            .map((item) => OrderModel.fromJson(item as Map<String, dynamic>))
+            .toList();
+      }
+    }
+
     return [];
   }
 
@@ -206,14 +265,35 @@ class AdminRemoteDatasourceImpl implements AdminRemoteDatasource {
   }) async {
     final response = await _apiClient.dio.get(
       ApiEndpoints.adminPeriods,
-      queryParameters: {},
+      // Backend returns a wrapped response:
+      // { success: true, data: [...], meta: {...} }
+      queryParameters: {
+        'page': page,
+      },
     );
     final data = response.data;
+
+    // Handle direct list response
     if (data is List) {
       return data
           .map((item) => WeeklyPeriodModel.fromJson(item as Map<String, dynamic>))
           .toList();
     }
+
+    // Handle wrapped response: { success, data: [...], meta: {...} }
+    if (data is Map<String, dynamic>) {
+      final List<dynamic>? periodsList =
+          data['data'] as List<dynamic>? ??
+          data['periods'] as List<dynamic>? ??
+          data['items'] as List<dynamic>?;
+
+      if (periodsList != null) {
+        return periodsList
+            .map((item) => WeeklyPeriodModel.fromJson(item as Map<String, dynamic>))
+            .toList();
+      }
+    }
+
     return [];
   }
 

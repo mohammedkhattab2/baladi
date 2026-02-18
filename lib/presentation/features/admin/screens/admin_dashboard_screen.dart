@@ -109,11 +109,21 @@ class _DashboardContent extends StatelessWidget {
             _WelcomeCard(currentPeriod: dashboard.currentPeriod),
             SizedBox(height: 24.h),
 
-            // Stats Section
-            _SectionHeader(title: 'الإحصائيات'),
-            SizedBox(height: 12.h),
-            _StatsGrid(dashboard: dashboard),
-            SizedBox(height: 24.h),
+                        // Stats Section
+                        _SectionHeader(
+                          title: 'الإحصائيات',
+                          trailing: Text(
+                            'إجمالي المستخدمين: ${Formatters.formatNumber(dashboard.totalUsers)}',
+                            style: TextStyle(
+                              fontFamily: AppTextStyles.fontFamily,
+                              fontSize: 12.sp,
+                              color: AppColors.textSecondary,
+                            ),
+                          ),
+                        ),
+                        SizedBox(height: 12.h),
+                        _StatsGrid(dashboard: dashboard),
+                        SizedBox(height: 24.h),
 
             // Quick Actions Section
             _SectionHeader(title: 'إجراءات سريعة'),
