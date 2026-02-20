@@ -32,10 +32,46 @@ abstract class AdminRemoteDatasource {
     int perPage = 20,
   });
 
+  /// Creates a new shop (with associated user) from the admin panel.
+  ///
+  /// Backend:
+  ///   POST /api/admin/shops
+  ///   Body contains both shop profile and owner user data.
+  Future<ShopModel> createShopAsAdmin({
+    required Map<String, dynamic> body,
+  });
+
+  /// Updates an existing shop (and optionally its owner user) from admin.
+  ///
+  /// Backend:
+  ///   PUT /api/admin/shops/:shopId
+  Future<ShopModel> updateShopAsAdmin({
+    required String shopId,
+    required Map<String, dynamic> body,
+  });
+
   /// Fetches all registered riders.
   Future<List<RiderModel>> getRiders({
     int page = 1,
     int perPage = 20,
+  });
+
+  /// Creates a new rider (with associated user) from the admin panel.
+  ///
+  /// Backend:
+  ///   POST /api/admin/riders
+  ///   Body contains both rider profile and user account data.
+  Future<RiderModel> createRiderAsAdmin({
+    required Map<String, dynamic> body,
+  });
+
+  /// Updates an existing rider (and optionally its user) from admin.
+  ///
+  /// Backend:
+  ///   PUT /api/admin/riders/:riderId
+  Future<RiderModel> updateRiderAsAdmin({
+    required String riderId,
+    required Map<String, dynamic> body,
   });
 
   /// Fetches all orders (admin view).
@@ -66,6 +102,16 @@ abstract class AdminRemoteDatasource {
     required String userId,
     required bool isActive,
   });
+
+  /// Resets a staff user's password (shop / rider / admin).
+  ///
+  /// Backend endpoint:
+  ///   POST /api/admin/users/:userId/reset-password
+  ///   { "new_password": "..." }
+  Future<void> resetUserPassword({
+    required String userId,
+    required String newPassword,
+  });
 }
 
 /// Implementation of [AdminRemoteDatasource] using [ApiClient].
@@ -92,54 +138,38 @@ class AdminRemoteDatasourceImpl implements AdminRemoteDatasource {
     int page = 1,
     int perPage = 20,
   }) async {
-    try {
-      final response = await _apiClient.dio.get(
-        ApiEndpoints.adminUsers,
-        queryParameters: {
-          if (role != null) 'role': role,
-        },
-      );
-      print('✅ Backend response type: ${response.data.runtimeType}');
-      print('✅ Backend response data: ${response.data}');
-      
-      final data = response.data;
-      
-      // Handle direct list response
-      if (data is List) {
-        print('✅ Response is List with ${data.length} items');
-        final users = data
+    final response = await _apiClient.dio.get(
+      ApiEndpoints.adminUsers,
+      queryParameters: {
+        if (role != null) 'role': role,
+      },
+    );
+    final data = response.data;
+
+    // Handle direct list response
+    if (data is List) {
+      return data
+          .map((item) => UserModel.fromJson(item as Map<String, dynamic>))
+          .toList();
+    }
+
+    // Handle wrapped response (Map)
+    if (data is Map<String, dynamic>) {
+      // Try different possible field names
+      final List<dynamic>? usersList =
+          data['data'] as List<dynamic>? ??
+          data['users'] as List<dynamic>? ??
+          data['items'] as List<dynamic>?;
+
+      if (usersList != null) {
+        return usersList
             .map((item) => UserModel.fromJson(item as Map<String, dynamic>))
             .toList();
-        print('✅ Parsed ${users.length} users');
-        return users;
       }
-      
-      // Handle wrapped response (Map)
-      if (data is Map<String, dynamic>) {
-        print('✅ Response is Map, checking for data field');
-        // Try different possible field names
-        final List<dynamic>? usersList =
-            data['data'] as List<dynamic>? ??
-            data['users'] as List<dynamic>? ??
-            data['items'] as List<dynamic>?;
-        
-        if (usersList != null) {
-          print('✅ Found users list with ${usersList.length} items');
-          final users = usersList
-              .map((item) => UserModel.fromJson(item as Map<String, dynamic>))
-              .toList();
-          print('✅ Parsed ${users.length} users');
-          return users;
-        }
-        print('❌ Map does not contain data/users/items field');
-      }
-      
-      print('❌ Response format not recognized, returning empty');
-      return [];
-    } catch (e) {
-      print('❌ Admin getUsers error: $e');
-      rethrow;
     }
+
+    // Fallback to empty list if response format is not recognized
+    return [];
   }
 
   @override
@@ -181,6 +211,48 @@ class AdminRemoteDatasourceImpl implements AdminRemoteDatasource {
   }
 
   @override
+  Future<ShopModel> createShopAsAdmin({
+    required Map<String, dynamic> body,
+  }) async {
+    // Backend route:
+    //   POST /api/admin/shops
+    //   Body includes both shop and owner user data.
+    final response = await _apiClient.post(
+      ApiEndpoints.adminShops,
+      body: body,
+      fromJson: (json) {
+        // Support both wrapped and direct shop JSON:
+        // { success, data: { shop: {...} } }
+        final data = json['data'] as Map<String, dynamic>?;
+        final shopJson =
+            data?['shop'] as Map<String, dynamic>? ?? data ?? json;
+        return ShopModel.fromJson(shopJson);
+      },
+    );
+    return response.data!;
+  }
+
+  @override
+  Future<ShopModel> updateShopAsAdmin({
+    required String shopId,
+    required Map<String, dynamic> body,
+  }) async {
+    // Backend route:
+    //   PUT /api/admin/shops/:shopId
+    final response = await _apiClient.put(
+      '${ApiEndpoints.adminShops}/$shopId',
+      body: body,
+      fromJson: (json) {
+        final data = json['data'] as Map<String, dynamic>?;
+        final shopJson =
+            data?['shop'] as Map<String, dynamic>? ?? data ?? json;
+        return ShopModel.fromJson(shopJson);
+      },
+    );
+    return response.data!;
+  }
+
+  @override
   Future<List<RiderModel>> getRiders({
     int page = 1,
     int perPage = 20,
@@ -215,6 +287,48 @@ class AdminRemoteDatasourceImpl implements AdminRemoteDatasource {
     }
 
     return [];
+  }
+
+  @override
+  Future<RiderModel> createRiderAsAdmin({
+    required Map<String, dynamic> body,
+  }) async {
+    // Backend route:
+    //   POST /api/admin/riders
+    //   Body includes both rider and user account data.
+    final response = await _apiClient.post(
+      ApiEndpoints.adminRiders,
+      body: body,
+      fromJson: (json) {
+        // Support both wrapped and direct rider JSON:
+        // { success, data: { rider: {...} } }
+        final data = json['data'] as Map<String, dynamic>?;
+        final riderJson =
+            data?['rider'] as Map<String, dynamic>? ?? data ?? json;
+        return RiderModel.fromJson(riderJson);
+      },
+    );
+    return response.data!;
+  }
+
+  @override
+  Future<RiderModel> updateRiderAsAdmin({
+    required String riderId,
+    required Map<String, dynamic> body,
+  }) async {
+    // Backend route:
+    //   PUT /api/admin/riders/:riderId
+    final response = await _apiClient.put(
+      '${ApiEndpoints.adminRiders}/$riderId',
+      body: body,
+      fromJson: (json) {
+        final data = json['data'] as Map<String, dynamic>?;
+        final riderJson =
+            data?['rider'] as Map<String, dynamic>? ?? data ?? json;
+        return RiderModel.fromJson(riderJson);
+      },
+    );
+    return response.data!;
   }
 
   @override
@@ -327,22 +441,43 @@ class AdminRemoteDatasourceImpl implements AdminRemoteDatasource {
     required String userId,
     required bool isActive,
   }) async {
+    // Backend route:
+    //   PUT /api/admin/users/:userId/activate
+    //   { "is_active": true/false }
     final response = await _apiClient.put(
-      '${ApiEndpoints.adminUsers}/$userId',
+      '${ApiEndpoints.adminUsers}/$userId/activate',
       body: {'is_active': isActive},
-      fromJson: (json) => UserModel.fromJson(json),
+      fromJson: (json) {
+        // admin.controller returns:
+        // {
+        //   success: true,
+        //   data: {
+        //     message: 'User ...',
+        //     user: { id, role, is_active }
+        //   }
+        // }
+        final data = (json['data'] as Map<String, dynamic>?);
+        final userJson = data?['user'] as Map<String, dynamic>? ?? json;
+        return UserModel.fromJson(userJson);
+      },
     );
     return response.data!;
   }
 
-  /// Parses a list of items from the standard API list response format.
-  static List<T> _parseList<T>(
-    Map<String, dynamic> json,
-    T Function(Map<String, dynamic>) fromJson,
-  ) {
-    final items = json['items'] as List<dynamic>? ?? [];
-    return items
-        .map((e) => fromJson(e as Map<String, dynamic>))
-        .toList();
+  @override
+  Future<void> resetUserPassword({
+    required String userId,
+    required String newPassword,
+  }) async {
+    // Backend route:
+    //   POST /api/admin/users/:userId/reset-password
+    //   Body: { "new_password": "..." }
+    await _apiClient.post<void>(
+      '${ApiEndpoints.adminUsers}/$userId/reset-password',
+      body: {
+        'new_password': newPassword,
+      },
+    );
   }
+
 }

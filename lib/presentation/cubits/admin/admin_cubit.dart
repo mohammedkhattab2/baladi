@@ -12,6 +12,7 @@ import '../../../domain/repositories/admin_repository.dart';
 import '../../../domain/usecases/admin/adjust_points.dart';
 import '../../../domain/usecases/admin/close_week.dart';
 import '../../../domain/usecases/admin/get_admin_dashboard.dart';
+import '../../../domain/usecases/admin/manage_users.dart';
 import 'admin_state.dart';
 
 /// Cubit that manages all admin-related operations.
@@ -24,6 +25,11 @@ class AdminCubit extends Cubit<AdminState> {
   final CloseWeek _closeWeek;
   final AdjustPoints _adjustPoints;
   final AdminRepository _adminRepository;
+  final ResetUserPassword _resetUserPassword;
+  final CreateShopAsAdmin _createShopAsAdmin;
+  final UpdateShopAsAdmin _updateShopAsAdmin;
+  final CreateRiderAsAdmin _createRiderAsAdmin;
+  final UpdateRiderAsAdmin _updateRiderAsAdmin;
 
   /// Creates an [AdminCubit].
   AdminCubit({
@@ -31,10 +37,20 @@ class AdminCubit extends Cubit<AdminState> {
     required CloseWeek closeWeek,
     required AdjustPoints adjustPoints,
     required AdminRepository adminRepository,
+    required ResetUserPassword resetUserPassword,
+    required CreateShopAsAdmin createShopAsAdmin,
+    required UpdateShopAsAdmin updateShopAsAdmin,
+    required CreateRiderAsAdmin createRiderAsAdmin,
+    required UpdateRiderAsAdmin updateRiderAsAdmin,
   })  : _getAdminDashboard = getAdminDashboard,
         _closeWeek = closeWeek,
         _adjustPoints = adjustPoints,
         _adminRepository = adminRepository,
+        _resetUserPassword = resetUserPassword,
+        _createShopAsAdmin = createShopAsAdmin,
+        _updateShopAsAdmin = updateShopAsAdmin,
+        _createRiderAsAdmin = createRiderAsAdmin,
+        _updateRiderAsAdmin = updateRiderAsAdmin,
         super(const AdminInitial());
 
   // ---------------------------------------------------------------------------
@@ -121,9 +137,16 @@ class AdminCubit extends Cubit<AdminState> {
   }
 
   /// Toggles a user's active status.
+  ///
+  /// [role] is the optional role filter currently applied in the UI so that
+  /// after toggling we reload the list with the same filter instead of
+  /// resetting to "all users". This keeps the UX consistent with the
+  /// Manage Users flow described in the architecture docs.
   Future<void> toggleUserStatus({
     required String userId,
     required bool isActive,
+    String? role,
+    int perPage = AppConstants.defaultPageSize,
   }) async {
     emit(const AdminActionLoading());
 
@@ -134,7 +157,42 @@ class AdminCubit extends Cubit<AdminState> {
 
     result.fold(
       onSuccess: (_) async {
-        await loadUsers();
+        await loadUsers(
+          role: role,
+          perPage: perPage,
+        );
+      },
+      onFailure: (failure) {
+        emit(AdminError(message: failure.message));
+      },
+    );
+  }
+
+  // ---------------------------------------------------------------------------
+  // User password management
+  // ---------------------------------------------------------------------------
+
+  /// Resets a staff user's password (shop / rider / admin).
+  ///
+  /// This should only be used for non-customer accounts. The backend enforces:
+  /// - 8+ chars
+  /// - at least one uppercase, one lowercase, and one digit
+  Future<void> resetUserPassword({
+    required String userId,
+    required String newPassword,
+  }) async {
+    emit(const AdminActionLoading());
+
+    final result = await _resetUserPassword(
+      ResetUserPasswordParams(
+        userId: userId,
+        newPassword: newPassword,
+      ),
+    );
+
+    result.fold(
+      onSuccess: (_) {
+        emit(const AdminUserPasswordReset());
       },
       onFailure: (failure) {
         emit(AdminError(message: failure.message));
@@ -162,6 +220,60 @@ class AdminCubit extends Cubit<AdminState> {
           currentPage: 1,
           hasMore: shops.length >= perPage,
         ));
+      },
+      onFailure: (failure) {
+        emit(AdminError(message: failure.message));
+      },
+    );
+  }
+
+  /// Creates a new shop (with owner user) from the admin panel.
+  ///
+  /// [payload] should follow the backend Joi schema for:
+  ///   POST /api/admin/shops
+  Future<void> createShopAsAdmin({
+    required Map<String, dynamic> payload,
+    int perPage = AppConstants.defaultPageSize,
+  }) async {
+    emit(const AdminActionLoading());
+
+    final result = await _createShopAsAdmin(
+      CreateShopAsAdminParams(payload: payload),
+    );
+
+    result.fold(
+      onSuccess: (_) async {
+        // Reload shops list so UI reflects the newly created shop.
+        await loadShops(perPage: perPage);
+      },
+      onFailure: (failure) {
+        emit(AdminError(message: failure.message));
+      },
+    );
+  }
+
+  /// Updates an existing shop from the admin panel.
+  ///
+  /// [shopId] is the ID of the shop to update.
+  /// [payload] is sent as-is to:
+  ///   PUT /api/admin/shops/:shopId
+  Future<void> updateShopAsAdmin({
+    required String shopId,
+    required Map<String, dynamic> payload,
+    int perPage = AppConstants.defaultPageSize,
+  }) async {
+    emit(const AdminActionLoading());
+
+    final result = await _updateShopAsAdmin(
+      UpdateShopAsAdminParams(
+        shopId: shopId,
+        payload: payload,
+      ),
+    );
+
+    result.fold(
+      onSuccess: (_) async {
+        await loadShops(perPage: perPage);
       },
       onFailure: (failure) {
         emit(AdminError(message: failure.message));
@@ -245,6 +357,60 @@ class AdminCubit extends Cubit<AdminState> {
           currentPage: nextPage,
           hasMore: newRiders.length >= perPage,
         ));
+      },
+      onFailure: (failure) {
+        emit(AdminError(message: failure.message));
+      },
+    );
+  }
+
+  /// Creates a new rider (with user account) from the admin panel.
+  ///
+  /// [payload] should follow the backend Joi schema for:
+  ///   POST /api/admin/riders
+  Future<void> createRiderAsAdmin({
+    required Map<String, dynamic> payload,
+    int perPage = AppConstants.defaultPageSize,
+  }) async {
+    emit(const AdminActionLoading());
+
+    final result = await _createRiderAsAdmin(
+      CreateRiderAsAdminParams(payload: payload),
+    );
+
+    result.fold(
+      onSuccess: (_) async {
+        // Reload riders list so UI reflects the newly created rider.
+        await loadRiders(perPage: perPage);
+      },
+      onFailure: (failure) {
+        emit(AdminError(message: failure.message));
+      },
+    );
+  }
+
+  /// Updates an existing rider from the admin panel.
+  ///
+  /// [riderId] is the ID of the rider to update.
+  /// [payload] is sent as-is to:
+  ///   PUT /api/admin/riders/:riderId
+  Future<void> updateRiderAsAdmin({
+    required String riderId,
+    required Map<String, dynamic> payload,
+    int perPage = AppConstants.defaultPageSize,
+  }) async {
+    emit(const AdminActionLoading());
+
+    final result = await _updateRiderAsAdmin(
+      UpdateRiderAsAdminParams(
+        riderId: riderId,
+        payload: payload,
+      ),
+    );
+
+    result.fold(
+      onSuccess: (_) async {
+        await loadRiders(perPage: perPage);
       },
       onFailure: (failure) {
         emit(AdminError(message: failure.message));

@@ -38,53 +38,108 @@ class _AdminDashboardView extends StatelessWidget {
     return AdminShell(
       currentRoute: RouteNames.adminDashboard,
       title: 'لوحة التحكم',
-      child: BlocConsumer<AdminCubit, AdminState>(
-        listener: (context, state) {
-          if (state is AdminWeekClosed) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(
-                  'تم إغلاق الفترة بنجاح: ${state.closedPeriod.displayLabel}',
-                  style: TextStyle(fontFamily: AppTextStyles.fontFamily),
-                ),
-                backgroundColor: AppColors.success,
+      child: Container(
+        decoration: const BoxDecoration(
+          // نفس الجريدينت العميق المستخدم في هوية Baladi (welcome / admin)
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              Color(0xFF0D1B2A),
+              Color(0xFF1B263B),
+              Color(0xFF2D5A27),
+              Color(0xFF1A3A16),
+            ],
+            stops: [0.0, 0.35, 0.7, 1.0],
+          ),
+        ),
+        child: Stack(
+          children: [
+            // أوربز إضاءة ناعمة في الخلفية عشان تحس إنها نفس العالم البصري
+            Positioned(
+              top: -80,
+              left: -40,
+              child: _GlowOrb(
+                size: 180,
+                color: AppColors.primary,
+                opacity: 0.22,
               ),
-            );
-            // Reload dashboard after closing week
-            context.read<AdminCubit>().loadDashboard();
-          }
-          if (state is AdminError) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(
-                  state.message,
-                  style: TextStyle(fontFamily: AppTextStyles.fontFamily),
-                ),
-                backgroundColor: AppColors.error,
+            ),
+            Positioned(
+              bottom: -60,
+              right: -30,
+              child: _GlowOrb(
+                size: 160,
+                color: AppColors.secondary,
+                opacity: 0.20,
               ),
-            );
-          }
-        },
-        builder: (context, state) {
-          if (state is AdminLoading) {
-            return const Center(child: LoadingWidget());
-          }
-          if (state is AdminActionLoading) {
-            return const Center(
-              child: LoadingWidget(message: 'جاري المعالجة...'),
-            );
-          }
-          if (state is AdminError) {
-            return AppErrorWidget(
-              message: state.message,
-              onRetry: () => context.read<AdminCubit>().loadDashboard(),
-            );
-          }
-          if (state is AdminDashboardLoaded) {
-            return _DashboardContent(dashboard: state.dashboard);
-          }
-          return const SizedBox.shrink();
-        },
+            ),
+            BlocConsumer<AdminCubit, AdminState>(
+              listener: (context, state) {
+                if (state is AdminWeekClosed) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      behavior: SnackBarBehavior.floating,
+                      margin: EdgeInsets.all(16.r),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14.r),
+                      ),
+                      content: Text(
+                        'تم إغلاق الفترة بنجاح: ${state.closedPeriod.displayLabel}',
+                        style: TextStyle(fontFamily: AppTextStyles.fontFamily),
+                      ),
+                      backgroundColor: AppColors.success,
+                    ),
+                  );
+                  // Reload dashboard after closing week
+                  context.read<AdminCubit>().loadDashboard();
+                }
+                if (state is AdminError) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      behavior: SnackBarBehavior.floating,
+                      margin: EdgeInsets.all(16.r),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14.r),
+                      ),
+                      content: Text(
+                        state.message,
+                        style: TextStyle(fontFamily: AppTextStyles.fontFamily),
+                      ),
+                      backgroundColor: AppColors.error,
+                    ),
+                  );
+                }
+              },
+              builder: (context, state) {
+                if (state is AdminLoading) {
+                  return const Center(child: LoadingWidget());
+                }
+                if (state is AdminActionLoading) {
+                  return const Center(
+                    child: LoadingWidget(message: 'جاري المعالجة...'),
+                  );
+                }
+                if (state is AdminError) {
+                  return Center(
+                    child: ConstrainedBox(
+                      constraints: BoxConstraints(maxWidth: 520.w),
+                      child: AppErrorWidget(
+                        message: state.message,
+                        onRetry: () =>
+                            context.read<AdminCubit>().loadDashboard(),
+                      ),
+                    ),
+                  );
+                }
+                if (state is AdminDashboardLoaded) {
+                  return _DashboardContent(dashboard: state.dashboard);
+                }
+                return const SizedBox.shrink();
+              },
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -109,21 +164,29 @@ class _DashboardContent extends StatelessWidget {
             _WelcomeCard(currentPeriod: dashboard.currentPeriod),
             SizedBox(height: 24.h),
 
-                        // Stats Section
-                        _SectionHeader(
-                          title: 'الإحصائيات',
-                          trailing: Text(
-                            'إجمالي المستخدمين: ${Formatters.formatNumber(dashboard.totalUsers)}',
-                            style: TextStyle(
-                              fontFamily: AppTextStyles.fontFamily,
-                              fontSize: 12.sp,
-                              color: AppColors.textSecondary,
-                            ),
-                          ),
-                        ),
-                        SizedBox(height: 12.h),
-                        _StatsGrid(dashboard: dashboard),
-                        SizedBox(height: 24.h),
+            // Stats Section
+            _SectionHeader(
+              title: 'الإحصائيات',
+              trailing: Text(
+                'إجمالي المستخدمين: ${Formatters.formatNumber(dashboard.totalUsers)}',
+                style: TextStyle(
+                  fontFamily: AppTextStyles.fontFamily,
+                  fontSize: 12.sp,
+                  color: Colors.white,
+                ),
+              ),
+            ),
+            SizedBox(height: 12.h),
+            _StatsGrid(dashboard: dashboard),
+            SizedBox(height: 24.h),
+
+            // Orders health section (from architecture: حالة الطلبات + تنبيه مبسط)
+            _SectionHeader(title: 'حالة الطلبات'),
+            SizedBox(height: 12.h),
+            _OrdersStatusRow(dashboard: dashboard),
+            SizedBox(height: 16.h),
+            _RevenueSummaryCard(dashboard: dashboard),
+            SizedBox(height: 24.h),
 
             // Quick Actions Section
             _SectionHeader(title: 'إجراءات سريعة'),
@@ -148,65 +211,129 @@ class _WelcomeCard extends StatelessWidget {
       width: double.infinity,
       padding: EdgeInsets.all(20.r),
       decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(20.r),
         gradient: const LinearGradient(
-          colors: [AppColors.primaryDark, AppColors.primary],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
+          colors: [
+            Color(0xFF0B1722),
+            Color(0xFF132433),
+          ],
         ),
-        borderRadius: BorderRadius.circular(16.r),
+        border: Border.all(
+          color: Colors.white24,
+          width: 1.0,
+        ),
         boxShadow: [
           BoxShadow(
-            color: AppColors.primary.withValues(alpha:  0.3),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
+            color: Colors.black.withValues(alpha: 0.45),
+            blurRadius: 26,
+            offset: const Offset(0, 12),
+          ),
+          BoxShadow(
+            color: AppColors.primary.withValues(alpha: 0.30),
+            blurRadius: 32,
+            offset: const Offset(0, 18),
           ),
         ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            'مرحباً بك في لوحة التحكم 👋',
-            style: TextStyle(
-              fontFamily: AppTextStyles.fontFamily,
-              fontSize: 18.sp,
-              fontWeight: FontWeight.bold,
-              color: AppColors.textOnPrimary,
-            ),
-          ),
-          SizedBox(height: 8.h),
-          Text(
-            'إدارة نظام بلدي للتوصيل',
-            style: TextStyle(
-              fontFamily: AppTextStyles.fontFamily,
-              fontSize: 13.sp,
-              color: AppColors.textOnPrimary.withValues(alpha:  0.8),
-            ),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Container(
+                width: 44.r,
+                height: 44.r,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: const LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      AppColors.primary,
+                      AppColors.primaryLight,
+                    ],
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppColors.primary.withValues(alpha: 0.55),
+                      blurRadius: 18,
+                      offset: const Offset(0, 8),
+                    ),
+                  ],
+                ),
+                child: Icon(
+                  Icons.dashboard_rounded,
+                  color: Colors.white,
+                  size: 24.r,
+                ),
+              ),
+              SizedBox(width: 12.w),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'مرحباً بك في لوحة التحكم 👋',
+                      style: TextStyle(
+                        fontFamily: AppTextStyles.fontFamily,
+                        fontSize: 18.sp,
+                        fontWeight: FontWeight.w800,
+                        color: Colors.white,
+                      ),
+                    ),
+                    SizedBox(height: 4.h),
+                    Text(
+                      'إدارة نظام بلدي للتوصيل',
+                      style: TextStyle(
+                        fontFamily: AppTextStyles.fontFamily,
+                        fontSize: 13.sp,
+                        color: Colors.white70,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
           if (currentPeriod != null) ...[
-            SizedBox(height: 12.h),
+            SizedBox(height: 14.h),
             Container(
-              padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
+              padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 7.h),
               decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha:  0.2),
-                borderRadius: BorderRadius.circular(8.r),
+                borderRadius: BorderRadius.circular(999),
+                color: AppColors.primary.withValues(alpha: 0.12),
+                border: Border.all(
+                  color: AppColors.primary.withValues(alpha: 0.40),
+                ),
               ),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(
-                    Icons.calendar_today,
-                    color: AppColors.textOnPrimary,
-                    size: 14.r,
+                  Container(
+                    width: 18.r,
+                    height: 18.r,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: Colors.white.withValues(alpha: 0.18),
+                    ),
+                    child: Icon(
+                      Icons.calendar_month_rounded,
+                      color: Colors.white,
+                      size: 11.r,
+                    ),
                   ),
-                  SizedBox(width: 6.w),
+                  SizedBox(width: 8.w),
                   Flexible(
                     child: Text(
                       'الفترة الحالية: ${Formatters.formatDate(currentPeriod!.startDate)} - ${Formatters.formatDate(currentPeriod!.endDate)}',
                       style: TextStyle(
                         fontFamily: AppTextStyles.fontFamily,
                         fontSize: 11.sp,
-                        color: AppColors.textOnPrimary,
+                        fontWeight: FontWeight.w500,
+                        color: Colors.white,
                       ),
                     ),
                   ),
@@ -225,7 +352,7 @@ class _SectionHeader extends StatelessWidget {
   final Widget? trailing;
 
   const _SectionHeader({required this.title, this.trailing});
-
+ 
   @override
   Widget build(BuildContext context) {
     return Row(
@@ -236,11 +363,24 @@ class _SectionHeader extends StatelessWidget {
           style: TextStyle(
             fontFamily: AppTextStyles.fontFamily,
             fontSize: 16.sp,
-            fontWeight: FontWeight.bold,
-            color: AppColors.textPrimary,
+            fontWeight: FontWeight.w700,
+            color: Colors.white,
+            shadows: [
+              Shadow(
+                color: Colors.black.withValues(alpha: 0.4),
+                blurRadius: 10,
+              ),
+            ],
           ),
         ),
-        if (trailing != null) trailing!,
+        if (trailing != null)
+          DefaultTextStyle.merge(
+            style: TextStyle(
+              color: Colors.white.withValues(alpha: 0.8),
+              fontFamily: AppTextStyles.fontFamily,
+            ),
+            child: trailing!,
+          ),
       ],
     );
   }
@@ -306,7 +446,7 @@ class _StatsGrid extends StatelessWidget {
                 icon: Icons.account_balance_wallet,
                 color: AppColors.warning,
                 value: Formatters.formatCurrency(dashboard.totalRevenue),
-                label: 'إيرادات المنصة',
+                label: 'إيرادات المنصة (الأسبوع الحالي)',
               ),
             ),
             SizedBox(width: 12.w),
@@ -323,6 +463,165 @@ class _StatsGrid extends StatelessWidget {
           ],
         ),
       ],
+    );
+  }
+}
+
+/// تبويب مبسط لحالة الطلبات الحالية (مستوحى من الـ Architecture: Alerts + Order Monitoring)
+class _OrdersStatusRow extends StatelessWidget {
+  final AdminDashboard dashboard;
+
+  const _OrdersStatusRow({required this.dashboard});
+
+  @override
+  Widget build(BuildContext context) {
+    final int activeOrders =
+        dashboard.totalOrders - dashboard.completedOrders - dashboard.cancelledOrders;
+
+    return Row(
+      children: [
+        Expanded(
+          child: AdminStatCard(
+            icon: Icons.pending_actions,
+            color: AppColors.statusPending,
+            value: Formatters.formatNumber(activeOrders),
+            label: 'طلبات نشطة',
+          ),
+        ),
+        SizedBox(width: 12.w),
+        Expanded(
+          child: AdminStatCard(
+            icon: Icons.check_circle_outline,
+            color: AppColors.statusCompleted,
+            value: Formatters.formatNumber(dashboard.completedOrders),
+            label: 'طلبات مكتملة',
+          ),
+        ),
+        SizedBox(width: 12.w),
+        Expanded(
+          child: AdminStatCard(
+            icon: Icons.cancel_outlined,
+            color: AppColors.statusCancelled,
+            value: Formatters.formatNumber(dashboard.cancelledOrders),
+            label: 'طلبات ملغاة',
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// كارت يلخص أداء الفترة الحالية (Requests + Revenue) كما هو موضح في Admin Dashboard بالـ Architecture
+class _RevenueSummaryCard extends StatelessWidget {
+  final AdminDashboard dashboard;
+
+  const _RevenueSummaryCard({required this.dashboard});
+
+  @override
+  Widget build(BuildContext context) {
+    final int activeOrders =
+        dashboard.totalOrders - dashboard.completedOrders - dashboard.cancelledOrders;
+ 
+    return Container(
+      width: double.infinity,
+      padding: EdgeInsets.all(16.r),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(18.r),
+        gradient: const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Color(0xFF050B11),
+            Color(0xFF101B27),
+          ],
+        ),
+        border: Border.all(
+          color: Colors.white24,
+          width: 1.0,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.55),
+            blurRadius: 24,
+            offset: const Offset(0, 12),
+          ),
+          BoxShadow(
+            color: AppColors.primary.withValues(alpha: 0.40),
+            blurRadius: 30,
+            offset: const Offset(0, 18),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'ملخص الفترة الحالية',
+            style: TextStyle(
+              fontFamily: AppTextStyles.fontFamily,
+              fontSize: 14.sp,
+              fontWeight: FontWeight.w600,
+              color: Colors.white,
+            ),
+          ),
+          SizedBox(height: 8.h),
+          if (dashboard.currentPeriod != null)
+            Text(
+              '${dashboard.currentPeriod!.displayLabel} • '
+              '${Formatters.formatDate(dashboard.currentPeriod!.startDate)} - ${Formatters.formatDate(dashboard.currentPeriod!.endDate)}',
+              style: TextStyle(
+                fontFamily: AppTextStyles.fontFamily,
+                fontSize: 12.sp,
+                color: Colors.white70,
+              ),
+            ),
+          if (dashboard.currentPeriod != null) SizedBox(height: 8.h),
+          Row(
+            children: [
+              Icon(
+                Icons.receipt_long,
+                size: 18.r,
+                color: Colors.white70,
+              ),
+              SizedBox(width: 6.w),
+              Expanded(
+                child: Text(
+                  'إجمالي الطلبات: ${Formatters.formatNumber(dashboard.totalOrders)} '
+                  '• المكتملة: ${Formatters.formatNumber(dashboard.completedOrders)} '
+                  '• الملغاة: ${Formatters.formatNumber(dashboard.cancelledOrders)} '
+                  '• النشطة الآن: ${Formatters.formatNumber(activeOrders)}',
+                  style: TextStyle(
+                    fontFamily: AppTextStyles.fontFamily,
+                    fontSize: 12.sp,
+                    color: Colors.white70,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: 8.h),
+          Row(
+            children: [
+              Icon(
+                Icons.account_balance_wallet_outlined,
+                size: 18.r,
+                color: Colors.white70,
+              ),
+              SizedBox(width: 6.w),
+              Expanded(
+                child: Text(
+                  'إيرادات المنصة في هذه الفترة: ${Formatters.formatCurrency(dashboard.totalRevenue)}',
+                  style: TextStyle(
+                    fontFamily: AppTextStyles.fontFamily,
+                    fontSize: 12.sp,
+                    color: Colors.white70,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 }
@@ -464,65 +763,143 @@ class _QuickActionTile extends StatelessWidget {
   final String label;
   final String subtitle;
   final VoidCallback onTap;
-
+ 
   const _QuickActionTile({
     required this.icon,
     required this.label,
     required this.subtitle,
     required this.onTap,
   });
-
+ 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      color: AppColors.surface,
-      borderRadius: BorderRadius.circular(12.r),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(12.r),
-        child: Padding(
-          padding: EdgeInsets.all(16.r),
-          child: Row(
-            children: [
-              Container(
-                width: 44.r,
-                height: 44.r,
-                decoration: BoxDecoration(
-                  color: AppColors.primary.withValues(alpha:  0.1),
-                  borderRadius: BorderRadius.circular(10.r),
-                ),
-                child: Icon(icon, color: AppColors.primary, size: 22.r),
-              ),
-              SizedBox(width: 16.w),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      label,
-                      style: TextStyle(
-                        fontFamily: AppTextStyles.fontFamily,
-                        fontSize: 14.sp,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.textPrimary,
-                      ),
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(16.r),
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Colors.white.withValues(alpha: 0.14),
+            Colors.white.withValues(alpha: 0.04),
+          ],
+        ),
+        border: Border.all(
+          color: Colors.white.withValues(alpha: 0.45),
+          width: 1.0,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.30),
+            blurRadius: 18,
+            offset: const Offset(0, 8),
+          ),
+          BoxShadow(
+            color: AppColors.primary.withValues(alpha: 0.18),
+            blurRadius: 22,
+            offset: const Offset(0, 10),
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(16.r),
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(16.r),
+          child: Padding(
+            padding: EdgeInsets.all(16.r),
+            child: Row(
+              children: [
+                Container(
+                  width: 46.r,
+                  height: 46.r,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(14.r),
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                        AppColors.primary.withValues(alpha: 0.95),
+                        AppColors.primary.withValues(alpha: 0.75),
+                      ],
                     ),
-                    SizedBox(height: 2.h),
-                    Text(
-                      subtitle,
-                      style: TextStyle(
-                        fontFamily: AppTextStyles.fontFamily,
-                        fontSize: 12.sp,
-                        color: AppColors.textSecondary,
+                    boxShadow: [
+                      BoxShadow(
+                        color: AppColors.primary.withValues(alpha: 0.55),
+                        blurRadius: 16,
+                        offset: const Offset(0, 8),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
+                  child: Icon(icon, color: Colors.white, size: 22.r),
                 ),
-              ),
-              Icon(Icons.chevron_left, color: AppColors.textHint, size: 24.r),
-            ],
+                SizedBox(width: 16.w),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        label,
+                        style: TextStyle(
+                          fontFamily: AppTextStyles.fontFamily,
+                          fontSize: 14.sp,
+                          fontWeight: FontWeight.w700,
+                          color: Colors.white,
+                        ),
+                      ),
+                      SizedBox(height: 4.h),
+                      Text(
+                        subtitle,
+                        style: TextStyle(
+                          fontFamily: AppTextStyles.fontFamily,
+                          fontSize: 12.sp,
+                          color: Colors.white70,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Icon(
+                  Icons.chevron_left,
+                  color: Colors.white.withValues(alpha: 0.55),
+                  size: 24.r,
+                ),
+              ],
+            ),
           ),
         ),
+      ),
+    );
+  }
+}
+ 
+/// Soft glowing background orb for admin dashboard (matches admin categories)
+class _GlowOrb extends StatelessWidget {
+  final double size;
+  final Color color;
+  final double opacity;
+ 
+  const _GlowOrb({
+    required this.size,
+    required this.color,
+    required this.opacity,
+  });
+ 
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        boxShadow: [
+          BoxShadow(
+            color: color.withValues(alpha: opacity),
+            blurRadius: size / 2,
+            spreadRadius: size / 6,
+          ),
+        ],
       ),
     );
   }

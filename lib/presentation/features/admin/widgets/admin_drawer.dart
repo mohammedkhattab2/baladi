@@ -86,6 +86,15 @@ class AdminDrawer extends StatelessWidget {
                     onTap: () => _navigateTo(context, RouteNames.adminShops),
                   ),
                   _DrawerItem(
+                    icon: Icons.category_outlined,
+                    activeIcon: Icons.category,
+                    label: 'التصنيفات',
+                    routeName: RouteNames.adminCategories,
+                    isSelected: currentRoute == RouteNames.adminCategories,
+                    onTap: () =>
+                        _navigateTo(context, RouteNames.adminCategories),
+                  ),
+                  _DrawerItem(
                     icon: Icons.delivery_dining_outlined,
                     activeIcon: Icons.delivery_dining,
                     label: 'السائقين',

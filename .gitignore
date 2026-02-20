@@ -43,3 +43,8 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+
+# Node / JavaScript
+node_modules/
+baladi_backend/node_modules/

@@ -172,7 +172,8 @@ class _WelcomeScreenState extends State<WelcomeScreen>
                               Transform.translate(
                                 offset: Offset(0, _cardsSlide.value),
                                 child: Opacity(
-                                  opacity: (1 - _cardsSlide.value / 100).clamp(0.0, 1.0),
+                                  opacity:
+                                      (1 - _cardsSlide.value / 100).clamp(0.0, 1.0),
                                   child: _LuxuryRoleSelection(
                                     onCustomerTap: () =>
                                         context.pushNamed(RouteNames.customerLogin),
@@ -334,17 +335,21 @@ class _ParticlesPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     for (final particle in particles) {
-      final x = (particle.x * size.width + animationValue * particle.speed * size.width) % size.width;
-      final y = (particle.y * size.height - animationValue * particle.speed * size.height * 0.5) % size.height;
-      
+      final x = (particle.x * size.width +
+              animationValue * particle.speed * size.width) %
+          size.width;
+      final y = (particle.y * size.height -
+              animationValue * particle.speed * size.height * 0.5) %
+          size.height;
+
       final glowSize = particle.size * (1 + pulseValue * 0.3);
-      
+
       // Outer glow
       final glowPaint = Paint()
         ..color = particle.color.withOpacity(particle.opacity * 0.3)
         ..maskFilter = MaskFilter.blur(BlurStyle.normal, glowSize * 3);
       canvas.drawCircle(Offset(x, y), glowSize * 2, glowPaint);
-      
+
       // Inner core
       final corePaint = Paint()
         ..color = particle.color.withOpacity(particle.opacity * 0.8)
@@ -421,13 +426,15 @@ class _LuxuryBrandSection extends StatelessWidget {
                     boxShadow: [
                       // Outer glow
                       BoxShadow(
-                        color: AppColors.primary.withOpacity(0.4 * pulseAnimation.value),
+                        color:
+                            AppColors.primary.withOpacity(0.4 * pulseAnimation.value),
                         blurRadius: 40 * pulseAnimation.value,
                         spreadRadius: 10 * pulseAnimation.value,
                       ),
                       // Secondary glow
                       BoxShadow(
-                        color: AppColors.secondary.withOpacity(0.2 * pulseAnimation.value),
+                        color: AppColors.secondary
+                            .withOpacity(0.2 * pulseAnimation.value),
                         blurRadius: 60 * pulseAnimation.value,
                         spreadRadius: 5,
                       ),
@@ -551,7 +558,8 @@ class _LuxuryBrandSection extends StatelessWidget {
                   ),
                   boxShadow: [
                     BoxShadow(
-                      color: AppColors.secondary.withOpacity(0.6 * pulseAnimation.value),
+                      color: AppColors.secondary
+                          .withOpacity(0.6 * pulseAnimation.value),
                       blurRadius: 15 * pulseAnimation.value,
                       spreadRadius: 2,
                     ),
@@ -720,7 +728,8 @@ class _GlassmorphicRoleCardState extends State<_GlassmorphicRoleCard>
                 boxShadow: [
                   // Glow effect
                   BoxShadow(
-                    color: widget.glowColor.withOpacity(0.3 * _glowAnimation.value),
+                    color:
+                        widget.glowColor.withOpacity(0.3 * _glowAnimation.value),
                     blurRadius: 25 * _glowAnimation.value,
                     spreadRadius: 2,
                   ),
@@ -737,7 +746,8 @@ class _GlassmorphicRoleCardState extends State<_GlassmorphicRoleCard>
                 child: BackdropFilter(
                   filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
                   child: Container(
-                    padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 20.h),
+                    padding:
+                        EdgeInsets.symmetric(horizontal: 20.w, vertical: 20.h),
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(20.r),
                       gradient: LinearGradient(

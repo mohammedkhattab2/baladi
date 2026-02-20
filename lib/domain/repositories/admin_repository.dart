@@ -89,6 +89,27 @@ abstract class AdminRepository {
     int perPage = 20,
   });
 
+  /// Creates a new shop (with associated owner user) from the admin panel.
+  ///
+  /// Backend:
+  ///   POST /api/admin/shops
+  ///   Body contains both shop profile and owner user data.
+  ///
+  /// [payload] is a raw map so that the presentation layer can mirror the
+  /// backend validation schema without coupling the domain to admin DTOs.
+  Future<Result<Shop>> createShopAsAdmin({
+    required Map<String, dynamic> payload,
+  });
+
+  /// Updates an existing shop (and optionally its owner user) from admin.
+  ///
+  /// Backend:
+  ///   PUT /api/admin/shops/:shopId
+  Future<Result<Shop>> updateShopAsAdmin({
+    required String shopId,
+    required Map<String, dynamic> payload,
+  });
+
   /// Fetches all registered riders.
   ///
   /// - [page]: Page number for pagination (1-based).
@@ -96,6 +117,27 @@ abstract class AdminRepository {
   Future<Result<List<Rider>>> getRiders({
     int page = 1,
     int perPage = 20,
+  });
+
+  /// Creates a new rider (with associated user) from the admin panel.
+  ///
+  /// Backend:
+  ///   POST /api/admin/riders
+  ///   Body contains both rider profile and user account data.
+  ///
+  /// [payload] is a raw map mirroring the backend Joi schema to avoid coupling
+  /// the domain layer to admin-specific DTOs.
+  Future<Result<Rider>> createRiderAsAdmin({
+    required Map<String, dynamic> payload,
+  });
+
+  /// Updates an existing rider (and optionally its user account) from admin.
+  ///
+  /// Backend:
+  ///   PUT /api/admin/riders/:riderId
+  Future<Result<Rider>> updateRiderAsAdmin({
+    required String riderId,
+    required Map<String, dynamic> payload,
   });
 
   /// Fetches all orders (admin view, all roles).
@@ -142,5 +184,19 @@ abstract class AdminRepository {
   Future<Result<User>> toggleUserStatus({
     required String userId,
     required bool isActive,
+  });
+
+  /// Resets a staff user's password (shop / rider / admin).
+  ///
+  /// - [userId]: The user's unique identifier.
+  /// - [newPassword]: The new password that satisfies backend policy
+  ///   (min 8 chars, 1 upper, 1 lower, 1 digit).
+  ///
+  /// Backend:
+  ///   POST /api/admin/users/:userId/reset-password
+  ///   Body: { "new_password": "..." }
+  Future<Result<void>> resetUserPassword({
+    required String userId,
+    required String newPassword,
   });
 }

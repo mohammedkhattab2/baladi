@@ -146,7 +146,7 @@ class AdminPeriodsLoaded extends AdminState {
   List<Object?> get props => [periods, currentPage, hasMore];
 }
 
-/// An admin action (close week, adjust points, toggle user) is in progress.
+/// An admin action (close week, adjust points, toggle user, reset password) is in progress.
 class AdminActionLoading extends AdminState {
   const AdminActionLoading();
 }
@@ -165,6 +165,20 @@ class AdminWeekClosed extends AdminState {
 /// Points adjustment completed successfully.
 class AdminPointsAdjusted extends AdminState {
   const AdminPointsAdjusted();
+}
+
+/// Staff user password was reset successfully.
+///
+/// Used when the admin triggers a password reset for a shop / rider / admin
+/// account from the Manage Users screen.
+class AdminUserPasswordReset extends AdminState {
+  /// Optional success message from backend (if provided).
+  final String? message;
+
+  const AdminUserPasswordReset({this.message});
+
+  @override
+  List<Object?> get props => [message];
 }
 
 /// An error occurred during an admin operation.

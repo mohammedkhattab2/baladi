@@ -141,6 +141,38 @@ class AdminRepositoryImpl implements AdminRepository {
   }
 
   @override
+  Future<Result<Shop>> createShopAsAdmin({
+    required Map<String, dynamic> payload,
+  }) async {
+    if (!await _networkInfo.isConnected) {
+      return const ResultFailure(
+        NetworkFailure(message: 'لا يوجد اتصال بالإنترنت'),
+      );
+    }
+    return Result.guard(
+      () => _remoteDatasource.createShopAsAdmin(body: payload),
+    );
+  }
+
+  @override
+  Future<Result<Shop>> updateShopAsAdmin({
+    required String shopId,
+    required Map<String, dynamic> payload,
+  }) async {
+    if (!await _networkInfo.isConnected) {
+      return const ResultFailure(
+        NetworkFailure(message: 'لا يوجد اتصال بالإنترنت'),
+      );
+    }
+    return Result.guard(
+      () => _remoteDatasource.updateShopAsAdmin(
+        shopId: shopId,
+        body: payload,
+      ),
+    );
+  }
+
+  @override
   Future<Result<List<Rider>>> getRiders({
     int page = 1,
     int perPage = 20,
@@ -155,6 +187,38 @@ class AdminRepositoryImpl implements AdminRepository {
     );
   }
 
+  @override
+  Future<Result<Rider>> createRiderAsAdmin({
+    required Map<String, dynamic> payload,
+  }) async {
+    if (!await _networkInfo.isConnected) {
+      return const ResultFailure(
+        NetworkFailure(message: 'لا يوجد اتصال بالإنترنت'),
+      );
+    }
+    return Result.guard(
+      () => _remoteDatasource.createRiderAsAdmin(body: payload),
+    );
+  }
+
+  @override
+  Future<Result<Rider>> updateRiderAsAdmin({
+    required String riderId,
+    required Map<String, dynamic> payload,
+  }) async {
+    if (!await _networkInfo.isConnected) {
+      return const ResultFailure(
+        NetworkFailure(message: 'لا يوجد اتصال بالإنترنت'),
+      );
+    }
+    return Result.guard(
+      () => _remoteDatasource.updateRiderAsAdmin(
+        riderId: riderId,
+        body: payload,
+      ),
+    );
+  }
+ 
   @override
   Future<Result<List<Order>>> getOrders({
     String? status,
@@ -232,6 +296,25 @@ class AdminRepositoryImpl implements AdminRepository {
       () => _remoteDatasource.toggleUserStatus(
         userId: userId,
         isActive: isActive,
+      ),
+    );
+  }
+
+  @override
+  Future<Result<void>> resetUserPassword({
+    required String userId,
+    required String newPassword,
+  }) async {
+    if (!await _networkInfo.isConnected) {
+      return const ResultFailure(
+        NetworkFailure(message: 'لا يوجد اتصال بالإنترنت'),
+      );
+    }
+
+    return Result.guard(
+      () => _remoteDatasource.resetUserPassword(
+        userId: userId,
+        newPassword: newPassword,
       ),
     );
   }

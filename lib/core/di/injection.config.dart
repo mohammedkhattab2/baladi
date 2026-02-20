@@ -427,6 +427,21 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i1048.ToggleUserStatus>(
       () => _i1048.ToggleUserStatus(gh<_i788.AdminRepository>()),
     );
+    gh.lazySingleton<_i1048.ResetUserPassword>(
+      () => _i1048.ResetUserPassword(gh<_i788.AdminRepository>()),
+    );
+    gh.lazySingleton<_i1048.CreateShopAsAdmin>(
+      () => _i1048.CreateShopAsAdmin(gh<_i788.AdminRepository>()),
+    );
+    gh.lazySingleton<_i1048.UpdateShopAsAdmin>(
+      () => _i1048.UpdateShopAsAdmin(gh<_i788.AdminRepository>()),
+    );
+    gh.lazySingleton<_i1048.CreateRiderAsAdmin>(
+      () => _i1048.CreateRiderAsAdmin(gh<_i788.AdminRepository>()),
+    );
+    gh.lazySingleton<_i1048.UpdateRiderAsAdmin>(
+      () => _i1048.UpdateRiderAsAdmin(gh<_i788.AdminRepository>()),
+    );
     gh.lazySingleton<_i147.ApplyReferral>(
       () => _i147.ApplyReferral(gh<_i959.CustomerRepository>()),
     );
@@ -508,6 +523,11 @@ extension GetItInjectableX on _i174.GetIt {
         closeWeek: gh<_i52.CloseWeek>(),
         adjustPoints: gh<_i186.AdjustPoints>(),
         adminRepository: gh<_i788.AdminRepository>(),
+        resetUserPassword: gh<_i1048.ResetUserPassword>(),
+        createShopAsAdmin: gh<_i1048.CreateShopAsAdmin>(),
+        updateShopAsAdmin: gh<_i1048.UpdateShopAsAdmin>(),
+        createRiderAsAdmin: gh<_i1048.CreateRiderAsAdmin>(),
+        updateRiderAsAdmin: gh<_i1048.UpdateRiderAsAdmin>(),
       ),
     );
     gh.factory<_i786.CustomerProfileCubit>(

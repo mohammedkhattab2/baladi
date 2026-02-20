@@ -128,7 +128,9 @@ class _AdminOrdersViewState extends State<_AdminOrdersView> {
             controller: _searchController,
             hint: 'بحث برقم الطلب...',
             onChanged: (value) {
-              // TODO: فلترة محلية على orderNumber لو حبيت
+              // لا نستدعي API هنا عشان ما نحملش السيرفر على كل حرف.
+              // بنعمل فلترة محلية في الـ UI بناءً على رقم الطلب المعروض.
+              setState(() {});
             },
           ),
           SizedBox(height: 12.h),
@@ -206,7 +208,17 @@ class _AdminOrdersViewState extends State<_AdminOrdersView> {
   // ───────────── List ─────────────
 
   Widget _buildOrdersList(AdminOrdersLoaded state) {
+    final query = _searchController.text.trim();
+
+    // فلترة محلية برقم الطلب على البيانات اللي رجعت من الـ API
+    final filteredOrders = state.orders.where((order) {
+      if (query.isEmpty) return true;
+      // نستخدم toString عشان orderNumber ممكن يكون int أو String في الـ Entity
+      return order.orderNumber.toString().contains(query);
+    }).toList();
+
     if (state.orders.isEmpty) {
+      // مفيش أي طلبات في النظام أساسًا
       return const AppEmptyState(
         icon: Icons.receipt_long_outlined,
         title: 'لا توجد طلبات',
@@ -214,15 +226,26 @@ class _AdminOrdersViewState extends State<_AdminOrdersView> {
       );
     }
 
+    if (filteredOrders.isEmpty) {
+      // في طلبات موجودة لكن البحث الحالي مديش أي نتيجة
+      return const AppEmptyState(
+        icon: Icons.search_off,
+        title: 'لا توجد نتائج',
+        description: 'جرّب البحث برقم طلب مختلف',
+      );
+    }
+
+    final showLoaderAtEnd = state.hasMore && query.isEmpty;
+
     return RefreshIndicator(
       onRefresh: () async =>
           context.read<AdminCubit>().loadOrders(status: _selectedStatus),
       child: ListView.builder(
         controller: _scrollController,
         padding: EdgeInsets.all(16.w),
-        itemCount: state.orders.length + (state.hasMore ? 1 : 0),
+        itemCount: filteredOrders.length + (showLoaderAtEnd ? 1 : 0),
         itemBuilder: (context, index) {
-          if (index == state.orders.length) {
+          if (index == filteredOrders.length) {
             return Padding(
               padding: EdgeInsets.all(16.r),
               child: const Center(
@@ -231,7 +254,7 @@ class _AdminOrdersViewState extends State<_AdminOrdersView> {
             );
           }
 
-          final order = state.orders[index];
+          final order = filteredOrders[index];
           return _OrderCard(order: order);
         },
       ),

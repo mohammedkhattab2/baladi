@@ -57,15 +57,24 @@ class SettlementRemoteDatasourceImpl implements SettlementRemoteDatasource {
     int page = 1,
     int perPage = 20,
   }) async {
-    final response = await _apiClient.get<List<WeeklyPeriodModel>>(
+    // Backend admin /periods endpoint only supports "page" and may return either:
+    // - a raw JSON array: [ {..}, {..} ]
+    // - a wrapped object with items/data: { items: [..] } or { data: [..] }
+    //
+    // We must NOT use ApiClient.get<T> here because it always expects a
+    // Map<String, dynamic> body. When the backend returns a List, that cast
+    // causes: "type 'List<dynamic>' is not a subtype of type 'Map<String, dynamic>'".
+    //
+    // So we go directly through Dio with a flexible dynamic body and then parse.
+    final response = await _apiClient.dio.get(
       ApiEndpoints.adminPeriods,
       queryParameters: {
         'page': page.toString(),
-        'per_page': perPage.toString(),
       },
-      fromJson: (json) => _parseList(json, WeeklyPeriodModel.fromJson),
     );
-    return response.data ?? [];
+
+    final data = response.data;
+    return _parseList(data, WeeklyPeriodModel.fromJson);
   }
 
   @override
@@ -83,7 +92,9 @@ class SettlementRemoteDatasourceImpl implements SettlementRemoteDatasource {
     int page = 1,
     int perPage = 20,
   }) async {
-    final response = await _apiClient.get<List<ShopSettlementModel>>(
+    // Similar to periods, /admin/settlements can respond with either a raw list
+    // or a wrapped object. Use Dio directly to avoid forcing Map<String, dynamic>.
+    final response = await _apiClient.dio.get(
       ApiEndpoints.adminSettlements,
       queryParameters: {
         'period_id': periodId,
@@ -91,9 +102,10 @@ class SettlementRemoteDatasourceImpl implements SettlementRemoteDatasource {
         'page': page.toString(),
         'per_page': perPage.toString(),
       },
-      fromJson: (json) => _parseList(json, ShopSettlementModel.fromJson),
     );
-    return response.data ?? [];
+
+    final data = response.data;
+    return _parseList(data, ShopSettlementModel.fromJson);
   }
 
   @override
@@ -102,7 +114,7 @@ class SettlementRemoteDatasourceImpl implements SettlementRemoteDatasource {
     int page = 1,
     int perPage = 20,
   }) async {
-    final response = await _apiClient.get<List<RiderSettlementModel>>(
+    final response = await _apiClient.dio.get(
       ApiEndpoints.adminSettlements,
       queryParameters: {
         'period_id': periodId,
@@ -110,9 +122,10 @@ class SettlementRemoteDatasourceImpl implements SettlementRemoteDatasource {
         'page': page.toString(),
         'per_page': perPage.toString(),
       },
-      fromJson: (json) => _parseList(json, RiderSettlementModel.fromJson),
     );
-    return response.data ?? [];
+
+    final data = response.data;
+    return _parseList(data, RiderSettlementModel.fromJson);
   }
 
   @override
@@ -137,14 +150,41 @@ class SettlementRemoteDatasourceImpl implements SettlementRemoteDatasource {
     return response.data!;
   }
 
-  /// Parses a list of items from the standard API list response format.
+  /// Parses a list of items from API list responses.
+  ///
+  /// Supports:
+  /// - Direct list: [ {..}, {..} ]
+  /// - Wrapped with "items": { items: [..] }
+  /// - Wrapped with "data"/feature key: { data: [..] } or { periods: [..], settlements: [..] }
   static List<T> _parseList<T>(
-    Map<String, dynamic> json,
+    dynamic json,
     T Function(Map<String, dynamic>) fromJson,
   ) {
-    final items = json['items'] as List<dynamic>? ?? [];
-    return items
-        .map((e) => fromJson(e as Map<String, dynamic>))
-        .toList();
+    // Direct list response
+    if (json is List) {
+      return json
+          .whereType<Map<String, dynamic>>()
+          .map(fromJson)
+          .toList();
+    }
+
+    if (json is Map<String, dynamic>) {
+      // Prefer explicit items/data keys when present
+      final List<dynamic>? raw =
+          json['items'] as List<dynamic>? ??
+          json['data'] as List<dynamic>? ??
+          json['periods'] as List<dynamic>? ??
+          json['settlements'] as List<dynamic>?;
+
+      if (raw != null) {
+        return raw
+            .whereType<Map<String, dynamic>>()
+            .map(fromJson)
+            .toList();
+      }
+    }
+
+    // Unknown shape
+    return <T>[];
   }
 }

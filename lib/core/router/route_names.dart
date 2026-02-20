@@ -140,6 +140,10 @@ class RouteNames {
   static const String adminShops = 'adminShops';
   static const String adminShopsPath = '/admin/shops';
 
+  /// Admin categories management.
+  static const String adminCategories = 'adminCategories';
+  static const String adminCategoriesPath = '/admin/categories';
+
   /// Admin riders management.
   static const String adminRiders = 'adminRiders';
   static const String adminRidersPath = '/admin/riders';

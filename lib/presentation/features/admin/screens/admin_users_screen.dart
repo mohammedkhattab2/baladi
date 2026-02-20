@@ -5,6 +5,7 @@ import 'package:baladi/core/theme/app_text_styles.dart';
 import 'package:baladi/core/utils/formatters.dart';
 import 'package:baladi/domain/entities/user.dart';
 import 'package:baladi/domain/enums/user_role.dart';
+import 'package:baladi/domain/repositories/auth_repository.dart';
 import 'package:baladi/presentation/common/widgets/app_card.dart';
 import 'package:baladi/presentation/common/widgets/app_text_field.dart';
 import 'package:baladi/presentation/common/widgets/empty_state.dart';
@@ -38,8 +39,10 @@ class _AdminUsersView extends StatefulWidget {
 
 class _AdminUsersViewState extends State<_AdminUsersView> {
   String? _selectedRole;
+  bool? _activeFilter; // null = كل الحالات، true = نشط فقط، false = معطّل فقط
   final _searchController = TextEditingController();
   final _scrollController = ScrollController();
+  String _searchQuery = '';
 
   @override
   void initState() {
@@ -82,6 +85,15 @@ class _AdminUsersViewState extends State<_AdminUsersView> {
                       backgroundColor: AppColors.error,
                     ),
                   );
+                } else if (state is AdminUserPasswordReset) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        state.message ?? 'تم إعادة تعيين كلمة المرور بنجاح',
+                      ),
+                      backgroundColor: AppColors.success,
+                    ),
+                  );
                 }
               },
               builder: (context, state) {
@@ -111,15 +123,19 @@ class _AdminUsersViewState extends State<_AdminUsersView> {
       padding: EdgeInsets.all(16.w),
       color: AppColors.surface,
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           AppSearchField(
             controller: _searchController,
             hint: "بحث بالاسم أو رقم الهاتف...",
             onChanged: (value) {
-              //// TODO: Implement local search filtering Implement search logic here
+              setState(() {
+                _searchQuery = value.trim();
+              });
             },
           ),
           SizedBox(height: 12.h),
+          // فلترة حسب الدور
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
             child: Row(
@@ -156,6 +172,32 @@ class _AdminUsersViewState extends State<_AdminUsersView> {
               ],
             ),
           ),
+          SizedBox(height: 8.h),
+          // فلترة حسب حالة الحساب (نشط / معطّل)
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              children: [
+                _FilterChip(
+                  label: 'كل الحالات',
+                  isSelected: _activeFilter == null,
+                  onTap: () => _onStatusFilter(null),
+                ),
+                SizedBox(width: 8.w),
+                _FilterChip(
+                  label: 'الحسابات النشطة',
+                  isSelected: _activeFilter == true,
+                  onTap: () => _onStatusFilter(true),
+                ),
+                SizedBox(width: 8.w),
+                _FilterChip(
+                  label: 'الحسابات المعطّلة',
+                  isSelected: _activeFilter == false,
+                  onTap: () => _onStatusFilter(false),
+                ),
+              ],
+            ),
+          ),
         ],
       ),
     );
@@ -166,26 +208,52 @@ class _AdminUsersViewState extends State<_AdminUsersView> {
     _loadUser();
   }
 
+  void _onStatusFilter(bool? isActive) {
+    // فلترة محلية فقط على القائمة المحمّلة من الـ API
+    setState(() {
+      _activeFilter = isActive;
+    });
+  }
+
   void _loadUser() {
     context.read<AdminCubit>().loadUsers(role: _selectedRole);
   }
 
   Widget _buildUsersList(AdminUsersLoaded state) {
-    if (state.users.isEmpty) {
+    // تطبيق فلترة البحث المحلية + حالة الحساب على النتيجة القادمة من الـ API
+    final filteredUsers = state.users.where((user) {
+      // فلترة بالحالة (نشط/معطل) لو فيه فلتر محدد
+      if (_activeFilter != null && user.isActive != _activeFilter) {
+        return false;
+      }
+
+      // فلترة بالبحث المحلي على اسم المستخدم أو رقم الهاتف أو الـ displayIdentifier
+      if (_searchQuery.isEmpty) return true;
+      final query = _searchQuery.toLowerCase();
+      final parts = [
+        user.username ?? '',
+        user.phone ?? '',
+        user.displayIdentifier,
+      ].join(' ').toLowerCase();
+      return parts.contains(query);
+    }).toList();
+
+    if (filteredUsers.isEmpty) {
       return const AppEmptyState(
         icon: Icons.people_outline,
         title: 'لا يوجد مستخدمين',
         description: 'لم يتم العثور على مستخدمين بهذه المعايير',
       );
     }
+
     return RefreshIndicator(
       onRefresh: () async => _loadUser(),
       child: ListView.builder(
         controller: _scrollController,
         padding: EdgeInsets.all(16.w),
-        itemCount: state.users.length + (state.hasMore ? 1 : 0),
+        itemCount: filteredUsers.length + (state.hasMore ? 1 : 0),
         itemBuilder: (context, index) {
-          if (index == state.users.length) {
+          if (index == filteredUsers.length) {
             return Padding(
               padding: EdgeInsets.all(16.r),
               child: const Center(
@@ -193,12 +261,418 @@ class _AdminUsersViewState extends State<_AdminUsersView> {
               ),
             );
           }
+          final user = filteredUsers[index];
           return _UseCard(
-            user: state.users[index],
-            onToggleStatus: () => _showToggleDialog(state.users[index]),
+            user: user,
+            onToggleStatus: () => _showToggleDialog(user),
+            onViewDetails: () => _showUserDetails(user),
           );
         },
       ),
+    );
+  }
+
+  Future<void> _showResetPasswordDialog(User user) async {
+    final controller = TextEditingController();
+    final formKey = GlobalKey<FormState>();
+
+    await showDialog<void>(
+      context: context,
+      builder: (ctx) {
+        return AlertDialog(
+          title: Text(
+            'إعادة تعيين كلمة المرور',
+            style: TextStyle(
+              fontFamily: AppTextStyles.fontFamily,
+              fontSize: 18.sp,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          content: Form(
+            key: formKey,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'سيتم تعيين كلمة مرور جديدة لحساب ${_getUserDisplayName(user)}.\n'
+                  'يجب أن تحتوي كلمة المرور على 8 أحرف على الأقل، وحرف كبير، وحرف صغير، ورقم.',
+                  style: TextStyle(
+                    fontFamily: AppTextStyles.fontFamily,
+                    fontSize: 12.sp,
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+                SizedBox(height: 12.h),
+                AppTextField(
+                  controller: controller,
+                  label: 'كلمة المرور الجديدة',
+                  obscureText: true,
+                  validator: (value) {
+                    final password = value?.trim() ?? '';
+                    if (password.isEmpty) {
+                      return 'من فضلك أدخل كلمة المرور الجديدة';
+                    }
+                    if (password.length < 8) {
+                      return 'كلمة المرور يجب أن تكون 8 أحرف على الأقل';
+                    }
+                    final hasUpper = password.contains(RegExp(r'[A-Z]'));
+                    final hasLower = password.contains(RegExp(r'[a-z]'));
+                    final hasDigit = password.contains(RegExp(r'\d'));
+                    if (!hasUpper || !hasLower || !hasDigit) {
+                      return 'يجب أن تحتوي على حرف كبير، حرف صغير، ورقم';
+                    }
+                    return null;
+                  },
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(ctx).pop(),
+              child: Text(
+                'إلغاء',
+                style: TextStyle(
+                  fontFamily: AppTextStyles.fontFamily,
+                  color: AppColors.textSecondary,
+                ),
+              ),
+            ),
+            TextButton(
+              onPressed: () async {
+                if (!formKey.currentState!.validate()) {
+                  return;
+                }
+                final password = controller.text.trim();
+                Navigator.of(ctx).pop();
+                await context.read<AdminCubit>().resetUserPassword(
+                      userId: user.id,
+                      newPassword: password,
+                    );
+              },
+              child: Text(
+                'تأكيد',
+                style: TextStyle(
+                  fontFamily: AppTextStyles.fontFamily,
+                  color: AppColors.primary,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Future<void> _showResetCustomerPinDialog(User user) async {
+    final phone = user.phone;
+    if (phone == null || phone.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('لا يوجد رقم هاتف مسجّل لهذا العميل'),
+          backgroundColor: AppColors.error,
+        ),
+      );
+      return;
+    }
+
+    final authRepository = getIt<AuthRepository>();
+
+    // Step 1: fetch security question for this phone
+    final questionResult =
+        await authRepository.getSecurityQuestion(phone: phone);
+
+    String? securityQuestion;
+    questionResult.fold(
+      onSuccess: (q) => securityQuestion = q,
+      onFailure: (failure) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(failure.message),
+            backgroundColor: AppColors.error,
+          ),
+        );
+      },
+    );
+
+    if (securityQuestion == null) {
+      return;
+    }
+
+    final answerController = TextEditingController();
+    final pinController = TextEditingController();
+    final formKey = GlobalKey<FormState>();
+
+    await showDialog<void>(
+      context: context,
+      builder: (ctx) {
+        return AlertDialog(
+          title: Text(
+            'إعادة تعيين رمز الدخول للعميل',
+            style: TextStyle(
+              fontFamily: AppTextStyles.fontFamily,
+              fontSize: 18.sp,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          content: Form(
+            key: formKey,
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'سيتم تعيين PIN جديد لحساب ${_getUserDisplayName(user)}.\n'
+                    'تأكّد أن لديك موافقة العميل وأنك أدخلت الإجابة الصحيحة للسؤال السري.',
+                    style: TextStyle(
+                      fontFamily: AppTextStyles.fontFamily,
+                      fontSize: 12.sp,
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+                  SizedBox(height: 12.h),
+                  Text(
+                    'رقم الهاتف',
+                    style: TextStyle(
+                      fontFamily: AppTextStyles.fontFamily,
+                      fontSize: 12.sp,
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+                  SizedBox(height: 4.h),
+                  Text(
+                    Formatters.formatPhone(phone),
+                    style: TextStyle(
+                      fontFamily: AppTextStyles.fontFamily,
+                      fontSize: 14.sp,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                  SizedBox(height: 12.h),
+                  Text(
+                    'السؤال السري',
+                    style: TextStyle(
+                      fontFamily: AppTextStyles.fontFamily,
+                      fontSize: 12.sp,
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+                  SizedBox(height: 4.h),
+                  Text(
+                    securityQuestion!,
+                    style: TextStyle(
+                      fontFamily: AppTextStyles.fontFamily,
+                      fontSize: 14.sp,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                  SizedBox(height: 12.h),
+                  AppTextField(
+                    controller: answerController,
+                    label: 'إجابة السؤال السري',
+                    validator: (value) {
+                      final answer = value?.trim() ?? '';
+                      if (answer.isEmpty) {
+                        return 'من فضلك أدخل إجابة السؤال السري';
+                      }
+                      return null;
+                    },
+                  ),
+                  SizedBox(height: 12.h),
+                  AppTextField(
+                    controller: pinController,
+                    label: 'الـ PIN الجديد (4 أرقام)',
+                    keyboardType: TextInputType.number,
+                    obscureText: true,
+                    validator: (value) {
+                      final pin = value?.trim() ?? '';
+                      if (pin.isEmpty) {
+                        return 'من فضلك أدخل الـ PIN الجديد';
+                      }
+                      if (pin.length != 4 || int.tryParse(pin) == null) {
+                        return 'الـ PIN يجب أن يكون 4 أرقام';
+                      }
+                      return null;
+                    },
+                  ),
+                ],
+              ),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(ctx).pop(),
+              child: Text(
+                'إلغاء',
+                style: TextStyle(
+                  fontFamily: AppTextStyles.fontFamily,
+                  color: AppColors.textSecondary,
+                ),
+              ),
+            ),
+            TextButton(
+              onPressed: () async {
+                if (!formKey.currentState!.validate()) {
+                  return;
+                }
+
+                final answer = answerController.text.trim();
+                final newPin = pinController.text.trim();
+
+                Navigator.of(ctx).pop();
+
+                final resetResult = await authRepository.resetPin(
+                  phone: phone,
+                  securityAnswer: answer,
+                  newPin: newPin,
+                );
+
+                resetResult.fold(
+                  onSuccess: (_) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: const Text(
+                            'تم إعادة تعيين رمز الدخول (PIN) بنجاح'),
+                        backgroundColor: AppColors.success,
+                      ),
+                    );
+                  },
+                  onFailure: (failure) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(failure.message),
+                        backgroundColor: AppColors.error,
+                      ),
+                    );
+                  },
+                );
+              },
+              child: Text(
+                'تأكيد',
+                style: TextStyle(
+                  fontFamily: AppTextStyles.fontFamily,
+                  color: AppColors.primary,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Future<void> _showUserDetails(User user) async {
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: AppColors.surface,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20.r)),
+      ),
+      builder: (ctx) {
+        return DraggableScrollableSheet(
+          initialChildSize: 0.5,
+          minChildSize: 0.4,
+          maxChildSize: 0.9,
+          expand: false,
+          builder: (context, scrollController) {
+            return SingleChildScrollView(
+              controller: scrollController,
+              padding: EdgeInsets.all(24.w),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Center(
+                    child: Container(
+                      width: 40.w,
+                      height: 4.h,
+                      decoration: BoxDecoration(
+                        color: AppColors.border,
+                        borderRadius: BorderRadius.circular(2.r),
+                      ),
+                    ),
+                  ),
+                  SizedBox(height: 24.h),
+                  Row(
+                    children: [
+                      Container(
+                        width: 56.r,
+                        height: 56.r,
+                        decoration: BoxDecoration(
+                          color: _getRoleColor(user.role).withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(16.r),
+                        ),
+                        child: Icon(
+                          _getRoleIcon(user.role),
+                          color: _getRoleColor(user.role),
+                          size: 28.r,
+                        ),
+                      ),
+                      SizedBox(width: 16.w),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              _getUserDisplayName(user),
+                              style: TextStyle(
+                                fontFamily: AppTextStyles.fontFamily,
+                                fontSize: 18.sp,
+                                fontWeight: FontWeight.bold,
+                                color: AppColors.textPrimary,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            SizedBox(height: 6.h),
+                            Row(
+                              children: [
+                                _RoleBadge(role: user.role),
+                                SizedBox(width: 8.w),
+                                _StatusBadge(isActive: user.isActive),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: 24.h),
+                  _UserDetailRow(
+                    label: 'المعرف',
+                    value: user.id,
+                  ),
+                  if (user.phone != null && user.phone!.isNotEmpty) ...[
+                    _UserDetailRow(
+                      label: 'رقم الهاتف',
+                      value: Formatters.formatPhone(user.phone!),
+                    ),
+                  ],
+                  if (user.username != null && user.username!.isNotEmpty) ...[
+                    _UserDetailRow(
+                      label: 'اسم المستخدم',
+                      value: user.username!,
+                    ),
+                  ],
+                  _UserDetailRow(
+                    label: 'تاريخ التسجيل',
+                    value: Formatters.formatDate(user.createdAt),
+                  ),
+                  _UserDetailRow(
+                    label: 'آخر تحديث',
+                    value: Formatters.formatDateTime(user.updatedAt),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
     );
   }
 
@@ -216,8 +690,8 @@ class _AdminUsersViewState extends State<_AdminUsersView> {
         ),
         content: Text(
           user.isActive
-              ? 'هل تريد تعطيل حساب ${user.displayIdentifier}؟'
-              : 'هل تريد تفعيل حساب ${user.displayIdentifier}؟',
+              ? 'هل تريد تعطيل حساب ${_getUserDisplayName(user)}؟'
+              : 'هل تريد تفعيل حساب ${_getUserDisplayName(user)}؟',
           style: TextStyle(
             fontFamily: AppTextStyles.fontFamily,
             fontSize: 14.sp,
@@ -240,6 +714,7 @@ class _AdminUsersViewState extends State<_AdminUsersView> {
               context.read<AdminCubit>().toggleUserStatus(
                 userId: user.id,
                 isActive: !user.isActive,
+                role: _selectedRole,
               );
             },
             child: Text(
@@ -260,16 +735,19 @@ class _AdminUsersViewState extends State<_AdminUsersView> {
 class _UseCard extends StatelessWidget {
   final User user;
   final VoidCallback onToggleStatus;
+  final VoidCallback onViewDetails;
 
   const _UseCard({
     required this.user,
     required this.onToggleStatus,
+    required this.onViewDetails,
   });
   @override
   Widget build(BuildContext context) {
     return AppCard(
       margin: EdgeInsets.only(bottom: 12.h),
       borderColor: user.isActive? null : AppColors.error,
+      onTap: onViewDetails,
       child:  Row(
         children: [
           Container(
@@ -294,7 +772,7 @@ class _UseCard extends StatelessWidget {
                   children: [
                     Expanded(
                       child: Text(
-                        user.displayIdentifier,
+                        _getUserDisplayName(user),
                         style: TextStyle(
                           fontFamily: AppTextStyles.fontFamily,
                           fontSize: 14.sp,
@@ -337,9 +815,22 @@ class _UseCard extends StatelessWidget {
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(12.r)
             ),
-            onSelected: (value) {
+            onSelected: (value) async {
               if (value == 'toggle') {
                 onToggleStatus();
+              } else if (value == 'reset_password') {
+                // Delegate to the parent stateful widget via context
+                final state =
+                    context.findAncestorStateOfType<_AdminUsersViewState>();
+                if (state != null) {
+                  await state._showResetPasswordDialog(user);
+                }
+              } else if (value == 'reset_pin') {
+                final state =
+                    context.findAncestorStateOfType<_AdminUsersViewState>();
+                if (state != null) {
+                  await state._showResetCustomerPinDialog(user);
+                }
               }
             },
             itemBuilder: (context) => [
@@ -354,48 +845,144 @@ class _UseCard extends StatelessWidget {
                     ),
                     SizedBox(width: 8.w,),
                     Text(
-                      user.isActive ? "تفعيل الحساب" : "تعطيل الحساب",
+                      user.isActive ? "تعطيل الحساب" : "تفعيل الحساب",
                       style: TextStyle(
                         fontFamily: AppTextStyles.fontFamily,
                         fontSize: 14.sp,
-                        
                       ),
                     )
                   ],
-                )
-              )
-            ]
-            )
+                ),
+              ),
+              if (user.role != UserRole.customer)
+                PopupMenuItem(
+                  value: "reset_password",
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.lock_reset,
+                        size: 18.r,
+                        color: AppColors.info,
+                      ),
+                      SizedBox(width: 8.w,),
+                      Text(
+                        "إعادة تعيين كلمة المرور",
+                        style: TextStyle(
+                          fontFamily: AppTextStyles.fontFamily,
+                          fontSize: 14.sp,
+                        ),
+                      )
+                    ],
+                  ),
+                ),
+              if (user.role == UserRole.customer)
+                PopupMenuItem(
+                  value: "reset_pin",
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.pin,
+                        size: 18.r,
+                        color: AppColors.info,
+                      ),
+                      SizedBox(width: 8.w,),
+                      Text(
+                        "إعادة تعيين رمز الدخول (PIN)",
+                        style: TextStyle(
+                          fontFamily: AppTextStyles.fontFamily,
+                          fontSize: 14.sp,
+                        ),
+                      )
+                    ],
+                  ),
+                ),
+            ],
+          )
         ],
 
       )
     );
   }
-
-Color  _getRoleColor(UserRole role) {
-    switch (role) {
-      case UserRole.customer:
-        return AppColors.primary;
-      case UserRole.shop:
-        return AppColors.secondary;
-      case UserRole.rider:
-        return AppColors.info;
-      case UserRole.admin:
-        return Colors.purple;
-    }
 }
 
-  IconData _getRoleIcon(UserRole role) {
-    switch (role) {
-      case UserRole.customer:
-        return Icons.person;
-      case UserRole.shop:
-        return Icons.storefront;
-      case UserRole.rider:
-        return Icons.delivery_dining;
-      case UserRole.admin:
-        return Icons.admin_panel_settings;
-    }
+String _getUserDisplayName(User user) {
+  // فضّل اسم المستخدم إن وُجد، ثم رقم الهاتف، وإلا fallback للمعرّف الحالي
+  if (user.username != null && user.username!.trim().isNotEmpty) {
+    return user.username!.trim();
+  }
+  if (user.phone != null && user.phone!.trim().isNotEmpty) {
+    return Formatters.formatPhone(user.phone!.trim());
+  }
+  return user.displayIdentifier;
+}
+
+Color _getRoleColor(UserRole role) {
+  switch (role) {
+    case UserRole.customer:
+      return AppColors.primary;
+    case UserRole.shop:
+      return AppColors.secondary;
+    case UserRole.rider:
+      return AppColors.info;
+    case UserRole.admin:
+      return Colors.purple;
+  }
+}
+
+IconData _getRoleIcon(UserRole role) {
+  switch (role) {
+    case UserRole.customer:
+      return Icons.person;
+    case UserRole.shop:
+      return Icons.storefront;
+    case UserRole.rider:
+      return Icons.delivery_dining;
+    case UserRole.admin:
+      return Icons.admin_panel_settings;
+  }
+}
+
+class _UserDetailRow extends StatelessWidget {
+  final String label;
+  final String value;
+
+  const _UserDetailRow({
+    required this.label,
+    required this.value,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: EdgeInsets.symmetric(vertical: 6.h),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: 110.w,
+            child: Text(
+              label,
+              style: TextStyle(
+                fontFamily: AppTextStyles.fontFamily,
+                fontSize: 13.sp,
+                color: AppColors.textSecondary,
+              ),
+            ),
+          ),
+          Expanded(
+            child: Text(
+              value,
+              style: TextStyle(
+                fontFamily: AppTextStyles.fontFamily,
+                fontSize: 13.sp,
+                color: AppColors.textPrimary,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }
 

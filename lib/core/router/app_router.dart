@@ -9,8 +9,10 @@ import 'package:baladi/presentation/features/admin/screens/admin_orders_screen.d
 import 'package:baladi/presentation/features/admin/screens/admin_periods_screen.dart';
 import 'package:baladi/presentation/features/admin/screens/admin_points_screen.dart';
 import 'package:baladi/presentation/features/admin/screens/admin_riders_screen.dart';
+import 'package:baladi/presentation/features/admin/screens/admin_settlements_screen.dart';
 import 'package:baladi/presentation/features/admin/screens/admin_shops_screen.dart';
 import 'package:baladi/presentation/features/admin/screens/admin_users_screen.dart';
+import 'package:baladi/presentation/features/admin/screens/admin_categories_screen.dart';
 import 'package:baladi/presentation/features/auth/screens/customer_login_screen.dart';
 import 'package:baladi/presentation/features/auth/screens/customer_register_screen.dart';
 import 'package:baladi/presentation/features/auth/screens/pin_recovery_screen.dart';
@@ -237,6 +239,11 @@ class AppRouter {
           builder: (context, state) => const AdminShopsScreen(),
         ),
         GoRoute(
+          path: RouteNames.adminCategoriesPath,
+          name: RouteNames.adminCategories,
+          builder: (context, state) => const AdminCategoriesScreen(),
+        ),
+        GoRoute(
           path: RouteNames.adminRidersPath,
           name: RouteNames.adminRiders,
           builder: (context, state) => const AdminRidersScreen(),
@@ -254,8 +261,7 @@ class AppRouter {
         GoRoute(
           path: RouteNames.adminSettlementsPath,
           name: RouteNames.adminSettlements,
-          builder: (context, state) =>
-              const _PlaceholderScreen(title: 'Admin Settlements'),
+          builder: (context, state) => const AdminSettlementsScreen(),
         ),
         GoRoute(
           path: RouteNames.adminPointsPath,

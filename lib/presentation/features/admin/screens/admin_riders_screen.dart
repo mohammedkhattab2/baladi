@@ -1,4 +1,4 @@
-import 'package:baladi/core/di/injection_container.dart';
+import 'package:baladi/core/di/injection.dart';
 import 'package:baladi/core/router/route_names.dart';
 import 'package:baladi/core/theme/app_colors.dart';
 import 'package:baladi/core/theme/app_text_styles.dart';
@@ -67,6 +67,11 @@ class _AdminRidersViewState extends State<_AdminRidersView> {
     return AdminShell(
       title: 'إدارة السائقين',
       currentRoute: RouteNames.adminRiders,
+      floatingActionButton: FloatingActionButton(
+        onPressed: () => _openRiderForm(context),
+        backgroundColor: AppColors.primary,
+        child: const Icon(Icons.add),
+      ),
       child: Column(
         children: [
           _buildSearchBar(),
@@ -115,27 +120,302 @@ class _AdminRidersViewState extends State<_AdminRidersView> {
         controller: _searchController,
         hint: 'بحث باسم السائق أو رقم الهاتف...',
         onChanged: (value) {
-          // TODO: فلترة محلية لو حبيت
+          // فلترة محلية على البيانات اللي جاية من الـ API بدون استدعاء جديد للسيرفر
+          setState(() {});
         },
       ),
     );
   }
 
+  void _openRiderForm(BuildContext context, [Rider? rider]) {
+    final isEdit = rider != null;
+
+    final nameController = TextEditingController(text: rider?.fullName ?? '');
+    final phoneController = TextEditingController(text: rider?.phone ?? '');
+    final deliveryFeeController = TextEditingController(
+      text: rider != null ? rider.deliveryFee.toStringAsFixed(0) : '10',
+    );
+
+    // سيتم استخدام هذه الحقول فقط عند إنشاء سائق جديد (حساب المستخدم)
+    final userNameController =
+        TextEditingController(text: rider?.fullName ?? '');
+    final userPhoneController =
+        TextEditingController(text: rider?.phone ?? '');
+    final userPasswordController = TextEditingController();
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: AppColors.surface,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20.r)),
+      ),
+      builder: (ctx) {
+        return Padding(
+          padding: EdgeInsets.only(
+            bottom: MediaQuery.of(ctx).viewInsets.bottom,
+            left: 16.w,
+            right: 16.w,
+            top: 24.h,
+          ),
+          child: StatefulBuilder(
+            builder: (context, setState) {
+              final formKey = GlobalKey<FormState>();
+              return Form(
+                key: formKey,
+                child: SingleChildScrollView(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Center(
+                        child: Container(
+                          width: 40.w,
+                          height: 4.h,
+                          decoration: BoxDecoration(
+                            color: AppColors.border,
+                            borderRadius: BorderRadius.circular(2.r),
+                          ),
+                        ),
+                      ),
+                      SizedBox(height: 16.h),
+                      Text(
+                        isEdit ? 'تعديل بيانات السائق' : 'إضافة سائق جديد',
+                        style: TextStyle(
+                          fontFamily: AppTextStyles.fontFamily,
+                          fontSize: 18.sp,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.textPrimary,
+                        ),
+                      ),
+                      SizedBox(height: 16.h),
+                      AppTextField(
+                        controller: nameController,
+                        label: 'اسم السائق',
+                        validator: (value) {
+                          if (value == null || value.trim().isEmpty) {
+                            return 'الاسم مطلوب';
+                          }
+                          return null;
+                        },
+                      ),
+                      SizedBox(height: 12.h),
+                      AppTextField(
+                        controller: phoneController,
+                        label: 'رقم الهاتف',
+                        keyboardType: TextInputType.phone,
+                        validator: (value) {
+                          if (value == null || value.trim().isEmpty) {
+                            return 'رقم الهاتف مطلوب';
+                          }
+                          if (value.trim().length < 8) {
+                            return 'رقم هاتف غير صالح';
+                          }
+                          return null;
+                        },
+                      ),
+                      SizedBox(height: 12.h),
+                      AppTextField(
+                        controller: deliveryFeeController,
+                        label: 'أجرة التوصيل (جنيه)',
+                        keyboardType: TextInputType.number,
+                        validator: (value) {
+                          if (value == null || value.trim().isEmpty) {
+                            return 'أجرة التوصيل مطلوبة';
+                          }
+                          final fee = double.tryParse(value.trim());
+                          if (fee == null || fee <= 0) {
+                            return 'أدخل قيمة صحيحة';
+                          }
+                          return null;
+                        },
+                      ),
+                      if (!isEdit) ...[
+                        SizedBox(height: 20.h),
+                        Text(
+                          'بيانات حساب المستخدم للسائق',
+                          style: TextStyle(
+                            fontFamily: AppTextStyles.fontFamily,
+                            fontSize: 14.sp,
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.textPrimary,
+                          ),
+                        ),
+                        SizedBox(height: 8.h),
+                        AppTextField(
+                          controller: userNameController,
+                          label: 'اسم المستخدم',
+                          validator: (value) {
+                            if (value == null || value.trim().isEmpty) {
+                              return 'الاسم مطلوب';
+                            }
+                            return null;
+                          },
+                        ),
+                        SizedBox(height: 12.h),
+                        AppTextField(
+                          controller: userPhoneController,
+                          label: 'رقم هاتف المستخدم',
+                          keyboardType: TextInputType.phone,
+                          validator: (value) {
+                            if (value == null || value.trim().isEmpty) {
+                              return 'رقم الهاتف مطلوب';
+                            }
+                            if (value.trim().length < 8) {
+                              return 'رقم هاتف غير صالح';
+                            }
+                            return null;
+                          },
+                        ),
+                        SizedBox(height: 12.h),
+                        AppTextField(
+                          controller: userPasswordController,
+                          label: 'كلمة المرور المبدئية',
+                          obscureText: true,
+                          validator: (value) {
+                            if (value == null || value.trim().isEmpty) {
+                              return 'كلمة المرور مطلوبة';
+                            }
+                            final pwd = value.trim();
+                            if (pwd.length < 8) {
+                              return 'على الأقل 8 حروف';
+                            }
+                            if (!RegExp(r'[A-Z]').hasMatch(pwd) ||
+                                !RegExp(r'[a-z]').hasMatch(pwd) ||
+                                !RegExp(r'[0-9]').hasMatch(pwd)) {
+                              return 'لابد أن تحتوي على حرف كبير وصغير ورقم';
+                            }
+                            return null;
+                          },
+                        ),
+                      ],
+                      SizedBox(height: 24.h),
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.primary,
+                            padding: EdgeInsets.symmetric(vertical: 12.h),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8.r),
+                            ),
+                          ),
+                          onPressed: () async {
+                            if (!formKey.currentState!.validate()) {
+                              return;
+                            }
+
+                            final fee =
+                                double.parse(deliveryFeeController.text.trim());
+
+                            final payload = <String, dynamic>{
+                              'rider': {
+                                'full_name': nameController.text.trim(),
+                                'phone': phoneController.text.trim(),
+                                'delivery_fee': fee,
+                              },
+                            };
+
+                            if (!isEdit) {
+                              payload['user'] = {
+                                'name': userNameController.text.trim(),
+                                'phone': userPhoneController.text.trim(),
+                                'password': userPasswordController.text.trim(),
+                              };
+                            }
+
+                            final cubit = context.read<AdminCubit>();
+                            if (isEdit) {
+                              await cubit.updateRiderAsAdmin(
+                                riderId: rider!.id,
+                                payload: payload,
+                              );
+                            } else {
+                              await cubit.createRiderAsAdmin(
+                                payload: payload,
+                              );
+                            }
+
+                            if (!context.mounted) return;
+                            Navigator.of(context).pop();
+
+                            // لو الحالة الحالية ليست خطأ، اعتبر العملية نجحت واعرض رسالة نجاح
+                            final currentState = cubit.state;
+                            if (currentState is! AdminError) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(
+                                    isEdit
+                                        ? 'تم تحديث بيانات السائق بنجاح'
+                                        : 'تم إضافة السائق بنجاح',
+                                    style: TextStyle(
+                                      fontFamily: AppTextStyles.fontFamily,
+                                    ),
+                                  ),
+                                  backgroundColor: AppColors.success,
+                                ),
+                              );
+                            }
+                          },
+                          child: Text(
+                            isEdit ? 'حفظ التعديلات' : 'إضافة السائق',
+                            style: TextStyle(
+                              fontFamily: AppTextStyles.fontFamily,
+                              fontSize: 14.sp,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ),
+                      SizedBox(height: 16.h),
+                    ],
+                  ),
+                ),
+              );
+            },
+          ),
+        );
+      },
+    );
+  }
+
   Widget _buildRidersList(AdminRidersLoaded state) {
+    final query = _searchController.text.trim().toLowerCase();
+
+    // فلترة محلية باسم السائق أو رقم الهاتف
+    final filteredRiders = state.riders.where((rider) {
+      if (query.isEmpty) return true;
+
+      final name = rider.fullName.toLowerCase();
+      final phone = rider.phone.toLowerCase();
+
+      return name.contains(query) || phone.contains(query);
+    }).toList();
+
     if (state.riders.isEmpty) {
       return const AppEmptyState.deliveries(
         title: 'لا يوجد سائقين',
         description: "لم يتم تسجيل أي سائقين بعد",
       );
     }
+
+    if (filteredRiders.isEmpty) {
+      return const AppEmptyState.deliveries(
+        title: 'لا توجد نتائج',
+        description: "جرّب البحث باسم أو رقم مختلف",
+      );
+    }
+
+    final showLoaderAtEnd = state.hasMore && query.isEmpty;
+
     return RefreshIndicator(
       onRefresh: () async => context.read<AdminCubit>().loadRiders(),
       child: ListView.builder(
         controller: _scrollController,
         padding: EdgeInsets.all(16.w),
-        itemCount: state.riders.length + (state.hasMore ? 1 : 0),
+        itemCount: filteredRiders.length + (showLoaderAtEnd ? 1 : 0),
         itemBuilder: (context, index) {
-          if (index == state.riders.length) {
+          if (index == filteredRiders.length) {
             return Padding(
               padding: EdgeInsets.all(16.r),
               child: const Center(
@@ -143,8 +423,11 @@ class _AdminRidersViewState extends State<_AdminRidersView> {
               ),
             );
           }
-          final rider = state.riders[index];
-          return _RiderCard(rider: rider);
+          final rider = filteredRiders[index];
+          return _RiderCard(
+            rider: rider,
+            onEdit: () => _openRiderForm(context, rider),
+          );
         },
       ),
     );
@@ -153,7 +436,8 @@ class _AdminRidersViewState extends State<_AdminRidersView> {
 
 class _RiderCard extends StatelessWidget {
   final Rider rider;
-  const _RiderCard({required this.rider});
+  final VoidCallback onEdit;
+  const _RiderCard({required this.rider, required this.onEdit});
   @override
   Widget build(BuildContext context) {
     return AppCard(
@@ -217,6 +501,11 @@ class _RiderCard extends StatelessWidget {
                       )
                     ],
                     const Spacer(),
+                    IconButton(
+                      onPressed: onEdit,
+                      icon: const Icon(Icons.edit, size: 18),
+                      color: AppColors.primary,
+                    ),
                     _AvailabilityBadge(isAvailable: rider.isAvailable),
                   ],
                 ),
