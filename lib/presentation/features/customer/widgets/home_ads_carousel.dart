@@ -128,11 +128,11 @@ class _PageIndicator extends StatelessWidget {
                     ],
                   )
                 : null,
-            color: isActive ? null : const Color(0xFF0A1628).withOpacity(0.15),
+            color: isActive ? null : const Color(0xFF0A1628).withValues(alpha:  0.15),
             boxShadow: isActive
                 ? [
                     BoxShadow(
-                      color: AppColors.primary.withOpacity(0.4),
+                      color: AppColors.primary.withValues(alpha: 0.4),
                       blurRadius: 8,
                       spreadRadius: 1,
                     ),
@@ -176,13 +176,13 @@ class _LuxuryAdCard extends StatelessWidget {
           ),
           boxShadow: [
             BoxShadow(
-              color: const Color(0xFF0A1628).withOpacity(0.4),
+              color: const Color(0xFF0A1628).withValues(alpha: 0.4),
               blurRadius: 20,
               offset: const Offset(0, 10),
               spreadRadius: 0,
             ),
             BoxShadow(
-              color: AppColors.primary.withOpacity(0.15),
+              color: AppColors.primary.withValues(alpha: 0.15),
               blurRadius: 30,
               offset: const Offset(0, 5),
             ),
@@ -201,8 +201,8 @@ class _LuxuryAdCard extends StatelessWidget {
                   shape: BoxShape.circle,
                   gradient: RadialGradient(
                     colors: [
-                      AppColors.primary.withOpacity(0.2),
-                      AppColors.primary.withOpacity(0.0),
+                      AppColors.primary.withValues(alpha: 0.2),
+                      AppColors.primary.withValues(alpha: 0.0),
                     ],
                   ),
                 ),
@@ -218,8 +218,8 @@ class _LuxuryAdCard extends StatelessWidget {
                   shape: BoxShape.circle,
                   gradient: RadialGradient(
                     colors: [
-                      AppColors.secondary.withOpacity(0.15),
-                      AppColors.secondary.withOpacity(0.0),
+                      AppColors.secondary.withValues(alpha: 0.15),
+                      AppColors.secondary.withValues(alpha: 0.0),
                     ],
                   ),
                 ),
@@ -254,13 +254,13 @@ class _LuxuryAdCard extends StatelessWidget {
                             gradient: LinearGradient(
                               colors: [
                                 AppColors.secondary,
-                                AppColors.secondary.withOpacity(0.8),
+                                AppColors.secondary.withValues(alpha: 0.8),
                               ],
                             ),
                             borderRadius: BorderRadius.circular(20.r),
                             boxShadow: [
                               BoxShadow(
-                                color: AppColors.secondary.withOpacity(0.4),
+                                color: AppColors.secondary.withValues(alpha: 0.4),
                                 blurRadius: 8,
                                 offset: const Offset(0, 2),
                               ),
@@ -305,7 +305,7 @@ class _LuxuryAdCard extends StatelessWidget {
                             style: TextStyle(
                               fontFamily: AppTextStyles.fontFamily,
                               fontSize: 12.sp,
-                              color: Colors.white.withOpacity(0.7),
+                              color: Colors.white.withValues(alpha: 0.7),
                               height: 1.4,
                             ),
                             maxLines: 2,
@@ -325,13 +325,13 @@ class _LuxuryAdCard extends StatelessWidget {
                               end: Alignment.bottomRight,
                               colors: [
                                 AppColors.primary,
-                                AppColors.primary.withOpacity(0.8),
+                                AppColors.primary.withValues(alpha: 0.8),
                               ],
                             ),
                             borderRadius: BorderRadius.circular(12.r),
                             boxShadow: [
                               BoxShadow(
-                                color: AppColors.primary.withOpacity(0.4),
+                                color: AppColors.primary.withValues(alpha: 0.4),
                                 blurRadius: 12,
                                 offset: const Offset(0, 4),
                               ),
@@ -370,7 +370,7 @@ class _LuxuryAdCard extends StatelessWidget {
                         borderRadius: BorderRadius.circular(16.r),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withOpacity(0.3),
+                            color: Colors.black.withValues(alpha: 0.3),
                             blurRadius: 15,
                             offset: const Offset(0, 5),
                           ),
@@ -387,14 +387,14 @@ class _LuxuryAdCard extends StatelessWidget {
                                 begin: Alignment.topLeft,
                                 end: Alignment.bottomRight,
                                 colors: [
-                                  AppColors.primary.withOpacity(0.3),
-                                  AppColors.primary.withOpacity(0.1),
+                                  AppColors.primary.withValues(alpha: 0.3),
+                                  AppColors.primary.withValues(alpha: 0.1),
                                 ],
                               ),
                             ),
                             child: Icon(
                               Icons.image_outlined,
-                              color: Colors.white.withOpacity(0.5),
+                              color: Colors.white.withValues(alpha: 0.5),
                               size: 40.r,
                             ),
                           ),
@@ -417,7 +417,7 @@ class _PatternPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = Colors.white.withOpacity(0.02)
+      ..color = Colors.white.withValues(alpha: 0.02)
       ..strokeWidth = 1;
 
     // Draw subtle diagonal lines

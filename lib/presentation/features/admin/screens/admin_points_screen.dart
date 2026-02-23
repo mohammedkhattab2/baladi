@@ -54,169 +54,261 @@ class _AdminPointsViewState extends State<_AdminPointsView> {
     return AdminShell(
       currentRoute: RouteNames.adminPoints,
       title: 'إدارة النقاط',
-      child: BlocConsumer<AdminCubit, AdminState>(
-        listener: (context, state) {
-          if (state is AdminPointsAdjusted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(
-                  'تم تعديل نقاط العميل بنجاح',
-                  style: TextStyle(fontFamily: AppTextStyles.fontFamily),
-                ),
-                backgroundColor: AppColors.success,
+      child: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              Color(0xFF0D1B2A),
+              Color(0xFF1B263B),
+              Color(0xFF2D5A27),
+              Color(0xFF1A3A16),
+            ],
+            stops: [0.0, 0.35, 0.7, 1.0],
+          ),
+        ),
+        child: Stack(
+          children: [
+            Positioned(
+              top: -80,
+              left: -40,
+              child: _GlowOrb(
+                size: 180,
+                color: AppColors.primary,
+                opacity: 0.22,
               ),
-            );
-            _formKey.currentState?.reset();
-            _pointsController.clear();
-            _reasonController.clear();
-          } else if (state is AdminError) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(
-                  state.message,
-                  style: TextStyle(fontFamily: AppTextStyles.fontFamily),
-                ),
-                backgroundColor: AppColors.error,
+            ),
+            Positioned(
+              bottom: -60,
+              right: -20,
+              child: _GlowOrb(
+                size: 160,
+                color: AppColors.secondary,
+                opacity: 0.20,
               ),
-            );
-          }
-        },
-        builder: (context, state) {
-          final isLoading = state is AdminActionLoading;
+            ),
+            BlocConsumer<AdminCubit, AdminState>(
+              listener: (context, state) {
+                if (state is AdminPointsAdjusted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      behavior: SnackBarBehavior.floating,
+                      margin: EdgeInsets.all(16.r),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16.r),
+                      ),
+                      content: Text(
+                        'تم تعديل نقاط العميل بنجاح',
+                        style: TextStyle(
+                          fontFamily: AppTextStyles.fontFamily,
+                        ),
+                      ),
+                      backgroundColor: AppColors.success,
+                    ),
+                  );
+                  _formKey.currentState?.reset();
+                  _pointsController.clear();
+                  _reasonController.clear();
+                } else if (state is AdminError) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      behavior: SnackBarBehavior.floating,
+                      margin: EdgeInsets.all(16.r),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16.r),
+                      ),
+                      content: Text(
+                        state.message,
+                        style: TextStyle(
+                          fontFamily: AppTextStyles.fontFamily,
+                        ),
+                      ),
+                      backgroundColor: AppColors.error,
+                    ),
+                  );
+                }
+              },
+              builder: (context, state) {
+                final isLoading = state is AdminActionLoading;
 
-          return SingleChildScrollView(
-            padding: EdgeInsets.all(16.w),
-            child: Center(
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 600),
-                child: AppCard(
-                  padding: EdgeInsets.all(20.w),
-                  child: Form(
-                    key: _formKey,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'تعديل نقاط عميل',
-                          style: TextStyle(
-                            fontFamily: AppTextStyles.fontFamily,
-                            fontSize: 18.sp,
-                            fontWeight: FontWeight.bold,
-                            color: AppColors.textPrimary,
+                return SingleChildScrollView(
+                  padding: EdgeInsets.all(16.w),
+                  child: Center(
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 600),
+                      child: Container(
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(24.r),
+                          gradient: const LinearGradient(
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                            colors: [
+                              Color(0xFF0B1722),
+                              Color(0xFF132433),
+                            ],
                           ),
-                        ),
-                        SizedBox(height: 4.h),
-                        Text(
-                          'يمكنك إضافة أو خصم نقاط من رصيد عميل لأي سبب إداري (تعويض، خطأ في الطلب، إلخ).',
-                          style: TextStyle(
-                            fontFamily: AppTextStyles.fontFamily,
-                            fontSize: 13.sp,
-                            color: AppColors.textSecondary,
+                          border: Border.all(
+                            color: AppColors.primary.withValues(alpha: 0.35),
+                            width: 1.2,
                           ),
-                        ),
-                        SizedBox(height: 20.h),
-
-                        // Customer ID
-                        AppTextField(
-                          label: 'معرّف العميل (customerId)',
-                          hint: 'example: cst_12345',
-                          controller: _customerIdController,
-                          validator: (value) {
-                            if (value == null || value.trim().isEmpty) {
-                              return 'حقل معرّف العميل مطلوب';
-                            }
-                            return null;
-                          },
-                        ),
-                        SizedBox(height: 16.h),
-
-                        // Add / Subtract toggle
-                        Text(
-                          'نوع العملية',
-                          style: TextStyle(
-                            fontFamily: AppTextStyles.fontFamily,
-                            fontSize: 14.sp,
-                            fontWeight: FontWeight.w600,
-                            color: AppColors.textPrimary,
-                          ),
-                        ),
-                        SizedBox(height: 8.h),
-                        Row(
-                          children: [
-                            _TypeChip(
-                              label: 'إضافة نقاط',
-                              isSelected: _isAdd,
-                              color: AppColors.success,
-                              onTap: () => setState(() => _isAdd = true),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.55),
+                              blurRadius: 22,
+                              offset: const Offset(0, 12),
                             ),
-                            SizedBox(width: 8.w),
-                            _TypeChip(
-                              label: 'خصم نقاط',
-                              isSelected: !_isAdd,
-                              color: AppColors.error,
-                              onTap: () => setState(() => _isAdd = false),
+                            BoxShadow(
+                              color: AppColors.primary.withValues(alpha: 0.28),
+                              blurRadius: 26,
+                              offset: const Offset(0, 16),
                             ),
                           ],
                         ),
-                        SizedBox(height: 16.h),
+                        child: AppCard(
+                          margin: EdgeInsets.zero,
+                          backgroundColor: Colors.transparent,
+                          elevation: 0.01,
+                          padding: EdgeInsets.all(20.w),
+                          child: Form(
+                            key: _formKey,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'تعديل نقاط عميل',
+                                  style: TextStyle(
+                                    fontFamily: AppTextStyles.fontFamily,
+                                    fontSize: 18.sp,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                                SizedBox(height: 4.h),
+                                Text(
+                                  'يمكنك إضافة أو خصم نقاط من رصيد عميل لأي سبب إداري (تعويض، خطأ في الطلب، إلخ).',
+                                  style: TextStyle(
+                                    fontFamily: AppTextStyles.fontFamily,
+                                    fontSize: 13.sp,
+                                    color: Colors.white70,
+                                  ),
+                                ),
+                                SizedBox(height: 20.h),
 
-                        // Points amount
-                        AppTextField(
-                          label: 'عدد النقاط',
-                          hint: 'مثال: 10',
-                          controller: _pointsController,
-                          keyboardType: TextInputType.number,
-                          validator: (value) {
-                            if (value == null || value.trim().isEmpty) {
-                              return 'برجاء إدخال عدد النقاط';
-                            }
-                            final parsed = int.tryParse(value.trim());
-                            if (parsed == null || parsed <= 0) {
-                              return 'أدخل رقم صحيح أكبر من صفر';
-                            }
-                            return null;
-                          },
-                        ),
-                        SizedBox(height: 16.h),
+                                // Customer ID
+                                AppTextField(
+                                  label: 'معرّف العميل (customerId)',
+                                  hint: 'example: cst_12345',
+                                  controller: _customerIdController,
+                                  validator: (value) {
+                                    if (value == null ||
+                                        value.trim().isEmpty) {
+                                      return 'حقل معرّف العميل مطلوب';
+                                    }
+                                    return null;
+                                  },
+                                ),
+                                SizedBox(height: 16.h),
 
-                        // Reason
-                        AppTextField.textArea(
-                          label: 'السبب',
-                          hint: 'مثال: تعويض عن مشكلة في الطلب، مكافأة خاصة، ...',
-                          controller: _reasonController,
-                          validator: (value) {
-                            if (value == null || value.trim().isEmpty) {
-                              return 'السبب مطلوب للتوثيق';
-                            }
-                            if (value.trim().length < 5) {
-                              return 'السبب قصير جداً';
-                            }
-                            return null;
-                          },
-                        ),
-                        SizedBox(height: 24.h),
+                                // Add / Subtract toggle
+                                Text(
+                                  'نوع العملية',
+                                  style: TextStyle(
+                                    fontFamily: AppTextStyles.fontFamily,
+                                    fontSize: 14.sp,
+                                    fontWeight: FontWeight.w600,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                                SizedBox(height: 8.h),
+                                Row(
+                                  children: [
+                                    _TypeChip(
+                                      label: 'إضافة نقاط',
+                                      isSelected: _isAdd,
+                                      color: AppColors.success,
+                                      onTap: () =>
+                                          setState(() => _isAdd = true),
+                                    ),
+                                    SizedBox(width: 8.w),
+                                    _TypeChip(
+                                      label: 'خصم نقاط',
+                                      isSelected: !_isAdd,
+                                      color: AppColors.error,
+                                      onTap: () =>
+                                          setState(() => _isAdd = false),
+                                    ),
+                                  ],
+                                ),
+                                SizedBox(height: 16.h),
 
-                        if (state is AdminError) ...[
-                          AppErrorWidget(
-                            message: state.message,
-                            onRetry: null,
+                                // Points amount
+                                AppTextField(
+                                  label: 'عدد النقاط',
+                                  hint: 'مثال: 10',
+                                  controller: _pointsController,
+                                  keyboardType: TextInputType.number,
+                                  validator: (value) {
+                                    if (value == null ||
+                                        value.trim().isEmpty) {
+                                      return 'برجاء إدخال عدد النقاط';
+                                    }
+                                    final parsed =
+                                        int.tryParse(value.trim());
+                                    if (parsed == null || parsed <= 0) {
+                                      return 'أدخل رقم صحيح أكبر من صفر';
+                                    }
+                                    return null;
+                                  },
+                                ),
+                                SizedBox(height: 16.h),
+
+                                // Reason
+                                AppTextField.textArea(
+                                  label: 'السبب',
+                                  hint:
+                                      'مثال: تعويض عن مشكلة في الطلب، مكافأة خاصة، ...',
+                                  controller: _reasonController,
+                                  validator: (value) {
+                                    if (value == null ||
+                                        value.trim().isEmpty) {
+                                      return 'السبب مطلوب للتوثيق';
+                                    }
+                                    if (value.trim().length < 5) {
+                                      return 'السبب قصير جداً';
+                                    }
+                                    return null;
+                                  },
+                                ),
+                                SizedBox(height: 24.h),
+
+                                if (state is AdminError) ...[
+                                  AppErrorWidget(
+                                    message: state.message,
+                                    onRetry: null,
+                                  ),
+                                  SizedBox(height: 16.h),
+                                ],
+
+                                AppButton.primary(
+                                  text: 'حفظ التعديل',
+                                  isLoading: isLoading,
+                                  onPressed: isLoading
+                                      ? null
+                                      : () => _submit(context),
+                                ),
+                              ],
+                            ),
                           ),
-                          SizedBox(height: 16.h),
-                        ],
-
-                        AppButton.primary(
-                          text: 'حفظ التعديل',
-                          isLoading: isLoading,
-                          onPressed: isLoading ? null : () => _submit(context),
                         ),
-                      ],
+                      ),
                     ),
                   ),
-                ),
-              ),
+                );
+              },
             ),
-          );
-        },
+          ],
+        ),
       ),
     );
   }
@@ -251,7 +343,8 @@ class _TypeChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final bg = isSelected ? color : AppColors.surfaceVariant;
-    final textColor = isSelected ? AppColors.textOnPrimary : AppColors.textPrimary;
+    final textColor =
+        isSelected ? AppColors.textOnPrimary : AppColors.textPrimary;
 
     return GestureDetector(
       onTap: onTap,
@@ -287,6 +380,36 @@ class _TypeChip extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _GlowOrb extends StatelessWidget {
+  final double size;
+  final Color color;
+  final double opacity;
+
+  const _GlowOrb({
+    required this.size,
+    required this.color,
+    required this.opacity,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        boxShadow: [
+          BoxShadow(
+            color: color.withValues(alpha: opacity),
+            blurRadius: size / 2,
+            spreadRadius: size / 6,
+          ),
+        ],
       ),
     );
   }

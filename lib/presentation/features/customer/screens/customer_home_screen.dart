@@ -110,8 +110,8 @@ class _CustomerHomeView extends StatelessWidget {
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
                           colors: [
-                            AppColors.primary.withOpacity(0.15),
-                            AppColors.primary.withOpacity(0.05),
+                            AppColors.primary.withValues(alpha:  0.15),
+                            AppColors.primary.withValues(alpha: 0.05),
                           ],
                         ),
                         borderRadius: BorderRadius.circular(10.r),
@@ -141,10 +141,10 @@ class _CustomerHomeView extends StatelessWidget {
                         vertical: 6.h,
                       ),
                       decoration: BoxDecoration(
-                        color: AppColors.primary.withOpacity(0.08),
+                        color: AppColors.primary.withValues(alpha: 0.08),
                         borderRadius: BorderRadius.circular(20.r),
                         border: Border.all(
-                          color: AppColors.primary.withOpacity(0.15),
+                          color: AppColors.primary.withValues(alpha: 0.15),
                           width: 1,
                         ),
                       ),
@@ -239,7 +239,7 @@ class _CustomerHomeView extends StatelessWidget {
         borderRadius: BorderRadius.circular(20.r),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF0A1628).withOpacity(0.04),
+            color: const Color(0xFF0A1628).withValues(alpha: 0.04),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -272,12 +272,12 @@ class _CustomerHomeView extends StatelessWidget {
         color: Colors.white,
         borderRadius: BorderRadius.circular(20.r),
         border: Border.all(
-          color: const Color(0xFFEF4444).withOpacity(0.2),
+          color: const Color(0xFFEF4444).withValues(alpha: 0.2),
           width: 1,
         ),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFFEF4444).withOpacity(0.08),
+            color: const Color(0xFFEF4444).withValues(alpha: 0.08),
             blurRadius: 20,
             offset: const Offset(0, 8),
           ),
@@ -289,7 +289,7 @@ class _CustomerHomeView extends StatelessWidget {
           Container(
             padding: EdgeInsets.all(16.r),
             decoration: BoxDecoration(
-              color: const Color(0xFFEF4444).withOpacity(0.1),
+              color: const Color(0xFFEF4444).withValues(alpha: 0.1),
               shape: BoxShape.circle,
             ),
             child: Icon(
@@ -314,7 +314,7 @@ class _CustomerHomeView extends StatelessWidget {
             style: TextStyle(
               fontFamily: AppTextStyles.fontFamily,
               fontSize: 13.sp,
-              color: const Color(0xFF0A1628).withOpacity(0.6),
+              color: const Color(0xFF0A1628).withValues(alpha: 0.6),
             ),
             textAlign: TextAlign.center,
           ),
@@ -338,7 +338,7 @@ class _CustomerHomeView extends StatelessWidget {
                 borderRadius: BorderRadius.circular(12.r),
                 boxShadow: [
                   BoxShadow(
-                    color: AppColors.primary.withOpacity(0.3),
+                    color: AppColors.primary.withValues(alpha: 0.3),
                     blurRadius: 12,
                     offset: const Offset(0, 4),
                   ),

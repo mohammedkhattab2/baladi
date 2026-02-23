@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 import 'package:baladi/core/di/injection.dart';
 import 'package:baladi/core/router/route_names.dart';
 import 'package:baladi/core/theme/app_colors.dart';
@@ -67,62 +69,137 @@ class _AdminRidersViewState extends State<_AdminRidersView> {
     return AdminShell(
       title: 'إدارة السائقين',
       currentRoute: RouteNames.adminRiders,
-      floatingActionButton: FloatingActionButton(
+      floatingActionButton: _LuxuryFab(
         onPressed: () => _openRiderForm(context),
-        backgroundColor: AppColors.primary,
-        child: const Icon(Icons.add),
       ),
-      child: Column(
-        children: [
-          _buildSearchBar(),
-          Expanded(
-            child: BlocConsumer<AdminCubit, AdminState>(
-              listener: (context, state) {
-                if (state is AdminError) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(
-                        state.message,
-                        style: TextStyle(fontFamily: AppTextStyles.fontFamily),
-                      ),
-                      backgroundColor: AppColors.error,
-                    ),
-                  );
-                }
-              },
-              builder: (context, state) {
-                if (state is AdminLoading || state is AdminActionLoading) {
-                  return const Center(child: LoadingWidget());
-                }
-                if (state is AdminError) {
-                  return AppErrorWidget(
-                    message: state.message,
-                    onRetry: () => context.read<AdminCubit>().loadRiders(),
-                  );
-                }
-                if (state is AdminRidersLoaded) {
-                  return _buildRidersList(state);
-                }
-                return const SizedBox.shrink();
-              },
-            ),
+      child: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              Color(0xFF0D1B2A),
+              Color(0xFF1B263B),
+              Color(0xFF2D5A27),
+              Color(0xFF1A3A16),
+            ],
+            stops: [0.0, 0.35, 0.7, 1.0],
           ),
-        ],
+        ),
+        child: Stack(
+          children: [
+            Positioned(
+              top: -80,
+              left: -40,
+              child: _GlowOrb(
+                size: 180,
+                color: AppColors.primary,
+                opacity: 0.22,
+              ),
+            ),
+            Positioned(
+              bottom: -60,
+              right: -20,
+              child: _GlowOrb(
+                size: 160,
+                color: AppColors.secondary,
+                opacity: 0.20,
+              ),
+            ),
+            Column(
+              children: [
+                _buildSearchBar(),
+                Expanded(
+                  child: BlocConsumer<AdminCubit, AdminState>(
+                    listener: (context, state) {
+                      if (state is AdminError) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            behavior: SnackBarBehavior.floating,
+                            margin: EdgeInsets.all(16.r),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16.r),
+                            ),
+                            content: Text(
+                              state.message,
+                              style: TextStyle(
+                                fontFamily: AppTextStyles.fontFamily,
+                              ),
+                            ),
+                            backgroundColor: AppColors.error,
+                          ),
+                        );
+                      }
+                    },
+                    builder: (context, state) {
+                      if (state is AdminLoading ||
+                          state is AdminActionLoading) {
+                        return const Center(child: LoadingWidget());
+                      }
+                      if (state is AdminError) {
+                        return Center(
+                          child: ConstrainedBox(
+                            constraints: BoxConstraints(maxWidth: 520.w),
+                            child: AppErrorWidget(
+                              message: state.message,
+                              onRetry: () =>
+                                  context.read<AdminCubit>().loadRiders(),
+                            ),
+                          ),
+                        );
+                      }
+                      if (state is AdminRidersLoaded) {
+                        return _buildRidersList(state);
+                      }
+                      return const SizedBox.shrink();
+                    },
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
 
   Widget _buildSearchBar() {
-    return Container(
-      padding: EdgeInsets.all(16.w),
-      color: AppColors.surface,
-      child: AppSearchField(
-        controller: _searchController,
-        hint: 'بحث باسم السائق أو رقم الهاتف...',
-        onChanged: (value) {
-          // فلترة محلية على البيانات اللي جاية من الـ API بدون استدعاء جديد للسيرفر
-          setState(() {});
-        },
+    return Padding(
+      padding: EdgeInsets.fromLTRB(16.w, 16.h, 16.w, 10.h),
+      child: Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(20.r),
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              Colors.white.withValues(alpha: 0.16),
+              Colors.white.withValues(alpha: 0.08),
+            ],
+          ),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.22)),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.45),
+              blurRadius: 22,
+              offset: const Offset(0, 10),
+            ),
+            BoxShadow(
+              color: AppColors.primary.withValues(alpha: 0.25),
+              blurRadius: 26,
+              offset: const Offset(0, 14),
+            ),
+          ],
+        ),
+        padding: EdgeInsets.all(12.w),
+        child: AppSearchField(
+          controller: _searchController,
+          hint: 'بحث باسم السائق أو رقم الهاتف...',
+          onChanged: (value) {
+            // فلترة محلية على البيانات اللي جاية من الـ API بدون استدعاء جديد للسيرفر
+            setState(() {});
+          },
+        ),
       ),
     );
   }
@@ -137,10 +214,10 @@ class _AdminRidersViewState extends State<_AdminRidersView> {
     );
 
     // سيتم استخدام هذه الحقول فقط عند إنشاء سائق جديد (حساب المستخدم)
-    final userNameController =
-        TextEditingController(text: rider?.fullName ?? '');
-    final userPhoneController =
-        TextEditingController(text: rider?.phone ?? '');
+    final userNameController = TextEditingController(
+      text: rider?.fullName ?? '',
+    );
+    final userPhoneController = TextEditingController(text: rider?.phone ?? '');
     final userPasswordController = TextEditingController();
 
     showModalBottomSheet(
@@ -305,8 +382,9 @@ class _AdminRidersViewState extends State<_AdminRidersView> {
                               return;
                             }
 
-                            final fee =
-                                double.parse(deliveryFeeController.text.trim());
+                            final fee = double.parse(
+                              deliveryFeeController.text.trim(),
+                            );
 
                             final payload = <String, dynamic>{
                               'rider': {
@@ -327,13 +405,11 @@ class _AdminRidersViewState extends State<_AdminRidersView> {
                             final cubit = context.read<AdminCubit>();
                             if (isEdit) {
                               await cubit.updateRiderAsAdmin(
-                                riderId: rider!.id,
+                                riderId: rider.id,
                                 payload: payload,
                               );
                             } else {
-                              await cubit.createRiderAsAdmin(
-                                payload: payload,
-                              );
+                              await cubit.createRiderAsAdmin(payload: payload);
                             }
 
                             if (!context.mounted) return;
@@ -437,130 +513,196 @@ class _AdminRidersViewState extends State<_AdminRidersView> {
 class _RiderCard extends StatelessWidget {
   final Rider rider;
   final VoidCallback onEdit;
+
   const _RiderCard({required this.rider, required this.onEdit});
+
   @override
   Widget build(BuildContext context) {
-    return AppCard(
+    final baseColor = AppColors.info;
+
+    return Container(
       margin: EdgeInsets.only(bottom: 12.h),
-      borderColor: rider.isActive ? null : AppColors.error,
-      onTap: () => _showDetails(context),
-      child: Row(
-        children: [
-          Container(
-            width: 48.r,
-            height: 48.r,
-            decoration: BoxDecoration(
-              color: AppColors.info.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(12.r),
-            ),
-            child: Icon(
-              Icons.delivery_dining,
-              color: AppColors.info,
-              size: 24.r,
-            ),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(18.r),
+        border: Border.all(
+          color: rider.isActive
+              ? Colors.white.withValues(alpha: 0.08)
+              : AppColors.error.withValues(alpha: 0.70),
+          width: 1,
+        ),
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Colors.white.withValues(alpha: 0.08),
+            Colors.white.withValues(alpha: 0.03),
+          ],
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.22),
+            blurRadius: 22,
+            offset: const Offset(0, 10),
           ),
-          SizedBox(width: 12.w,),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        rider.fullName,
-                        style: TextStyle(
-                          fontFamily: AppTextStyles.fontFamily,
-                          fontSize: 14.sp,
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.textPrimary,
-                        ),
-                        overflow: TextOverflow.ellipsis,
-                      ) 
-                    ),
-                    _ActiveBadge(isActive: rider.isActive)
-                  ],
-                ),
-                SizedBox(height: 4.h,),
-                Row(
-                  children: [
-                    if (rider.phone.isNotEmpty)...[
-                      Icon(
-                        Icons.phone,
-                        size: 14.r,
-                        color: AppColors.textSecondary,
-                      ),
-                      SizedBox(width: 4.w,),
-                      Text(
-                        Formatters.formatPhone(rider.phone),
-                        style: TextStyle(
-                          fontFamily: AppTextStyles.fontFamily,
-                          fontSize: 12.sp,
-                          color: AppColors.textSecondary,
-                        ),
-                      )
-                    ],
-                    const Spacer(),
-                    IconButton(
-                      onPressed: onEdit,
-                      icon: const Icon(Icons.edit, size: 18),
-                      color: AppColors.primary,
-                    ),
-                    _AvailabilityBadge(isAvailable: rider.isAvailable),
-                  ],
-                ),
-                SizedBox(height: 6.h,),
-                Row(
-                  children: [
-                    Icon(
-                      Icons.shopping_bag_outlined,
-                      size: 14.r,
-                      color: AppColors.textSecondary,
-                    ),
-                    SizedBox(width: 4.w,),
-                    Text(
-                      'توصيلات: ${rider.totalDeliveries}',
-                      style: TextStyle(
-                        fontFamily: AppTextStyles.fontFamily,
-                        fontSize: 11.sp,
-                        color: AppColors.textSecondary,
-                      ),
-                    ),
-                    SizedBox(width: 12.w,),
-                    Icon(
-                      Icons.payment_outlined,
-                      size: 14.r,
-                      color: AppColors.textSecondary,
-                    ),
-                    SizedBox(width: 4.w,),
-                    Text(
-                      'أجرة: ${Formatters.formatCurrency(rider.deliveryFee)}',
-                      style: TextStyle(
-                        fontFamily: AppTextStyles.fontFamily,
-                        fontSize: 11.sp,
-                        color: AppColors.textSecondary,
-                      ),
-                    )
-                  ],
-                ),
-                SizedBox(height: 4.h,),
-                Text(
-                  'انضم ${Formatters.formatRelativeTime(rider.createdAt)}',
-                  style: TextStyle(
-                    fontFamily: AppTextStyles.fontFamily,
-                    fontSize: 11.sp,
-                    color: AppColors.textSecondary,
-                  ),
-                )
-              ],
-            ) 
+          BoxShadow(
+            color: baseColor.withValues(alpha: 0.25),
+            blurRadius: 24,
+            offset: const Offset(0, 6),
           ),
-          Icon(
-            Icons.chevron_right,
-            color: AppColors.textHint,
-            size: 20.r,
-          )
         ],
+      ),
+      child: AppCard(
+        margin: EdgeInsets.zero,
+        padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 12.h),
+        borderColor: Colors.transparent,
+        onTap: () => _showDetails(context),
+        child: Row(
+          children: [
+            // Glowing rider icon
+            Stack(
+              alignment: Alignment.center,
+              children: [
+                Container(
+                  width: 52.r,
+                  height: 52.r,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    gradient: LinearGradient(
+                      colors: [
+                        baseColor.withValues(alpha: 0.18),
+                        baseColor.withValues(alpha: 0.08),
+                      ],
+                    ),
+                  ),
+                ),
+                Container(
+                  width: 42.r,
+                  height: 42.r,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(14.r),
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                        baseColor.withValues(alpha: 0.95),
+                        baseColor.withValues(alpha: 0.75),
+                      ],
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: baseColor.withValues(alpha: 0.55),
+                        blurRadius: 16,
+                        offset: const Offset(0, 6),
+                      ),
+                    ],
+                  ),
+                  child: Icon(
+                    Icons.delivery_dining,
+                    color: Colors.white,
+                    size: 22.r,
+                  ),
+                ),
+              ],
+            ),
+            SizedBox(width: 14.w),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          rider.fullName,
+                          style: TextStyle(
+                            fontFamily: AppTextStyles.fontFamily,
+                            fontSize: 14.sp,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.white,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      _ActiveBadge(isActive: rider.isActive),
+                    ],
+                  ),
+                  SizedBox(height: 4.h),
+                  Row(
+                    children: [
+                      if (rider.phone.isNotEmpty) ...[
+                        Icon(Icons.phone, size: 14.r, color: Colors.white70),
+                        SizedBox(width: 4.w),
+                        Text(
+                          Formatters.formatPhone(rider.phone),
+                          style: TextStyle(
+                            fontFamily: AppTextStyles.fontFamily,
+                            fontSize: 12.sp,
+                            color: Colors.white70,
+                          ),
+                        ),
+                      ],
+                      const Spacer(),
+                      IconButton(
+                        onPressed: onEdit,
+                        icon: const Icon(Icons.edit, size: 18),
+                        color: AppColors.primaryLight,
+                      ),
+                      _AvailabilityBadge(isAvailable: rider.isAvailable),
+                    ],
+                  ),
+                  SizedBox(height: 6.h),
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.shopping_bag_outlined,
+                        size: 14.r,
+                        color: Colors.white70,
+                      ),
+                      SizedBox(width: 4.w),
+                      Text(
+                        'توصيلات: ${rider.totalDeliveries}',
+                        style: TextStyle(
+                          fontFamily: AppTextStyles.fontFamily,
+                          fontSize: 11.sp,
+                          color: Colors.white70,
+                        ),
+                      ),
+                      SizedBox(width: 12.w),
+                      Icon(
+                        Icons.payment_outlined,
+                        size: 14.r,
+                        color: Colors.white70,
+                      ),
+                      SizedBox(width: 4.w),
+                      Text(
+                        'أجرة: ${Formatters.formatCurrency(rider.deliveryFee)}',
+                        style: TextStyle(
+                          fontFamily: AppTextStyles.fontFamily,
+                          fontSize: 11.sp,
+                          color: Colors.white70,
+                        ),
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: 4.h),
+                  Text(
+                    'انضم ${Formatters.formatRelativeTime(rider.createdAt)}',
+                    style: TextStyle(
+                      fontFamily: AppTextStyles.fontFamily,
+                      fontSize: 11.sp,
+                      color: Colors.white70,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Icon(
+              Icons.chevron_right,
+              color: Colors.white.withValues(alpha: 0.6),
+              size: 20.r,
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -569,11 +711,16 @@ class _RiderCard extends StatelessWidget {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: AppColors.surface,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20.r)),
-      ),
-      builder: (ctx) => _RiderDetailsSheet(rider: rider),
+      useSafeArea: true,
+      backgroundColor: Colors.transparent,
+      barrierColor: Colors.black.withValues(alpha: 0.65),
+      elevation: 0,
+      builder: (ctx) {
+        return Align(
+          alignment: Alignment.bottomCenter,
+          child: _GlassBottomSheet(child: _RiderDetailsSheet(rider: rider)),
+        );
+      },
     );
   }
 }
@@ -774,6 +921,143 @@ class _ActiveBadge extends StatelessWidget {
           fontSize: 10.sp,
           color: color,
           fontWeight: FontWeight.w600,
+        ),
+      ),
+    );
+  }
+}
+
+/// Soft glowing orb for admin riders background.
+class _GlowOrb extends StatelessWidget {
+  final double size;
+  final Color color;
+  final double opacity;
+
+  const _GlowOrb({
+    required this.size,
+    required this.color,
+    required this.opacity,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        boxShadow: [
+          BoxShadow(
+            color: color.withValues(alpha: opacity),
+            blurRadius: size / 2,
+            spreadRadius: size / 6,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Glassmorphism wrapper for rider bottom sheets.
+class _GlassBottomSheet extends StatelessWidget {
+  final Widget child;
+
+  const _GlassBottomSheet({required this.child});
+
+  @override
+  Widget build(BuildContext context) {
+    return ClipRRect(
+      borderRadius: BorderRadius.vertical(top: Radius.circular(28.r)),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 24, sigmaY: 24),
+        child: Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.vertical(top: Radius.circular(28.r)),
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [
+                Colors.white.withValues(alpha: 0.16),
+                Colors.white.withValues(alpha: 0.06),
+              ],
+            ),
+            border: Border.all(
+              color: AppColors.primary.withValues(alpha: 0.30),
+              width: 1.2,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.45),
+                blurRadius: 24,
+                offset: const Offset(0, -6),
+              ),
+            ],
+          ),
+          child: child,
+        ),
+      ),
+    );
+  }
+}
+
+/// Floating luxury FAB for creating riders (matches admin shops/categories).
+class _LuxuryFab extends StatelessWidget {
+  final VoidCallback onPressed;
+
+  const _LuxuryFab({required this.onPressed});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.primary.withValues(alpha: 0.45),
+            blurRadius: 22,
+            offset: const Offset(0, 10),
+          ),
+        ],
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              AppColors.primary,
+              AppColors.primaryLight,
+              AppColors.secondary.withValues(alpha: 0.9),
+            ],
+          ),
+          borderRadius: BorderRadius.circular(999),
+        ),
+        child: FloatingActionButton.extended(
+          onPressed: onPressed,
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          icon: Container(
+            width: 28.r,
+            height: 28.r,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: Colors.white.withValues(alpha: 0.16),
+            ),
+            child: const Icon(Icons.add_rounded, size: 18, color: Colors.white),
+          ),
+          label: Padding(
+            padding: EdgeInsets.symmetric(horizontal: 4.w),
+            child: Text(
+              'سائق جديد',
+              style: TextStyle(
+                fontFamily: AppTextStyles.fontFamily,
+                fontWeight: FontWeight.w700,
+                fontSize: 14.sp,
+                color: Colors.white,
+                letterSpacing: 0.5,
+              ),
+            ),
+          ),
         ),
       ),
     );

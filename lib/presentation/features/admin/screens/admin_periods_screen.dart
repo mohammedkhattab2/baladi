@@ -65,45 +65,100 @@ class _AdminPeriodsViewState extends State<_AdminPeriodsView> {
     return AdminShell(
       currentRoute: RouteNames.adminPeriods,
       title: 'فترات التسوية',
-      child: BlocConsumer<AdminCubit, AdminState>(
-        listener: (context, state) {
-          if (state is AdminError) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(
-                  state.message,
-                  style: TextStyle(fontFamily: AppTextStyles.fontFamily),
-                ),
-                backgroundColor: AppColors.error,
+      child: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              Color(0xFF0D1B2A),
+              Color(0xFF1B263B),
+              Color(0xFF2D5A27),
+              Color(0xFF1A3A16),
+            ],
+            stops: [0.0, 0.35, 0.7, 1.0],
+          ),
+        ),
+        child: Stack(
+          children: [
+            Positioned(
+              top: -80,
+              left: -40,
+              child: _GlowOrb(
+                size: 180,
+                color: AppColors.primary,
+                opacity: 0.22,
               ),
-            );
-          }
-        },
-        builder: (context, state) {
-          if (state is AdminLoading || state is AdminActionLoading) {
-            return const Center(child: LoadingWidget());
-          }
-          if (state is AdminError) {
-            return AppErrorWidget(
-              message: state.message,
-              onRetry: () => context.read<AdminCubit>().loadPeriods(),
-            );
-          }
-          if (state is AdminPeriodsLoaded) {
-            return _buildPeriodsList(state);
-          }
-          return const SizedBox.shrink();
-        },
+            ),
+            Positioned(
+              bottom: -60,
+              right: -30,
+              child: _GlowOrb(
+                size: 160,
+                color: AppColors.secondary,
+                opacity: 0.20,
+              ),
+            ),
+            BlocConsumer<AdminCubit, AdminState>(
+              listener: (context, state) {
+                if (state is AdminError) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      behavior: SnackBarBehavior.floating,
+                      margin: EdgeInsets.all(16.r),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14.r),
+                      ),
+                      content: Text(
+                        state.message,
+                        style: TextStyle(
+                          fontFamily: AppTextStyles.fontFamily,
+                        ),
+                      ),
+                      backgroundColor: AppColors.error,
+                    ),
+                  );
+                }
+              },
+              builder: (context, state) {
+                if (state is AdminLoading || state is AdminActionLoading) {
+                  return const Center(child: LoadingWidget());
+                }
+                if (state is AdminError) {
+                  return Center(
+                    child: ConstrainedBox(
+                      constraints: BoxConstraints(maxWidth: 520.w),
+                      child: AppErrorWidget(
+                        message: state.message,
+                        onRetry: () =>
+                            context.read<AdminCubit>().loadPeriods(),
+                      ),
+                    ),
+                  );
+                }
+                if (state is AdminPeriodsLoaded) {
+                  return _buildPeriodsList(state);
+                }
+                return const SizedBox.shrink();
+              },
+            ),
+          ],
+        ),
       ),
     );
   }
 
   Widget _buildPeriodsList(AdminPeriodsLoaded state) {
     if (state.periods.isEmpty) {
-      return const AppEmptyState(
-        icon: Icons.date_range_outlined,
-        title: 'لا توجد فترات',
-        description: 'سيتم إنشاء فترات أسبوعية تلقائياً مع أول طلبات',
+      return Center(
+        child: ConstrainedBox(
+          constraints: BoxConstraints(maxWidth: 480.w),
+          child: const AppEmptyState(
+            icon: Icons.date_range_outlined,
+            title: 'لا توجد فترات',
+            description: 'سيتم إنشاء فترات أسبوعية تلقائياً مع أول طلبات',
+          ),
+        ),
       );
     }
 
@@ -140,81 +195,128 @@ class _PeriodCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return AppCard(
-      margin: EdgeInsets.only(bottom: 12.h),
-      borderColor: _statusColor(period.status),
-      onTap: () => _showDetails(context),
-      child: Row(
-        children: [
-          // Icon
-          Container(
-            width: 44.r,
-            height: 44.r,
-            decoration: BoxDecoration(
-              color: AppColors.primary.withOpacity(0.08),
-              borderRadius: BorderRadius.circular(12.r),
-            ),
-            child: Icon(
-              Icons.date_range,
-              color: AppColors.primary,
-              size: 22.r,
-            ),
-          ),
-          SizedBox(width: 12.w),
+    final statusColor = _statusColor(period.status);
 
-          // Info
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+    return Container(
+      margin: EdgeInsets.only(bottom: 12.h),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(16.r),
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Colors.white.withValues(alpha: 0.14),
+            Colors.white.withValues(alpha: 0.04),
+          ],
+        ),
+        border: Border.all(
+          color: statusColor.withValues(alpha: 0.70),
+          width: 1.1,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.30),
+            blurRadius: 18,
+            offset: const Offset(0, 8),
+          ),
+          BoxShadow(
+            color: statusColor.withValues(alpha: 0.28),
+            blurRadius: 22,
+            offset: const Offset(0, 10),
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(16.r),
+        child: InkWell(
+          onTap: () => _showDetails(context),
+          borderRadius: BorderRadius.circular(16.r),
+          child: Padding(
+            padding: EdgeInsets.all(16.r),
+            child: Row(
               children: [
-                // Label + status
-                Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        period.displayLabel,
+                Container(
+                  width: 46.r,
+                  height: 46.r,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(14.r),
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                        statusColor.withValues(alpha: 0.95),
+                        statusColor.withValues(alpha: 0.70),
+                      ],
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: statusColor.withValues(alpha: 0.55),
+                        blurRadius: 16,
+                        offset: const Offset(0, 8),
+                      ),
+                    ],
+                  ),
+                  child: Icon(
+                    Icons.date_range,
+                    color: Colors.white,
+                    size: 22.r,
+                  ),
+                ),
+                SizedBox(width: 16.w),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              period.displayLabel,
+                              style: TextStyle(
+                                fontFamily: AppTextStyles.fontFamily,
+                                fontSize: 14.sp,
+                                fontWeight: FontWeight.w700,
+                                color: Colors.white,
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                          _StatusBadge(status: period.status),
+                        ],
+                      ),
+                      SizedBox(height: 4.h),
+                      Text(
+                        '${Formatters.formatDate(period.startDate)} - ${Formatters.formatDate(period.endDate)}',
                         style: TextStyle(
                           fontFamily: AppTextStyles.fontFamily,
-                          fontSize: 14.sp,
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.textPrimary,
+                          fontSize: 12.sp,
+                          color: Colors.white70,
                         ),
-                        overflow: TextOverflow.ellipsis,
                       ),
-                    ),
-                    _StatusBadge(status: period.status),
-                  ],
-                ),
-                SizedBox(height: 4.h),
-                Text(
-                  '${Formatters.formatDate(period.startDate)} - ${Formatters.formatDate(period.endDate)}',
-                  style: TextStyle(
-                    fontFamily: AppTextStyles.fontFamily,
-                    fontSize: 12.sp,
-                    color: AppColors.textSecondary,
+                      if (period.closedAt != null) ...[
+                        SizedBox(height: 2.h),
+                        Text(
+                          'أُغلقت: ${Formatters.formatDateTime(period.closedAt!)}',
+                          style: TextStyle(
+                            fontFamily: AppTextStyles.fontFamily,
+                            fontSize: 11.sp,
+                            color: Colors.white60,
+                          ),
+                        ),
+                      ],
+                    ],
                   ),
                 ),
-                if (period.closedAt != null) ...[
-                  SizedBox(height: 2.h),
-                  Text(
-                    'أُغلقت: ${Formatters.formatDateTime(period.closedAt!)}',
-                    style: TextStyle(
-                      fontFamily: AppTextStyles.fontFamily,
-                      fontSize: 11.sp,
-                      color: AppColors.textSecondary,
-                    ),
-                  ),
-                ],
+                Icon(
+                  Icons.chevron_left,
+                  color: Colors.white.withValues(alpha: 0.55),
+                  size: 22.r,
+                ),
               ],
             ),
           ),
-
-          Icon(
-            Icons.chevron_left,
-            color: AppColors.textHint,
-            size: 20.r,
-          ),
-        ],
+        ),
       ),
     );
   }
@@ -254,7 +356,7 @@ class _StatusBadge extends StatelessWidget {
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(4.r),
       ),
       child: Text(
@@ -413,6 +515,36 @@ class _DetailRow extends StatelessWidget {
                 color: AppColors.textPrimary,
               ),
             ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _GlowOrb extends StatelessWidget {
+  final double size;
+  final Color color;
+  final double opacity;
+
+  const _GlowOrb({
+    required this.size,
+    required this.color,
+    required this.opacity,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        boxShadow: [
+          BoxShadow(
+            color: color.withValues(alpha: opacity),
+            blurRadius: size / 2,
+            spreadRadius: size / 6,
           ),
         ],
       ),

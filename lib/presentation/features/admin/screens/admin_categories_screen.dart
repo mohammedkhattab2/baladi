@@ -161,7 +161,7 @@ class _AdminCategoriesView extends StatelessWidget {
                     onRefresh: () =>
                         context.read<AdminCategoriesCubit>().loadCategories(),
                     color: AppColors.primary,
-                    backgroundColor: Colors.white,
+                    backgroundColor: Colors.transparent,
                     child: ListView.builder(
                       padding: EdgeInsets.fromLTRB(16.w, 16.h, 16.w, 32.h),
                       itemCount: state.categories.length,
@@ -340,32 +340,32 @@ class _AdminCategoriesView extends StatelessWidget {
                             ],
                           ),
                           SizedBox(height: 20.h),
-                          // Glass card for fields (matches auth identity)
+                          // Glass card for fields (dark admin identity instead of pure white)
                           Container(
                             decoration: BoxDecoration(
                               borderRadius: BorderRadius.circular(20.r),
-                              gradient: LinearGradient(
+                              gradient: const LinearGradient(
                                 begin: Alignment.topLeft,
                                 end: Alignment.bottomRight,
                                 colors: [
-                                  Colors.white.withValues(alpha: 0.95),
-                                  Colors.white.withValues(alpha: 0.92),
+                                  Color(0xFF0B1722),
+                                  Color(0xFF132433),
                                 ],
                               ),
                               border: Border.all(
-                                color: AppColors.primary.withValues(alpha: 0.12),
+                                color: AppColors.primary.withValues(alpha: 0.35),
                                 width: 1.2,
                               ),
                               boxShadow: [
                                 BoxShadow(
-                                  color: Colors.black.withValues(alpha: 0.04),
-                                  blurRadius: 18,
-                                  offset: const Offset(0, 8),
+                                  color: Colors.black.withValues(alpha: 0.55),
+                                  blurRadius: 22,
+                                  offset: const Offset(0, 12),
                                 ),
                                 BoxShadow(
-                                  color: AppColors.primary.withValues(alpha: 0.10),
-                                  blurRadius: 26,
-                                  offset: const Offset(0, 10),
+                                  color: AppColors.primary.withValues(alpha: 0.35),
+                                  blurRadius: 28,
+                                  offset: const Offset(0, 18),
                                 ),
                               ],
                             ),
@@ -762,50 +762,61 @@ class _CategoryCard extends StatelessWidget {
       margin: EdgeInsets.only(bottom: 12.h),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(18.r),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.06), width: 1),
-        gradient: LinearGradient(
+        // نفس ستايل AdminStatCard: خلفية داكنة + بوردر مضيء + جلو حسب حالة الكاتيجوري
+        gradient: const LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            Colors.white.withValues(alpha: 0.06),
-            Colors.white.withValues(alpha: 0.02),
+            Color(0xFF0B1722),
+            Color(0xFF132433),
           ],
+        ),
+        border: Border.all(
+          color: AppColors.primary.withValues(alpha: 0.35),
+          width: 1.0,
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.18),
-            blurRadius: 20,
+            color: Colors.black.withValues(alpha: 0.45),
+            blurRadius: 18,
             offset: const Offset(0, 10),
           ),
           BoxShadow(
-            color: baseColor.withValues(alpha: 0.20),
-            blurRadius: 24,
-            offset: const Offset(0, 6),
+            color: baseColor.withValues(alpha: 0.25),
+            blurRadius: 22,
+            offset: const Offset(0, 14),
           ),
         ],
       ),
       child: AppCard(
         margin: EdgeInsets.zero,
-        padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 12.h),
+        // خلي الكارت الداخلي شفاف عشان نوضح الجريدينت الداكن زي لوحة التحكم
+        backgroundColor: Colors.transparent,
+        // elevation صغير جداً لتفادي البوردر الأبيض الافتراضي في AppCard
+        elevation: 0.01,
+        padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
         onTap: onEdit,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Top row: icon + names + status
+            // الصف العلوي: الأيقونة + الأسماء + الحالة
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Icon + decorative ring
+                // أيقونة داخل بلوك مضيء (مثل QuickActionTile / AdminStatCard)
                 Stack(
                   alignment: Alignment.center,
                   children: [
                     Container(
-                      width: 52.r,
-                      height: 52.r,
+                      width: 54.r,
+                      height: 54.r,
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
-                        gradient: LinearGradient(
-                          colors: [tileColor, tileColor.withValues(alpha: 0.4)],
+                        gradient: RadialGradient(
+                          colors: [
+                            baseColor.withValues(alpha: 0.35),
+                            baseColor.withValues(alpha: 0.05),
+                          ],
                         ),
                       ),
                     ),
@@ -843,46 +854,109 @@ class _CategoryCard extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Arabic name (primary)
-                      Text(
-                        category.nameAr,
-                        style: TextStyle(
-                          fontFamily: AppTextStyles.fontFamily,
-                          fontSize: 15.sp,
-                          fontWeight: FontWeight.w800,
-                          color: AppColors.textPrimary,
-                        ),
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      SizedBox(height: 3.h),
-                      // English name + slug chip
                       Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Expanded(
-                            child: Text(
-                              category.name,
-                              style: TextStyle(
-                                fontFamily: AppTextStyles.fontFamily,
-                                fontSize: 12.sp,
-                                fontWeight: FontWeight.w500,
-                                color: AppColors.textSecondary.withValues(
-                                  alpha: 0.95,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                // الاسم العربي (رئيسي)
+                                Text(
+                                  category.nameAr,
+                                  style: TextStyle(
+                                    fontFamily: AppTextStyles.fontFamily,
+                                    fontSize: 15.sp,
+                                    fontWeight: FontWeight.w800,
+                                    color: Colors.white,
+                                  ),
+                                  overflow: TextOverflow.ellipsis,
                                 ),
-                              ),
-                              overflow: TextOverflow.ellipsis,
+                                SizedBox(height: 4.h),
+                                // الاسم الإنجليزي تحتها بخط أخف
+                                Text(
+                                  category.name,
+                                  style: TextStyle(
+                                    fontFamily: AppTextStyles.fontFamily,
+                                    fontSize: 12.sp,
+                                    fontWeight: FontWeight.w500,
+                                    color: Colors.white70,
+                                  ),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ],
                             ),
                           ),
                           SizedBox(width: 8.w),
+                          // شارة الحالة في الزاوية اليمنى
+                          Container(
+                            padding: EdgeInsets.symmetric(
+                              horizontal: 10.w,
+                              vertical: 4.h,
+                            ),
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(999),
+                              gradient: LinearGradient(
+                                colors: isActive
+                                    ? [
+                                        AppColors.success.withValues(alpha: 0.18),
+                                        AppColors.success.withValues(alpha: 0.30),
+                                      ]
+                                    : [
+                                        AppColors.error.withValues(alpha: 0.18),
+                                        AppColors.error.withValues(alpha: 0.30),
+                                      ],
+                              ),
+                              boxShadow: [
+                                BoxShadow(
+                                  color:
+                                      (isActive ? AppColors.success : AppColors.error)
+                                          .withValues(alpha: 0.45),
+                                  blurRadius: 14,
+                                  offset: const Offset(0, 6),
+                                ),
+                              ],
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Container(
+                                  width: 6.r,
+                                  height: 6.r,
+                                  decoration: const BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                                SizedBox(width: 4.w),
+                                Text(
+                                  isActive ? 'نشط' : 'معطل',
+                                  style: TextStyle(
+                                    fontFamily: AppTextStyles.fontFamily,
+                                    fontSize: 11.sp,
+                                    fontWeight: FontWeight.w700,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                      SizedBox(height: 10.h),
+                      // صف شرائح: slug + ترتيب العرض (إن وجد)
+                      Row(
+                        children: [
                           Container(
                             padding: EdgeInsets.symmetric(
                               horizontal: 8.w,
-                              vertical: 3.h,
+                              vertical: 4.h,
                             ),
                             decoration: BoxDecoration(
                               borderRadius: BorderRadius.circular(999),
                               color: Colors.white.withValues(alpha: 0.06),
                               border: Border.all(
-                                color: Colors.white.withValues(alpha: 0.18),
+                                color: Colors.white.withValues(alpha: 0.20),
                               ),
                             ),
                             child: Row(
@@ -891,9 +965,7 @@ class _CategoryCard extends StatelessWidget {
                                 Icon(
                                   Icons.link_rounded,
                                   size: 11.r,
-                                  color: AppColors.textSecondary.withValues(
-                                    alpha: 0.9,
-                                  ),
+                                  color: Colors.white70,
                                 ),
                                 SizedBox(width: 4.w),
                                 Text(
@@ -901,69 +973,46 @@ class _CategoryCard extends StatelessWidget {
                                   style: TextStyle(
                                     fontFamily: AppTextStyles.fontFamily,
                                     fontSize: 10.sp,
-                                    color: AppColors.textSecondary.withValues(
-                                      alpha: 0.9,
-                                    ),
+                                    color: Colors.white70,
                                   ),
                                   overflow: TextOverflow.ellipsis,
                                 ),
                               ],
                             ),
                           ),
+                          if (category.sortOrder != 0) ...[
+                            SizedBox(width: 8.w),
+                            Container(
+                              padding: EdgeInsets.symmetric(
+                                horizontal: 8.w,
+                                vertical: 3.h,
+                              ),
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(999),
+                                color: AppColors.primary.withValues(alpha: 0.16),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(
+                                    Icons.sort_rounded,
+                                    size: 12.r,
+                                    color: AppColors.primaryLight,
+                                  ),
+                                  SizedBox(width: 4.w),
+                                  Text(
+                                    'ترتيب #${category.sortOrder}',
+                                    style: TextStyle(
+                                      fontFamily: AppTextStyles.fontFamily,
+                                      fontSize: 11.sp,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
                         ],
-                      ),
-                    ],
-                  ),
-                ),
-                SizedBox(width: 8.w),
-                // Status pill
-                Container(
-                  padding: EdgeInsets.symmetric(
-                    horizontal: 10.w,
-                    vertical: 4.h,
-                  ),
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(999),
-                    gradient: LinearGradient(
-                      colors: isActive
-                          ? [
-                              AppColors.success.withValues(alpha:  0.16),
-                              AppColors.success.withValues ( alpha: 0.26),
-                            ]
-                          : [
-                              AppColors.error.withValues(alpha: 0.16),
-                              AppColors.error.withValues(alpha: 0.26),
-                            ],
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: (isActive ? AppColors.success : AppColors.error)
-                            .withValues(alpha: 0.35),
-                        blurRadius: 14,
-                        offset: const Offset(0, 6),
-                      ),
-                    ],
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Container(
-                        width: 6.r,
-                        height: 6.r,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: Colors.white,
-                        ),
-                      ),
-                      SizedBox(width: 4.w),
-                      Text(
-                        isActive ? 'نشط' : 'معطل',
-                        style: TextStyle(
-                          fontFamily: AppTextStyles.fontFamily,
-                          fontSize: 11.sp,
-                          fontWeight: FontWeight.w700,
-                          color: Colors.white,
-                        ),
                       ),
                     ],
                   ),
@@ -971,53 +1020,40 @@ class _CategoryCard extends StatelessWidget {
               ],
             ),
             SizedBox(height: 10.h),
-            // Bottom row: sort order + actions
+            // خط فاصل ناعم
+            Divider(
+              height: 1,
+              color: Colors.white.withValues(alpha: 0.10),
+            ),
+            SizedBox(height: 8.h),
+            // الصف السفلي: أكشنات بشكل أيقونات / نص خفيف
             Row(
               children: [
-                if (category.sortOrder != 0) ...[
-                  Container(
-                    padding: EdgeInsets.symmetric(
-                      horizontal: 8.w,
-                      vertical: 3.h,
-                    ),
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(999),
-                      color: AppColors.primary.withValues(alpha: 0.08),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(
-                          Icons.sort_rounded,
-                          size: 12.r,
-                          color: AppColors.primary,
-                        ),
-                        SizedBox(width: 4.w),
-                        Text(
-                          'ترتيب #${category.sortOrder}',
-                          style: TextStyle(
-                            fontFamily: AppTextStyles.fontFamily,
-                            fontSize: 11.sp,
-                            color: AppColors.primary,
-                          ),
-                        ),
-                      ],
-                    ),
+                Icon(
+                  Icons.category_outlined,
+                  size: 14.r,
+                  color: Colors.white24,
+                ),
+                SizedBox(width: 4.w),
+                Text(
+                  'ID: ${category.id}',
+                  style: TextStyle(
+                    fontFamily: AppTextStyles.fontFamily,
+                    fontSize: 10.sp,
+                    color: Colors.white30,
                   ),
-                  SizedBox(width: 8.w),
-                ],
-                Spacer(),
+                ),
+                const Spacer(),
                 TextButton.icon(
                   onPressed: onEdit,
                   style: TextButton.styleFrom(
-                    foregroundColor: AppColors.primary,
+                    foregroundColor: AppColors.primaryLight,
                     padding: EdgeInsets.symmetric(
-                      horizontal: 10.w,
+                      horizontal: 8.w,
                       vertical: 4.h,
                     ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(999),
-                    ),
+                    minimumSize: Size.zero,
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                   ),
                   icon: Icon(Icons.edit_rounded, size: 16.r),
                   label: Text(
@@ -1035,12 +1071,11 @@ class _CategoryCard extends StatelessWidget {
                   style: TextButton.styleFrom(
                     foregroundColor: AppColors.error,
                     padding: EdgeInsets.symmetric(
-                      horizontal: 10.w,
+                      horizontal: 8.w,
                       vertical: 4.h,
                     ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(999),
-                    ),
+                    minimumSize: Size.zero,
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                   ),
                   icon: Icon(Icons.delete_outline_rounded, size: 16.r),
                   label: Text(
@@ -1213,15 +1248,18 @@ class _GlassDialog extends StatelessWidget {
         filter: ImageFilter.blur(sigmaX: 26, sigmaY: 26),
         child: Container(
           decoration: BoxDecoration(
-            gradient: LinearGradient(
+            // Dark glass dialog to match admin dashboard theme (no solid white)
+            gradient: const LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
               colors: [
-                Colors.white.withValues(alpha: 0.92),
-                Colors.white.withValues(alpha: 0.98),
+                Color(0xFF050B11),
+                Color(0xFF101B27),
               ],
             ),
             borderRadius: BorderRadius.circular(24.r),
             border: Border.all(
-              color: Colors.white.withValues(alpha: 0.8),
+              color: AppColors.primary.withValues(alpha: 0.55),
               width: 1.4,
             ),
           ),

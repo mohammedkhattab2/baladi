@@ -8,7 +8,7 @@ import 'package:hive_flutter/hive_flutter.dart';
 import 'app.dart';
 import 'core/config/environment.dart';
 import 'core/di/injection.dart';
-
+ 
 /// Application entry point.
 ///
 /// Initialization order:

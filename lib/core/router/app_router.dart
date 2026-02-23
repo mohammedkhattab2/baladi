@@ -19,6 +19,8 @@ import 'package:baladi/presentation/features/auth/screens/pin_recovery_screen.da
 import 'package:baladi/presentation/features/auth/screens/staff_login_screen.dart';
 import 'package:baladi/presentation/features/auth/screens/welcome_screen.dart';
 import 'package:baladi/presentation/features/customer/screens/customer_home_screen.dart';
+import 'package:baladi/presentation/features/shop/screens/shop_dashboard_screen.dart';
+import 'package:baladi/presentation/features/shop/screens/shop_orders_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:injectable/injectable.dart';
@@ -150,8 +152,7 @@ class AppRouter {
         GoRoute(
           path: RouteNames.shopDashboardPath,
           name: RouteNames.shopDashboard,
-          builder: (context, state) =>
-              const _PlaceholderScreen(title: 'Shop Dashboard'),
+          builder: (context, state) => const ShopDashboardScreen(),
           routes: [
             GoRoute(
               path: RouteNames.shopOrderManagePath,
@@ -166,8 +167,7 @@ class AppRouter {
         GoRoute(
           path: RouteNames.shopOrdersPath,
           name: RouteNames.shopOrders,
-          builder: (context, state) =>
-              const _PlaceholderScreen(title: 'Shop Orders'),
+          builder: (context, state) => const ShopOrdersScreen(),
         ),
         GoRoute(
           path: RouteNames.shopProductsPath,

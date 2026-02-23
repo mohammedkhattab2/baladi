@@ -25,13 +25,29 @@ class AdminStatCard extends StatelessWidget {
     return Container(
       padding: EdgeInsets.all(16.r),
       decoration: BoxDecoration(
-        color: AppColors.surface,
         borderRadius: BorderRadius.circular(16.r),
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            const Color(0xFF0B1722),
+            const Color(0xFF132433),
+          ],
+        ),
+        border: Border.all(
+          color: AppColors.primary.withValues(alpha: 0.35),
+          width: 1.0,
+        ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
+            color: Colors.black.withValues(alpha: 0.45),
+            blurRadius: 18,
+            offset: const Offset(0, 10),
+          ),
+          BoxShadow(
+            color: color.withValues(alpha: 0.25),
+            blurRadius: 22,
+            offset: const Offset(0, 14),
           ),
         ],
       ),
@@ -44,10 +60,24 @@ class AdminStatCard extends StatelessWidget {
                 width: 44.r,
                 height: 44.r,
                 decoration: BoxDecoration(
-                  color: color.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(12.r),
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      color.withValues(alpha: 0.9),
+                      color.withValues(alpha: 0.7),
+                    ],
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: color.withValues(alpha: 0.55),
+                      blurRadius: 14,
+                      offset: const Offset(0, 8),
+                    ),
+                  ],
                 ),
-                child: Icon(icon, color: color, size: 24.r),
+                child: Icon(icon, color: Colors.white, size: 24.r),
               ),
               const Spacer(),
               if (trend != null)
@@ -94,7 +124,8 @@ class AdminStatCard extends StatelessWidget {
             style: TextStyle(
               fontFamily: AppTextStyles.fontFamily,
               fontWeight: FontWeight.bold,
-              color: AppColors.primary,
+              fontSize: 16.sp,
+              color: Colors.white,
             ),
           ),
           SizedBox(height: 4.h,),
@@ -103,7 +134,7 @@ class AdminStatCard extends StatelessWidget {
             style: TextStyle(
               fontFamily: AppTextStyles.fontFamily,
               fontSize: 12.sp,
-              color: AppColors.textSecondary,
+              color: Colors.white70,
             ),
           )
         ],

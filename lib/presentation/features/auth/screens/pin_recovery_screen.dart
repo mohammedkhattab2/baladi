@@ -608,15 +608,15 @@ class _LuxuryHeader extends StatelessWidget {
                         borderRadius: BorderRadius.circular(2.r),
                         gradient: LinearGradient(
                           colors: [
-                            AppColors.secondary.withOpacity(0.5),
+                            AppColors.secondary.withValues(alpha:  0.5),
                             AppColors.secondary,
-                            AppColors.secondary.withOpacity(0.5),
+                            AppColors.secondary.withValues(alpha:  0.5),
                           ],
                         ),
                         boxShadow: [
                           BoxShadow(
                             color:
-                                AppColors.secondary.withOpacity(0.6 * pulseValue),
+                                AppColors.secondary.withValues(alpha: 0.6 * pulseValue),
                             blurRadius: 15 * pulseValue,
                             spreadRadius: 2,
                           ),
@@ -670,14 +670,14 @@ class _GlowingBackButtonState extends State<_GlowingBackButton> {
             height: 44.r,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: Colors.white.withOpacity(_isPressed ? 0.25 : 0.15),
+              color: Colors.white.withValues(alpha: _isPressed ? 0.25 : 0.15),
               border: Border.all(
-                color: Colors.white.withOpacity(0.3),
+                color: Colors.white.withValues(alpha: 0.3),
                 width: 1,
               ),
               boxShadow: [
                 BoxShadow(
-                  color: AppColors.primary.withOpacity(0.3 * pulseValue),
+                  color: AppColors.primary.withValues(alpha: 0.3 * pulseValue),
                   blurRadius: 15 * pulseValue,
                   spreadRadius: 2,
                 ),
@@ -732,12 +732,13 @@ class _LuxuryStepIndicator extends StatelessWidget {
                             ],
                           )
                         : null,
-                    color: isActive ? null : Colors.white.withOpacity(0.2),
+                    color: isActive ? null : Colors.white.withValues(alpha:  0.2),
                     boxShadow: isActive
                         ? [
                             BoxShadow(
                               color:
-                                  AppColors.primary.withOpacity(0.5 * pulseValue),
+                                  // ignore: deprecated_member_use
+                                  AppColors.primary.withValues(alpha: 0.5 * pulseValue),
                               blurRadius: 10 * pulseValue,
                               spreadRadius: 1,
                             ),
@@ -768,18 +769,18 @@ class _LuxuryStepIndicator extends StatelessWidget {
                         ],
                       )
                     : null,
-                color: isActive ? null : Colors.white.withOpacity(0.1),
+                color: isActive ? null : Colors.white.withValues(alpha: 0.1),
                 border: Border.all(
                   color: isActive
-                      ? AppColors.primary.withOpacity(0.5)
-                      : Colors.white.withOpacity(0.3),
+                      ? AppColors.primary.withValues(alpha: 0.5)
+                      : Colors.white.withValues(alpha: 0.3),
                   width: 2,
                 ),
                 boxShadow: isCurrent
                     ? [
                         BoxShadow(
                           color:
-                              AppColors.primary.withOpacity(0.5 * pulseValue),
+                              AppColors.primary.withValues(alpha: 0.5 * pulseValue),
                           blurRadius: 20 * pulseValue,
                           spreadRadius: 3,
                         ),
@@ -793,7 +794,7 @@ class _LuxuryStepIndicator extends StatelessWidget {
                   fontFamily: AppTextStyles.fontFamily,
                   fontSize: 14.sp,
                   fontWeight: FontWeight.bold,
-                  color: isActive ? Colors.white : Colors.white.withOpacity(0.5),
+                  color: isActive ? Colors.white : Colors.white.withValues(alpha: 0.5),
                 ),
               ),
             );
@@ -826,17 +827,17 @@ class _GlassmorphicFormContainer extends StatelessWidget {
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
                 colors: [
-                  Colors.white.withOpacity(0.15),
-                  Colors.white.withOpacity(0.08),
+                  Colors.white.withValues(alpha: 0.15),
+                  Colors.white.withValues(alpha: 0.08),
                 ],
               ),
               border: Border.all(
-                color: Colors.white.withOpacity(0.2),
+                color: Colors.white.withValues(alpha: 0.2),
                 width: 1.5,
               ),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.2),
+                  color: Colors.black.withValues(alpha: 0.2),
                   blurRadius: 30,
                   offset: const Offset(0, 15),
                 ),
@@ -876,17 +877,17 @@ class _LuxuryInfoBanner extends StatelessWidget {
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
               colors: [
-                AppColors.info.withOpacity(0.2),
-                AppColors.info.withOpacity(0.1),
+                AppColors.info.withValues(alpha: 0.2),
+                AppColors.info.withValues(alpha: 0.1),
               ],
             ),
             border: Border.all(
-              color: AppColors.info.withOpacity(0.3),
+              color: AppColors.info.withValues(alpha: 0.3),
               width: 1,
             ),
             boxShadow: [
               BoxShadow(
-                color: AppColors.info.withOpacity(0.2 * pulseValue),
+                color: AppColors.info.withValues(alpha: 0.2 * pulseValue),
                 blurRadius: 15 * pulseValue,
                 spreadRadius: 1,
               ),
@@ -900,7 +901,7 @@ class _LuxuryInfoBanner extends StatelessWidget {
                 height: 36.r,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: AppColors.info.withOpacity(0.3),
+                  color: AppColors.info.withValues(alpha: 0.3),
                 ),
                 child: Icon(icon, color: Colors.white, size: 20.r),
               ),
@@ -912,7 +913,7 @@ class _LuxuryInfoBanner extends StatelessWidget {
                     fontFamily: AppTextStyles.fontFamily,
                     fontSize: 13.sp,
                     height: 1.6,
-                    color: Colors.white.withOpacity(0.9),
+                    color: Colors.white.withValues(alpha: 0.9),
                   ),
                 ),
               ),
@@ -988,10 +989,10 @@ class _LuxuryTextFieldState extends State<_LuxuryTextField> {
             fontFamily: AppTextStyles.fontFamily,
             fontSize: 14.sp,
             fontWeight: FontWeight.w600,
-            color: Colors.white.withOpacity(0.9),
+            color: Colors.white.withValues(alpha: 0.9),
             shadows: [
               Shadow(
-                color: Colors.black.withOpacity(0.3),
+                color: Colors.black.withValues(alpha: 0.3),
                 blurRadius: 5,
               ),
             ],

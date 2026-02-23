@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 import 'package:baladi/core/di/injection_container.dart';
 import 'package:baladi/core/router/route_names.dart';
 import 'package:baladi/core/theme/app_colors.dart';
@@ -121,62 +123,139 @@ class _AdminShopViewState extends State<_AdminShopView> {
     return AdminShell(
       title: "إدارة المحلات",
       currentRoute: RouteNames.adminShops,
-      floatingActionButton: FloatingActionButton(
+      floatingActionButton: _LuxuryFab(
         onPressed: () => _openCreateShopForm(context),
-        backgroundColor: AppColors.primary,
-        child: const Icon(Icons.add),
       ),
-      child: Column(
-        children: [
-          _buildSearchBar(),
-          Expanded(
-            child: BlocConsumer<AdminCubit, AdminState>(
-              listener: (context, state) {
-                if (state is AdminError) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(
-                        state.message,
-                        style: TextStyle(fontFamily: AppTextStyles.fontFamily),
-                      ),
-                      backgroundColor: AppColors.error,
-                    ),
-                  );
-                }
-              },
-              builder: (context, state) {
-                if (state is AdminLoading || state is AdminActionLoading) {
-                  return const Center(child: LoadingWidget());
-                }
-                if (state is AdminError) {
-                  return AppErrorWidget(
-                    message: state.message,
-                    onRetry: () => context.read<AdminCubit>().loadShops(),
-                  );
-                }
-                if (state is AdminShopsLoaded) {
-                  return _buildShopsList(state);
-                }
-                return const SizedBox.shrink();
-              },
-            ),
+      child: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              Color(0xFF0D1B2A), // Deep navy
+              Color(0xFF1B263B), // Dark blue
+              Color(0xFF2D5A27), // Forest green
+              Color(0xFF1A3A16), // Dark green
+            ],
+            stops: [0.0, 0.35, 0.7, 1.0],
           ),
-        ],
+        ),
+        child: Stack(
+          children: [
+            // Background glow orbs
+            Positioned(
+              top: -80,
+              left: -40,
+              child: _GlowOrb(
+                size: 180,
+                color: AppColors.primary,
+                opacity: 0.22,
+              ),
+            ),
+            Positioned(
+              bottom: -60,
+              right: -20,
+              child: _GlowOrb(
+                size: 160,
+                color: AppColors.secondary,
+                opacity: 0.20,
+              ),
+            ),
+            Column(
+              children: [
+                _buildSearchBar(),
+                Expanded(
+                  child: BlocConsumer<AdminCubit, AdminState>(
+                    listener: (context, state) {
+                      if (state is AdminError) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            behavior: SnackBarBehavior.floating,
+                            margin: EdgeInsets.all(16.r),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16.r),
+                            ),
+                            content: Text(
+                              state.message,
+                              style: TextStyle(
+                                fontFamily: AppTextStyles.fontFamily,
+                              ),
+                            ),
+                            backgroundColor: AppColors.error,
+                          ),
+                        );
+                      }
+                    },
+                    builder: (context, state) {
+                      if (state is AdminLoading || state is AdminActionLoading) {
+                        return const Center(child: LoadingWidget());
+                      }
+                      if (state is AdminError) {
+                        return Center(
+                          child: ConstrainedBox(
+                            constraints: BoxConstraints(maxWidth: 520.w),
+                            child: AppErrorWidget(
+                              message: state.message,
+                              onRetry: () =>
+                                  context.read<AdminCubit>().loadShops(),
+                            ),
+                          ),
+                        );
+                      }
+                      if (state is AdminShopsLoaded) {
+                        return _buildShopsList(state);
+                      }
+                      return const SizedBox.shrink();
+                    },
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
 
   Widget _buildSearchBar() {
-    return Container(
-      padding: EdgeInsets.all(16.w),
-      color: AppColors.surface,
-      child: AppSearchField(
-        controller: _searchController,
-        hint: 'بحث باسم المحل أو رقم الهاتف...',
-        onChanged: (value) {
-          // فلترة محلية على البيانات اللي جاية من الـ API بدون استدعاء جديد
-          setState(() {});
-        },
+    return Padding(
+      padding: EdgeInsets.fromLTRB(16.w, 16.h, 16.w, 10.h),
+      child: Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(20.r),
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              Colors.white.withValues(alpha: 0.16),
+              Colors.white.withValues(alpha: 0.08),
+            ],
+          ),
+          border: Border.all(
+            color: Colors.white.withValues(alpha: 0.22),
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.45),
+              blurRadius: 22,
+              offset: const Offset(0, 10),
+            ),
+            BoxShadow(
+              color: AppColors.primary.withValues(alpha: 0.25),
+              blurRadius: 26,
+              offset: const Offset(0, 14),
+            ),
+          ],
+        ),
+        padding: EdgeInsets.all(12.w),
+        child: AppSearchField(
+          controller: _searchController,
+          hint: 'بحث باسم المحل أو رقم الهاتف...',
+          onChanged: (value) {
+            // فلترة محلية على البيانات اللي جاية من الـ API بدون استدعاء جديد
+            setState(() {});
+          },
+        ),
       ),
     );
   }
@@ -221,47 +300,174 @@ class _AdminShopViewState extends State<_AdminShopView> {
     await showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
-      backgroundColor: AppColors.surface,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20.r)),
-      ),
+      useSafeArea: true,
+      backgroundColor: Colors.transparent,
+      barrierColor: Colors.black.withValues(alpha: 0.65),
+      elevation: 0,
       builder: (ctx) {
-        return Padding(
-          padding: EdgeInsets.only(
-            left: 16.w,
-            right: 16.w,
-            top: 16.h,
-            bottom: MediaQuery.of(ctx).viewInsets.bottom + 16.h,
-          ),
-          child: Form(
-            key: formKey,
-            child: SingleChildScrollView(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Center(
-                    child: Container(
-                      width: 40.w,
-                      height: 4.h,
-                      decoration: BoxDecoration(
-                        color: AppColors.border,
-                        borderRadius: BorderRadius.circular(2.r),
-                      ),
-                    ),
+        return Stack(
+          children: [
+            // Background gradient
+            Container(
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    Color(0xFF0D1B2A),
+                    Color(0xFF1B263B),
+                    Color(0xFF2D5A27),
+                    Color(0xFF1A3A16),
+                  ],
+                  stops: [0.0, 0.35, 0.7, 1.0],
+                ),
+              ),
+            ),
+            // Glow orbs
+            Positioned(
+              top: -40,
+              left: -20,
+              child: _GlowOrb(
+                size: 140,
+                color: AppColors.primary,
+                opacity: 0.22,
+              ),
+            ),
+            Positioned(
+              bottom: 80,
+              right: -16,
+              child: _GlowOrb(
+                size: 120,
+                color: AppColors.secondary,
+                opacity: 0.20,
+              ),
+            ),
+            Align(
+              alignment: Alignment.bottomCenter,
+              child: _GlassBottomSheet(
+                child: Padding(
+                  padding: EdgeInsets.only(
+                    left: 16.w,
+                    right: 16.w,
+                    top: 18.h,
+                    bottom: MediaQuery.of(ctx).viewInsets.bottom + 22.h,
                   ),
-                  SizedBox(height: 16.h),
-                  Text(
-                    isEdit ? 'تعديل بيانات المحل' : 'إضافة محل جديد',
-                    style: TextStyle(
-                      fontFamily: AppTextStyles.fontFamily,
-                      fontSize: 16.sp,
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.textPrimary,
-                    ),
-                  ),
-                  SizedBox(height: 16.h),
-                  AppTextField(
+                  child: Form(
+                    key: formKey,
+                    child: SingleChildScrollView(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Center(
+                            child: Container(
+                              width: 48.w,
+                              height: 5.h,
+                              decoration: BoxDecoration(
+                                color: Colors.white.withValues(alpha: 0.35),
+                                borderRadius: BorderRadius.circular(100.r),
+                              ),
+                            ),
+                          ),
+                          SizedBox(height: 18.h),
+                          // Header
+                          Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Container(
+                                padding: EdgeInsets.all(10.r),
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  gradient: const LinearGradient(
+                                    begin: Alignment.topLeft,
+                                    end: Alignment.bottomRight,
+                                    colors: [
+                                      AppColors.primary,
+                                      AppColors.primaryLight,
+                                    ],
+                                  ),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: AppColors.primary
+                                          .withValues(alpha: 0.45),
+                                      blurRadius: 18,
+                                      offset: const Offset(0, 8),
+                                    ),
+                                  ],
+                                ),
+                                child: Icon(
+                                  isEdit
+                                      ? Icons.edit_rounded
+                                      : Icons.storefront_rounded,
+                                  color: Colors.white,
+                                  size: 20.r,
+                                ),
+                              ),
+                              SizedBox(height: 10.h),
+                              Text(
+                                isEdit ? 'تعديل بيانات المحل' : 'إضافة محل جديد',
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  fontFamily: AppTextStyles.fontFamily,
+                                  fontSize: 18.sp,
+                                  fontWeight: FontWeight.w700,
+                                  color: Colors.white,
+                                  letterSpacing: 0.3,
+                                ),
+                              ),
+                              SizedBox(height: 4.h),
+                              Text(
+                                isEdit
+                                    ? 'قم بتحديث بيانات المحل الحالية'
+                                    : 'أنشئ متجرًا جديداً للمنصة',
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  fontFamily: AppTextStyles.fontFamily,
+                                  fontSize: 12.sp,
+                                  color: Colors.white.withValues(alpha: 0.85),
+                                ),
+                              ),
+                            ],
+                          ),
+                          SizedBox(height: 20.h),
+                          // Inner glass card for fields
+                          Container(
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(20.r),
+                              gradient: LinearGradient(
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                                colors: [
+                                  Colors.white.withValues(alpha: 0.14),
+                                  Colors.white.withValues(alpha: 0.06),
+                                ],
+                              ),
+                              border: Border.all(
+                                color: Colors.white.withValues(alpha: 0.24),
+                                width: 1.2,
+                              ),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withValues(alpha: 0.45),
+                                  blurRadius: 22,
+                                  offset: const Offset(0, 12),
+                                ),
+                                BoxShadow(
+                                  color:
+                                      AppColors.primary.withValues(alpha: 0.28),
+                                  blurRadius: 28,
+                                  offset: const Offset(0, 14),
+                                ),
+                              ],
+                            ),
+                            padding: EdgeInsets.symmetric(
+                              horizontal: 14.w,
+                              vertical: 16.h,
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                AppTextField(
                     controller: nameController,
                     label: 'اسم المحل (بالإنجليزية)',
                     validator: (value) {
@@ -474,26 +680,40 @@ class _AdminShopViewState extends State<_AdminShopView> {
                     ),
                   ],
                   SizedBox(height: 16.h),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    children: [
-                      TextButton(
-                        onPressed: () => Navigator.of(ctx).pop(),
-                        child: Text(
-                          'إلغاء',
-                          style: TextStyle(
-                            fontFamily: AppTextStyles.fontFamily,
-                            color: AppColors.textSecondary,
-                          ),
-                        ),
-                      ),
-                      SizedBox(width: 8.w),
-                      Expanded(
-                        child: ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: AppColors.primary,
-                          ),
-                          onPressed: () async {
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.end,
+                                  children: [
+                                    TextButton(
+                                      onPressed: () => Navigator.of(ctx).pop(),
+                                      style: TextButton.styleFrom(
+                                        foregroundColor:
+                                            Colors.white.withValues(alpha: 0.7),
+                                      ),
+                                      child: Text(
+                                        'إلغاء',
+                                        style: TextStyle(
+                                          fontFamily: AppTextStyles.fontFamily,
+                                          fontSize: 13.sp,
+                                        ),
+                                      ),
+                                    ),
+                                    SizedBox(width: 8.w),
+                                    Expanded(
+                                      child: ElevatedButton(
+                                        style: ElevatedButton.styleFrom(
+                                          padding: EdgeInsets.symmetric(
+                                            vertical: 12.h,
+                                          ),
+                                          elevation: 0,
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius:
+                                                BorderRadius.circular(16.r),
+                                          ),
+                                          backgroundColor: AppColors.primary,
+                                          shadowColor: AppColors.primary
+                                              .withValues(alpha: 0.3),
+                                        ),
+                                        onPressed: () async {
                             if (!formKey.currentState!.validate()) {
                               return;
                             }
@@ -537,7 +757,8 @@ class _AdminShopViewState extends State<_AdminShopView> {
                                 payload: {
                                   'name': nameController.text.trim(),
                                   'name_ar': nameArController.text.trim(),
-                                  'category_id': categoryIdController.text.trim(),
+                                  'category_id':
+                                      categoryIdController.text.trim(),
                                   'phone': phoneController.text.trim(),
                                   'address': addressController.text.trim(),
                                   'commission_rate': commission / 100,
@@ -567,21 +788,31 @@ class _AdminShopViewState extends State<_AdminShopView> {
                                 ),
                               );
                             }
-                          },
-                          child: Text(
-                            isEdit ? 'تحديث' : 'حفظ',
-                            style: TextStyle(
-                              fontFamily: AppTextStyles.fontFamily,
+                                          },
+                                        child: Text(
+                                          isEdit ? 'تحديث' : 'حفظ',
+                                          style: TextStyle(
+                                            fontFamily: AppTextStyles.fontFamily,
+                                            fontSize: 14.sp,
+                                            fontWeight: FontWeight.w600,
+                                            color: Colors.white,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
                             ),
                           ),
-                        ),
+                        ],
                       ),
-                    ],
+                    ),
                   ),
-                ],
+                ),
               ),
             ),
-          ),
+          ],
         );
       },
     );
@@ -620,6 +851,8 @@ class _AdminShopViewState extends State<_AdminShopView> {
 
     return RefreshIndicator(
       onRefresh: () async => context.read<AdminCubit>().loadShops(),
+      color: AppColors.primary,
+      backgroundColor: Colors.transparent,
       child: ListView.builder(
         controller: _scrollController,
         padding: EdgeInsets.all(16.w),
@@ -653,108 +886,178 @@ class _ShopCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return AppCard(
+    final baseColor =
+        shop.isActive ? AppColors.secondary : AppColors.error;
+
+    return Container(
       margin: EdgeInsets.only(bottom: 12.h),
-      borderColor: shop.isActive ? null : AppColors.error,
-      onTap: () => _showDetails(context),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                width: 48.r,
-                height: 48.r,
-                decoration: BoxDecoration(
-                  color: AppColors.secondary.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(12.r),
-                ),
-                child: Icon(
-                  Icons.storefront,
-                  color: AppColors.secondary,
-                  size: 24.r,
-                ),
-              ),
-              SizedBox(width: 12.w),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(18.r),
+        border: Border.all(
+          color: Colors.white.withValues(alpha: 0.08),
+          width: 1,
+        ),
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Colors.white.withValues(alpha: 0.08),
+            Colors.white.withValues(alpha: 0.03),
+          ],
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.22),
+            blurRadius: 22,
+            offset: const Offset(0, 10),
+          ),
+          BoxShadow(
+            color: baseColor.withValues(alpha: 0.25),
+            blurRadius: 24,
+            offset: const Offset(0, 6),
+          ),
+        ],
+      ),
+      child: AppCard(
+        margin: EdgeInsets.zero,
+        padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 12.h),
+        borderColor: Colors.transparent,
+        onTap: () => _showDetails(context),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                // Glowing icon
+                Stack(
+                  alignment: Alignment.center,
                   children: [
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            shop.displayName,
-                            style: TextStyle(
-                              fontFamily: AppTextStyles.fontFamily,
-                              fontSize: 15.sp,
-                              fontWeight: FontWeight.w600,
-                              color: AppColors.textPrimary,
-                            ),
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                        IconButton(
-                          onPressed: onEdit,
-                          icon: const Icon(
-                            Icons.edit,
-                            size: 18,
-                          ),
-                          color: AppColors.primary,
-                        ),
-                        _ShopStatusBadge(
-                          isActive: shop.isActive,
-                          isOpen: shop.isOpen,
-                        ),
-                      ],
-                    ),
-                    if (shop.phone != null && shop.phone!.isNotEmpty) ...[
-                      SizedBox(height: 4.h),
-                      Text(
-                        Formatters.formatPhone(shop.phone!),
-                        style: TextStyle(
-                          fontFamily: AppTextStyles.fontFamily,
-                          fontSize: 12.sp,
-                          color: AppColors.textSecondary,
+                    Container(
+                      width: 52.r,
+                      height: 52.r,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        gradient: LinearGradient(
+                          colors: [
+                            baseColor.withValues(alpha: 0.18),
+                            baseColor.withValues(alpha: 0.08),
+                          ],
                         ),
                       ),
-                    ],
+                    ),
+                    Container(
+                      width: 42.r,
+                      height: 42.r,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(14.r),
+                        gradient: LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: [
+                            baseColor.withValues(alpha: 0.95),
+                            baseColor.withValues(alpha: 0.75),
+                          ],
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: baseColor.withValues(alpha: 0.55),
+                            blurRadius: 16,
+                            offset: const Offset(0, 6),
+                          ),
+                        ],
+                      ),
+                      child: Icon(
+                        Icons.storefront,
+                        color: Colors.white,
+                        size: 22.r,
+                      ),
+                    ),
                   ],
                 ),
-              ),
-            ],
-          ),
-          SizedBox(height: 12.h),
-          Divider(color: AppColors.divider, height: 1),
-          SizedBox(height: 8.h),
-          Row(
-            children: [
-              Expanded(
-                child: _InfoItem(
-                  icon: Icons.percent,
-                  label: 'العمولة',
-                  value: Formatters.formatPercentage(shop.commissionRate),
+                SizedBox(width: 14.w),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              shop.displayName,
+                              style: TextStyle(
+                                fontFamily: AppTextStyles.fontFamily,
+                                fontSize: 15.sp,
+                                fontWeight: FontWeight.w700,
+                                color: Colors.white,
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                          IconButton(
+                            onPressed: onEdit,
+                            icon: const Icon(
+                              Icons.edit,
+                              size: 18,
+                            ),
+                            color: AppColors.primaryLight,
+                          ),
+                          _ShopStatusBadge(
+                            isActive: shop.isActive,
+                            isOpen: shop.isOpen,
+                          ),
+                        ],
+                      ),
+                      if (shop.phone != null && shop.phone!.isNotEmpty) ...[
+                        SizedBox(height: 4.h),
+                        Text(
+                          Formatters.formatPhone(shop.phone!),
+                          style: TextStyle(
+                            fontFamily: AppTextStyles.fontFamily,
+                            fontSize: 12.sp,
+                            color: Colors.white.withValues(alpha: 0.8),
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
                 ),
-              ),
-              SizedBox(width: 16.w),
-              Expanded(
-                child: _InfoItem(
-                  icon: Icons.shopping_bag_outlined,
-                  label: 'الحد الأدنى',
-                  value: shop.minOrderAmount > 0
-                      ? Formatters.formatCurrency(shop.minOrderAmount)
-                      : 'لا يوجد',
+              ],
+            ),
+            SizedBox(height: 12.h),
+            Divider(
+              color: Colors.white.withValues(alpha: 0.12),
+              height: 1,
+            ),
+            SizedBox(height: 8.h),
+            Row(
+              children: [
+                Expanded(
+                  child: _InfoItem(
+                    icon: Icons.percent,
+                    label: 'العمولة',
+                    value: Formatters.formatPercentage(shop.commissionRate),
+                  ),
                 ),
-              ),
-            ],
-          ),
-          SizedBox(height: 4.h,),
-          _InfoItem(
-            icon: Icons.calendar_today_outlined, 
-            label: "تاريخ التسجيل", 
-            value: Formatters.formatDate(shop.createdAt)
-            )
-        ],
+                SizedBox(width: 16.w),
+                Expanded(
+                  child: _InfoItem(
+                    icon: Icons.shopping_bag_outlined,
+                    label: 'الحد الأدنى',
+                    value: shop.minOrderAmount > 0
+                        ? Formatters.formatCurrency(shop.minOrderAmount)
+                        : 'لا يوجد',
+                  ),
+                ),
+              ],
+            ),
+            SizedBox(height: 4.h),
+            _InfoItem(
+              icon: Icons.calendar_today_outlined,
+              label: "تاريخ التسجيل",
+              value: Formatters.formatDate(shop.createdAt),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -763,11 +1066,18 @@ class _ShopCard extends StatelessWidget {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: AppColors.surface,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20.r)),
-      ),
-      builder: (ctx) => _ShopDetailsSheet(shop: shop),
+      useSafeArea: true,
+      backgroundColor: Colors.transparent,
+      barrierColor: Colors.black.withValues(alpha: 0.65),
+      elevation: 0,
+      builder: (ctx) {
+        return Align(
+          alignment: Alignment.bottomCenter,
+          child: _GlassBottomSheet(
+            child: _ShopDetailsSheet(shop: shop),
+          ),
+        );
+      },
     );
   }
 }
@@ -790,7 +1100,7 @@ class _InfoItem extends StatelessWidget {
         Icon(
           icon,
           size: 16.r,
-          color: AppColors.textSecondary,
+          color: Colors.white.withValues(alpha: 0.8),
         ),
         SizedBox(width: 4.w),
         Text(
@@ -798,19 +1108,21 @@ class _InfoItem extends StatelessWidget {
           style: TextStyle(
             fontFamily: AppTextStyles.fontFamily,
             fontSize: 12.sp,
-            color: AppColors.textSecondary,
+            color: Colors.white.withValues(alpha: 0.75),
           ),
         ),
         SizedBox(width: 4.w),
-        Text(
-          value,
-          style: TextStyle(
-            fontFamily: AppTextStyles.fontFamily,
-            fontSize: 12.sp,
-            fontWeight: FontWeight.w600,
-            color: AppColors.textPrimary,
+        Expanded(
+          child: Text(
+            value,
+            style: TextStyle(
+              fontFamily: AppTextStyles.fontFamily,
+              fontSize: 12.sp,
+              fontWeight: FontWeight.w600,
+              color: Colors.white,
+            ),
+            overflow: TextOverflow.ellipsis,
           ),
-          overflow: TextOverflow.ellipsis,
         ),
       ],
     );
@@ -837,11 +1149,11 @@ class _ShopDetailsSheet extends StatelessWidget {
             children: [
               Center(
                 child: Container(
-                  width: 40.w,
-                  height: 4.h,
+                  width: 48.w,
+                  height: 5.h,
                   decoration: BoxDecoration(
-                    color: AppColors.border,
-                    borderRadius: BorderRadius.circular(2.r),
+                    color: Colors.white.withValues(alpha: 0.35),
+                    borderRadius: BorderRadius.circular(100.r),
                   ),
                 ),
               ),
@@ -852,12 +1164,27 @@ class _ShopDetailsSheet extends StatelessWidget {
                     width: 64.r,
                     height: 64.r,
                     decoration: BoxDecoration(
-                      color: AppColors.secondary.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(16.r),
+                      borderRadius: BorderRadius.circular(20.r),
+                      gradient: LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [
+                          AppColors.secondary.withValues(alpha: 0.95),
+                          AppColors.secondary.withValues(alpha: 0.75),
+                        ],
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color:
+                              AppColors.secondary.withValues(alpha: 0.5),
+                          blurRadius: 20,
+                          offset: const Offset(0, 10),
+                        ),
+                      ],
                     ),
                     child: Icon(
                       Icons.storefront,
-                      color: AppColors.secondary,
+                      color: Colors.white,
                       size: 32.r,
                     ),
                   ),
@@ -872,6 +1199,7 @@ class _ShopDetailsSheet extends StatelessWidget {
                             fontFamily: AppTextStyles.fontFamily,
                             fontSize: 20.sp,
                             fontWeight: FontWeight.bold,
+                            color: Colors.white,
                           ),
                         ),
                         SizedBox(height: 4.h),
@@ -891,7 +1219,10 @@ class _ShopDetailsSheet extends StatelessWidget {
                     ? Formatters.formatPhone(shop.phone!)
                     : '-',
               ),
-              _DetailRow(label: 'العنوان', value: shop.address ?? '-'),
+              _DetailRow(
+                label: 'العنوان',
+                value: shop.address ?? '-',
+              ),
               _DetailRow(
                 label: 'نسبة العمولة',
                 value: Formatters.formatPercentage(shop.commissionRate),
@@ -918,7 +1249,7 @@ class _ShopDetailsSheet extends StatelessWidget {
                     fontFamily: AppTextStyles.fontFamily,
                     fontSize: 14.sp,
                     fontWeight: FontWeight.w600,
-                    color: AppColors.textPrimary,
+                    color: Colors.white,
                   ),
                 ),
                 SizedBox(height: 8.h),
@@ -927,7 +1258,7 @@ class _ShopDetailsSheet extends StatelessWidget {
                   style: TextStyle(
                     fontFamily: AppTextStyles.fontFamily,
                     fontSize: 14.sp,
-                    color: AppColors.textSecondary,
+                    color: Colors.white.withValues(alpha: 0.85),
                   ),
                 ),
               ],
@@ -952,13 +1283,13 @@ class _DetailRow extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           SizedBox(
-            width: 12.w,
+            width: 120.w,
             child: Text(
               label,
               style: TextStyle(
                 fontFamily: AppTextStyles.fontFamily,
                 fontSize: 14.sp,
-                color: AppColors.textSecondary,
+                color: Colors.white.withValues(alpha: 0.75),
               ),
             ),
           ),
@@ -969,7 +1300,7 @@ class _DetailRow extends StatelessWidget {
                 fontFamily: AppTextStyles.fontFamily,
                 fontSize: 14.sp,
                 fontWeight: FontWeight.w500,
-                color: AppColors.textPrimary,
+                color: Colors.white,
               ),
             ),
           ),
@@ -999,18 +1330,181 @@ class _ShopStatusBadge extends StatelessWidget {
       color = AppColors.warning;
     }
     return Container(
-      padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
+      padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(4.r),
+        borderRadius: BorderRadius.circular(999),
+        gradient: LinearGradient(
+          colors: [
+            color.withValues(alpha: 0.18),
+            color.withValues(alpha: 0.30),
+          ],
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: color.withValues(alpha: 0.45),
+            blurRadius: 14,
+            offset: const Offset(0, 6),
+          ),
+        ],
       ),
-      child: Text(
-        label,
-        style: TextStyle(
-          fontFamily: AppTextStyles.fontFamily,
-          fontSize: 10.sp,
-          fontWeight: FontWeight.w600,
-          color: color,
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 6.r,
+            height: 6.r,
+            decoration: const BoxDecoration(
+              shape: BoxShape.circle,
+              color: Colors.white,
+            ),
+          ),
+          SizedBox(width: 4.w),
+          Text(
+            label,
+            style: TextStyle(
+              fontFamily: AppTextStyles.fontFamily,
+              fontSize: 10.sp,
+              fontWeight: FontWeight.w700,
+              color: Colors.white,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Soft glowing background orb
+class _GlowOrb extends StatelessWidget {
+  final double size;
+  final Color color;
+  final double opacity;
+
+  const _GlowOrb({
+    required this.size,
+    required this.color,
+    required this.opacity,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        boxShadow: [
+          BoxShadow(
+            color: color.withValues(alpha: opacity),
+            blurRadius: size / 2,
+            spreadRadius: size / 6,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Glassmorphism wrapper for bottom sheets
+class _GlassBottomSheet extends StatelessWidget {
+  final Widget child;
+
+  const _GlassBottomSheet({required this.child});
+
+  @override
+  Widget build(BuildContext context) {
+    return ClipRRect(
+      borderRadius: BorderRadius.vertical(top: Radius.circular(28.r)),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 24, sigmaY: 24),
+        child: Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.vertical(top: Radius.circular(28.r)),
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [
+                Colors.white.withValues(alpha: 0.16),
+                Colors.white.withValues(alpha: 0.06),
+              ],
+            ),
+            border: Border.all(
+              color: AppColors.primary.withValues(alpha: 0.30),
+              width: 1.2,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.45),
+                blurRadius: 24,
+                offset: const Offset(0, -6),
+              ),
+            ],
+          ),
+          child: child,
+        ),
+      ),
+    );
+  }
+}
+
+/// Floating luxury FAB (matches admin/categories/orders identity)
+class _LuxuryFab extends StatelessWidget {
+  final VoidCallback onPressed;
+
+  const _LuxuryFab({required this.onPressed});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.primary.withValues(alpha: 0.45),
+            blurRadius: 22,
+            offset: const Offset(0, 10),
+          ),
+        ],
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              AppColors.primary,
+              AppColors.primaryLight,
+              AppColors.secondary.withValues(alpha: 0.9),
+            ],
+          ),
+          borderRadius: BorderRadius.circular(999),
+        ),
+        child: FloatingActionButton.extended(
+          onPressed: onPressed,
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          icon: Container(
+            width: 28.r,
+            height: 28.r,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: Colors.white.withValues(alpha: 0.16),
+            ),
+            child: const Icon(Icons.add_rounded, size: 18, color: Colors.white),
+          ),
+          label: Padding(
+            padding: EdgeInsets.symmetric(horizontal: 4.w),
+            child: Text(
+              'محل جديد',
+              style: TextStyle(
+                fontFamily: AppTextStyles.fontFamily,
+                fontWeight: FontWeight.w700,
+                fontSize: 14.sp,
+                color: Colors.white,
+                letterSpacing: 0.5,
+              ),
+            ),
+          ),
         ),
       ),
     );
