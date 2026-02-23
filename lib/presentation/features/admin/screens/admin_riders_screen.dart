@@ -195,6 +195,11 @@ class _AdminRidersViewState extends State<_AdminRidersView> {
         child: AppSearchField(
           controller: _searchController,
           hint: 'بحث باسم السائق أو رقم الهاتف...',
+          // نفس ستايل البحث في عالم الـ Admin الداكن (مطابق للمستخدمين والمحلات)
+          backgroundColor: Colors.white.withValues(alpha: 0.12),
+          textColor: Colors.white,
+          iconColor: Colors.white70,
+          hintColor: Colors.white60,
           onChanged: (value) {
             // فلترة محلية على البيانات اللي جاية من الـ API بدون استدعاء جديد للسيرفر
             setState(() {});
@@ -522,38 +527,34 @@ class _RiderCard extends StatelessWidget {
 
     return Container(
       margin: EdgeInsets.only(bottom: 12.h),
+      // كارت داكن بنفس روح كروت لوحة التحكم / المستخدمين / المحلات
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(18.r),
+        color: const Color(0xFF0B1722),
         border: Border.all(
           color: rider.isActive
-              ? Colors.white.withValues(alpha: 0.08)
-              : AppColors.error.withValues(alpha: 0.70),
-          width: 1,
-        ),
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            Colors.white.withValues(alpha: 0.08),
-            Colors.white.withValues(alpha: 0.03),
-          ],
+              ? Colors.white.withValues(alpha: 0.22)
+              : AppColors.error.withValues(alpha: 0.80),
+          width: 1.0,
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.22),
+            color: Colors.black.withValues(alpha: 0.45),
             blurRadius: 22,
             offset: const Offset(0, 10),
           ),
           BoxShadow(
-            color: baseColor.withValues(alpha: 0.25),
-            blurRadius: 24,
-            offset: const Offset(0, 6),
+            color: baseColor.withValues(alpha: 0.28),
+            blurRadius: 26,
+            offset: const Offset(0, 14),
           ),
         ],
       ),
       child: AppCard(
         margin: EdgeInsets.zero,
         padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 12.h),
+        // خلفية AppCard نفسها داكنة عشان ما يبقاش فيه أي أبيض في الكارت
+        backgroundColor: const Color(0xFF0B1722),
         borderColor: Colors.transparent,
         onTap: () => _showDetails(context),
         child: Row(
@@ -868,12 +869,13 @@ class _AvailabilityBadge extends StatelessWidget {
   Widget build(BuildContext context) {
     final color = isAvailable ? AppColors.success : AppColors.textSecondary;
     final label = isAvailable ? 'متاح' : 'غير متاح';
-
+ 
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(4.r),
+        // خلفية شفافة ملونة مع نص أبيض عشان تبان كويس على الخلفية الداكنة
+        color: color.withValues(alpha: 0.22),
+        borderRadius: BorderRadius.circular(6.r),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -881,7 +883,7 @@ class _AvailabilityBadge extends StatelessWidget {
           Icon(
             isAvailable ? Icons.check_circle : Icons.schedule,
             size: 12.r,
-            color: color,
+            color: Colors.white,
           ),
           SizedBox(width: 4.w),
           Text(
@@ -890,7 +892,7 @@ class _AvailabilityBadge extends StatelessWidget {
               fontFamily: AppTextStyles.fontFamily,
               fontSize: 10.sp,
               fontWeight: FontWeight.w500,
-              color: color,
+              color: Colors.white,
             ),
           ),
         ],
@@ -907,19 +909,20 @@ class _ActiveBadge extends StatelessWidget {
   Widget build(BuildContext context) {
     final color = isActive ? AppColors.success : AppColors.error;
     final label = isActive ? 'نشط' : 'غير نشط';
-
+ 
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(4.r),
+        // نفس ستايل البادجات في شاشة المستخدمين (خلفية ملونة ونص أبيض)
+        color: color.withValues(alpha: 0.22),
+        borderRadius: BorderRadius.circular(6.r),
       ),
       child: Text(
         label,
         style: TextStyle(
           fontFamily: AppTextStyles.fontFamily,
           fontSize: 10.sp,
-          color: color,
+          color: Colors.white,
           fontWeight: FontWeight.w600,
         ),
       ),

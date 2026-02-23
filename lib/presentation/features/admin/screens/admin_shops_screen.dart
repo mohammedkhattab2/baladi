@@ -251,6 +251,11 @@ class _AdminShopViewState extends State<_AdminShopView> {
         child: AppSearchField(
           controller: _searchController,
           hint: 'بحث باسم المحل أو رقم الهاتف...',
+          // نفس ستايل البحث في عالم الـ Admin الداكن (مطابق لشاشة المستخدمين)
+          backgroundColor: Colors.white.withValues(alpha: 0.12),
+          textColor: Colors.white,
+          iconColor: Colors.white70,
+          hintColor: Colors.white60,
           onChanged: (value) {
             // فلترة محلية على البيانات اللي جاية من الـ API بدون استدعاء جديد
             setState(() {});
@@ -628,7 +633,8 @@ class _AdminShopViewState extends State<_AdminShopView> {
                         fontFamily: AppTextStyles.fontFamily,
                         fontSize: 14.sp,
                         fontWeight: FontWeight.w600,
-                        color: AppColors.textPrimary,
+                        // توحيد لون العنوان مع الهوية الداكنة (أبيض صريح)
+                        color: Colors.white,
                       ),
                     ),
                     SizedBox(height: 8.h),
@@ -891,36 +897,32 @@ class _ShopCard extends StatelessWidget {
 
     return Container(
       margin: EdgeInsets.only(bottom: 12.h),
+      // كارت داكن بنفس روح كروت لوحة التحكم / شاشة المستخدمين
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(18.r),
+        color: const Color(0xFF0B1722),
         border: Border.all(
-          color: Colors.white.withValues(alpha: 0.08),
-          width: 1,
-        ),
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            Colors.white.withValues(alpha: 0.08),
-            Colors.white.withValues(alpha: 0.03),
-          ],
+          color: Colors.white.withValues(alpha: 0.22),
+          width: 1.0,
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.22),
+            color: Colors.black.withValues(alpha: 0.45),
             blurRadius: 22,
             offset: const Offset(0, 10),
           ),
           BoxShadow(
-            color: baseColor.withValues(alpha: 0.25),
-            blurRadius: 24,
-            offset: const Offset(0, 6),
+            color: baseColor.withValues(alpha: 0.28),
+            blurRadius: 26,
+            offset: const Offset(0, 14),
           ),
         ],
       ),
       child: AppCard(
         margin: EdgeInsets.zero,
         padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 12.h),
+        // خلفية الكارت نفسها داكنة عشان ما يبقاش فيه أي أبيض من AppCard
+        backgroundColor: const Color(0xFF0B1722),
         borderColor: Colors.transparent,
         onTap: () => _showDetails(context),
         child: Column(

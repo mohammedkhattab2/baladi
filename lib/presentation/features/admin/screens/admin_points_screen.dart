@@ -342,33 +342,57 @@ class _TypeChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final bg = isSelected ? color : AppColors.surfaceVariant;
-    final textColor =
-        isSelected ? AppColors.textOnPrimary : AppColors.textPrimary;
+    // Glassy dark chip styling to match admin identity (no flat white backgrounds)
+    final Color bg = isSelected
+        ? color.withValues(alpha: 0.22)
+        : Colors.white.withValues(alpha: 0.06);
+    final Color borderColor = isSelected
+        ? color.withValues(alpha: 0.85)
+        : Colors.white.withValues(alpha: 0.24);
+    final Color textColor = Colors.white.withValues(alpha: 0.96);
 
     return GestureDetector(
       onTap: onTap,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
-        padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
+        padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 7.h),
         decoration: BoxDecoration(
           color: bg,
-          borderRadius: BorderRadius.circular(20.r),
+          borderRadius: BorderRadius.circular(999.r),
           border: Border.all(
-            color: isSelected ? color : AppColors.border,
+            color: borderColor,
+            width: 1.1,
           ),
+          boxShadow: [
+            if (isSelected)
+              BoxShadow(
+                color: color.withValues(alpha: 0.32),
+                blurRadius: 14,
+                offset: const Offset(0, 6),
+              ),
+          ],
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(
-              isSelected
-                  ? Icons.check_circle
-                  : Icons.radio_button_unchecked,
-              size: 14.r,
-              color: textColor,
+            Container(
+              width: 18.r,
+              height: 18.r,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: Colors.white.withValues(alpha: 0.10),
+              ),
+              child: Icon(
+                isSelected
+                    ? Icons.check_rounded
+                    : Icons.radio_button_unchecked,
+                size: 12.r,
+                color: isSelected
+                    ? Colors.white
+                    : Colors.white.withValues(alpha: 0.75),
+              ),
             ),
-            SizedBox(width: 6.w),
+            SizedBox(width: 8.w),
             Text(
               label,
               style: TextStyle(

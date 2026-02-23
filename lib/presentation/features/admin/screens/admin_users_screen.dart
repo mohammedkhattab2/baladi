@@ -72,48 +72,128 @@ class _AdminUsersViewState extends State<_AdminUsersView> {
     return AdminShell(
       title: 'إدارة المستخدمين',
       currentRoute: RouteNames.adminUsers,
-      child: Column(
-        children: [
-          _buildFilters(),
-          Expanded(
-            child: BlocConsumer<AdminCubit, AdminState>(
-              listener: (context, state) {
-                if (state is AdminError) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(state.message),
-                      backgroundColor: AppColors.error,
-                    ),
-                  );
-                } else if (state is AdminUserPasswordReset) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(
-                        state.message ?? 'تم إعادة تعيين كلمة المرور بنجاح',
-                      ),
-                      backgroundColor: AppColors.success,
-                    ),
-                  );
-                }
-              },
-              builder: (context, state) {
-                if (state is AdminLoading) {
-                  return const Center(child: LoadingWidget());
-                }
-                if (state is AdminError) {
-                  return AppErrorWidget(
-                    message: state.message,
-                    onRetry: () => _loadUser(),
-                  );
-                }
-                if (state is AdminUsersLoaded) {
-                  return _buildUsersList(state);
-                }
-                return const SizedBox.shrink();
-              },
-            ),
+      child: Container(
+        decoration: const BoxDecoration(
+          // نفس الجريدينت العميق المستخدم في لوحة التحكم الرئيسية
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              Color(0xFF0D1B2A),
+              Color(0xFF1B263B),
+              Color(0xFF2D5A27),
+              Color(0xFF1A3A16),
+            ],
+            stops: [0.0, 0.35, 0.7, 1.0],
           ),
-        ],
+        ),
+        child: Stack(
+          children: [
+            // Glow Orbs في الخلفية عشان نفس العالم البصري للـ Admin
+            Positioned(
+              top: -70,
+              left: -30,
+              child: _GlowOrb(
+                size: 160,
+                color: AppColors.primary,
+                opacity: 0.22,
+              ),
+            ),
+            Positioned(
+              bottom: -60,
+              right: -40,
+              child: _GlowOrb(
+                size: 150,
+                color: AppColors.secondary,
+                opacity: 0.20,
+              ),
+            ),
+            // المحتوى الرئيسي
+            SafeArea(
+              child: Column(
+                children: [
+                  SizedBox(height: 16.h),
+                  Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 16.w),
+                    child: const _UsersHeaderCard(),
+                  ),
+                  SizedBox(height: 16.h),
+                  // فلاتر داخل كارت نصف شفاف فوق الخلفية الداكنة
+                  Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 16.w),
+                    child: _buildFilters(),
+                  ),
+                  SizedBox(height: 8.h),
+                  Expanded(
+                    child: BlocConsumer<AdminCubit, AdminState>(
+                      listener: (context, state) {
+                        if (state is AdminError) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              behavior: SnackBarBehavior.floating,
+                              margin: EdgeInsets.all(16.r),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(14.r),
+                                ).borderRadius,
+                              ),
+                              backgroundColor: AppColors.error,
+                              content: Text(
+                                state.message,
+                                style: TextStyle(
+                                  fontFamily: AppTextStyles.fontFamily,
+                                ),
+                              ),
+                            ),
+                          );
+                        } else if (state is AdminUserPasswordReset) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              behavior: SnackBarBehavior.floating,
+                              margin: EdgeInsets.all(16.r),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(14.r),
+                              ),
+                              backgroundColor: AppColors.success,
+                              content: Text(
+                                state.message ??
+                                    'تم إعادة تعيين كلمة المرور بنجاح',
+                                style: TextStyle(
+                                  fontFamily: AppTextStyles.fontFamily,
+                                ),
+                              ),
+                            ),
+                          );
+                        }
+                      },
+                      builder: (context, state) {
+                        if (state is AdminLoading) {
+                          return const Center(child: LoadingWidget());
+                        }
+                        if (state is AdminError) {
+                          return Center(
+                            child: ConstrainedBox(
+                              constraints: BoxConstraints(maxWidth: 520.w),
+                              child: AppErrorWidget(
+                                message: state.message,
+                                onRetry: () => _loadUser(),
+                              ),
+                            ),
+                          );
+                        }
+                        if (state is AdminUsersLoaded) {
+                          return _buildUsersList(state);
+                        }
+                        return const SizedBox.shrink();
+                      },
+                    ),
+                  ),
+                  SizedBox(height: 8.h),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -121,13 +201,44 @@ class _AdminUsersViewState extends State<_AdminUsersView> {
   Widget _buildFilters() {
     return Container(
       padding: EdgeInsets.all(16.w),
-      color: AppColors.surface,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(18.r),
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Colors.white.withValues(alpha: 0.10),
+            Colors.white.withValues(alpha: 0.04),
+          ],
+        ),
+        border: Border.all(
+          color: Colors.white.withValues(alpha: 0.30),
+          width: 1.0,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.35),
+            blurRadius: 18,
+            offset: const Offset(0, 10),
+          ),
+          BoxShadow(
+            color: AppColors.primary.withValues(alpha: 0.18),
+            blurRadius: 24,
+            offset: const Offset(0, 12),
+          ),
+        ],
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           AppSearchField(
             controller: _searchController,
             hint: "بحث بالاسم أو رقم الهاتف...",
+            // نفس ستايل البحث في عالم الـ Admin الداكن
+            backgroundColor: Colors.white.withValues(alpha: 0.12),
+            textColor: Colors.white,
+            iconColor: Colors.white70,
+            hintColor: Colors.white60,
             onChanged: (value) {
               setState(() {
                 _searchQuery = value.trim();
@@ -732,6 +843,133 @@ class _AdminUsersViewState extends State<_AdminUsersView> {
   }
 }
 
+class _UsersHeaderCard extends StatelessWidget {
+  const _UsersHeaderCard();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: EdgeInsets.all(18.r),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(20.r),
+        gradient: const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Color(0xFF0B1722),
+            Color(0xFF132433),
+          ],
+        ),
+        border: Border.all(
+          color: Colors.white24,
+          width: 1.0,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.45),
+            blurRadius: 22,
+            offset: const Offset(0, 12),
+          ),
+          BoxShadow(
+            color: AppColors.primary.withValues(alpha: 0.30),
+            blurRadius: 28,
+            offset: const Offset(0, 16),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 44.r,
+            height: 44.r,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              gradient: const LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  AppColors.primary,
+                  AppColors.primaryLight,
+                ],
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: AppColors.primary.withValues(alpha: 0.55),
+                  blurRadius: 18,
+                  offset: const Offset(0, 8),
+                ),
+              ],
+            ),
+            child: Icon(
+              Icons.people_alt_rounded,
+              color: Colors.white,
+              size: 24.r,
+            ),
+          ),
+          SizedBox(width: 14.w),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'إدارة مستخدمي بلدي',
+                  style: TextStyle(
+                    fontFamily: AppTextStyles.fontFamily,
+                    fontSize: 16.sp,
+                    fontWeight: FontWeight.w800,
+                    color: Colors.white,
+                  ),
+                ),
+                SizedBox(height: 4.h),
+                Text(
+                  'مراجعة صلاحيات وأمان حسابات العملاء، المحلات، السائقين، والمديرين.',
+                  style: TextStyle(
+                    fontFamily: AppTextStyles.fontFamily,
+                    fontSize: 12.sp,
+                    color: Colors.white70,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Soft glowing background orb for admin users screen (matches admin dashboard)
+class _GlowOrb extends StatelessWidget {
+  final double size;
+  final Color color;
+  final double opacity;
+
+  const _GlowOrb({
+    required this.size,
+    required this.color,
+    required this.opacity,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        boxShadow: [
+          BoxShadow(
+            color: color.withValues(alpha: opacity),
+            blurRadius: size / 2,
+            spreadRadius: size / 6,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class _UseCard extends StatelessWidget {
   final User user;
   final VoidCallback onToggleStatus;
@@ -742,28 +980,31 @@ class _UseCard extends StatelessWidget {
     required this.onToggleStatus,
     required this.onViewDetails,
   });
+
   @override
   Widget build(BuildContext context) {
     return AppCard(
       margin: EdgeInsets.only(bottom: 12.h),
-      borderColor: user.isActive? null : AppColors.error,
+      // كارت داكن بنفس روح كروت لوحة التحكم
+      backgroundColor: const Color(0xFF0B1722),
+      borderColor: user.isActive ? null : AppColors.error,
       onTap: onViewDetails,
-      child:  Row(
+      child: Row(
         children: [
           Container(
             width: 48.r,
             height: 48.r,
             decoration: BoxDecoration(
-              color: _getRoleColor(user.role).withValues(alpha:  0.1),
+              color: _getRoleColor(user.role).withValues(alpha: 0.20),
               borderRadius: BorderRadius.circular(12.r),
             ),
             child: Icon(
               _getRoleIcon(user.role),
-              color: _getRoleColor(user.role),
+              color: Colors.white,
               size: 24.r,
             ),
           ),
-          SizedBox(width: 12.w,),
+          SizedBox(width: 12.w),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -777,49 +1018,48 @@ class _UseCard extends StatelessWidget {
                           fontFamily: AppTextStyles.fontFamily,
                           fontSize: 14.sp,
                           fontWeight: FontWeight.w600,
-                          color: AppColors.textPrimary
+                          color: Colors.white,
                         ),
                         overflow: TextOverflow.ellipsis,
-                      ) 
+                      ),
                     ),
                     _StatusBadge(isActive: user.isActive),
                   ],
                 ),
-                SizedBox(height: 4.h,),
+                SizedBox(height: 4.h),
                 Row(
                   children: [
                     _RoleBadge(role: user.role),
-                    SizedBox(width: 8.w,),
+                    SizedBox(width: 8.w),
                     Expanded(
                       child: Text(
                         'انضم ${Formatters.formatRelativeTime(user.createdAt)}',
                         style: TextStyle(
                           fontFamily: AppTextStyles.fontFamily,
                           fontSize: 11.sp,
-                          color: AppColors.textSecondary,
+                          color: Colors.white70,
                         ),
                         overflow: TextOverflow.ellipsis,
-                      ) 
-                    )
+                      ),
+                    ),
                   ],
-                )
+                ),
               ],
-            ) 
+            ),
           ),
           PopupMenuButton<String>(
             icon: Icon(
               Icons.more_vert,
-              color: AppColors.textSecondary,
+              color: Colors.white70,
               size: 20.r,
             ),
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12.r)
+              borderRadius: BorderRadius.circular(12.r),
             ),
             onSelected: (value) async {
               if (value == 'toggle') {
                 onToggleStatus();
               } else if (value == 'reset_password') {
-                // Delegate to the parent stateful widget via context
                 final state =
                     context.findAncestorStateOfType<_AdminUsersViewState>();
                 if (state != null) {
@@ -843,7 +1083,7 @@ class _UseCard extends StatelessWidget {
                       size: 18.r,
                       color: user.isActive ? AppColors.error : AppColors.success,
                     ),
-                    SizedBox(width: 8.w,),
+                    SizedBox(width: 8.w),
                     Text(
                       user.isActive ? "تعطيل الحساب" : "تفعيل الحساب",
                       style: TextStyle(
@@ -864,7 +1104,7 @@ class _UseCard extends StatelessWidget {
                         size: 18.r,
                         color: AppColors.info,
                       ),
-                      SizedBox(width: 8.w,),
+                      SizedBox(width: 8.w),
                       Text(
                         "إعادة تعيين كلمة المرور",
                         style: TextStyle(
@@ -885,7 +1125,7 @@ class _UseCard extends StatelessWidget {
                         size: 18.r,
                         color: AppColors.info,
                       ),
-                      SizedBox(width: 8.w,),
+                      SizedBox(width: 8.w),
                       Text(
                         "إعادة تعيين رمز الدخول (PIN)",
                         style: TextStyle(
@@ -897,10 +1137,9 @@ class _UseCard extends StatelessWidget {
                   ),
                 ),
             ],
-          )
+          ),
         ],
-
-      )
+      ),
     );
   }
 }
@@ -990,13 +1229,15 @@ class _RoleBadge extends StatelessWidget {
   final UserRole role;
 
   const _RoleBadge({required this.role});
-   @override
-   Widget build(BuildContext context) {
-     return Container(
+
+  @override
+  Widget build(BuildContext context) {
+    final baseColor = _getColor();
+    return Container(
       padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 2.h),
       decoration: BoxDecoration(
-        color: _getColor().withValues(alpha:  0.1),
-        borderRadius: BorderRadius.circular(4.r),
+        color: baseColor.withValues(alpha: 0.20),
+        borderRadius: BorderRadius.circular(6.r),
       ),
       child: Text(
         role.labelAr,
@@ -1004,13 +1245,13 @@ class _RoleBadge extends StatelessWidget {
           fontFamily: AppTextStyles.fontFamily,
           fontSize: 10.sp,
           fontWeight: FontWeight.w500,
-          color: _getColor()
+          color: Colors.white,
         ),
       ),
-     );
-   }
-   
-   Color  _getColor() {
+    );
+  }
+
+  Color _getColor() {
     switch (role) {
       case UserRole.customer:
         return AppColors.primary;
@@ -1022,36 +1263,34 @@ class _RoleBadge extends StatelessWidget {
         return Colors.purple;
     }
   }
-   }
+}
 
 
 class _StatusBadge extends StatelessWidget {
   final bool isActive;
 
   const _StatusBadge({required this.isActive});
+
   @override
   Widget build(BuildContext context) {
+    final baseColor = isActive ? AppColors.success : AppColors.error;
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
       decoration: BoxDecoration(
-        color: isActive 
-            ? AppColors.success.withValues(alpha: 0.1)
-            : AppColors.error.withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(4.r)
+        color: baseColor.withValues(alpha: 0.20),
+        borderRadius: BorderRadius.circular(6.r),
       ),
       child: Text(
-        isActive ?'نشط' : 'معطل',
+        isActive ? 'نشط' : 'معطل',
         style: TextStyle(
           fontFamily: AppTextStyles.fontFamily,
           fontSize: 10.sp,
-          fontWeight: FontWeight.w500,
-          color: isActive ? AppColors.success : AppColors.error,
+          fontWeight: FontWeight.w600,
+          color: Colors.white,
         ),
       ),
     );
   }
-
-  
 }
 
 class _FilterChip extends StatelessWidget {
@@ -1067,16 +1306,25 @@ class _FilterChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final Color bg = isSelected
+        ? Colors.white.withValues(alpha: 0.20)
+        : Colors.white.withValues(alpha: 0.06);
+    final Color border = isSelected
+        ? Colors.white.withValues(alpha: 0.60)
+        : Colors.white.withValues(alpha: 0.25);
+    final Color textColor =
+        isSelected ? Colors.white : Colors.white.withValues(alpha: 0.80);
+
     return GestureDetector(
       onTap: onTap,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
         padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
         decoration: BoxDecoration(
-          color: isSelected ? AppColors.primary : AppColors.surfaceVariant,
+          color: bg,
           borderRadius: BorderRadius.circular(20.r),
           border: Border.all(
-            color: isSelected ? AppColors.primary : AppColors.border,
+            color: border,
           ),
         ),
         child: Text(
@@ -1085,7 +1333,7 @@ class _FilterChip extends StatelessWidget {
             fontFamily: AppTextStyles.fontFamily,
             fontSize: 13.sp,
             fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
-            color: isSelected ? AppColors.textOnPrimary : AppColors.textPrimary,
+            color: textColor,
           ),
         ),
       ),

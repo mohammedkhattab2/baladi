@@ -46,25 +46,74 @@ class AdminShell extends StatelessWidget {
         return false;
       },
       child: Scaffold(
-        backgroundColor: AppColors.background,
+        // Deep dark base to blend with admin gradients
+        backgroundColor: const Color(0xFF050B11),
         appBar: AppBar(
+          centerTitle: true,
+          elevation: 0,
+          backgroundColor: Colors.transparent,
+          foregroundColor: Colors.white,
+          automaticallyImplyLeading: false,
+          // Custom flexible space for luxurious gradient bar
+          flexibleSpace: Container(
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  Color(0xFF0D1B2A),
+                  Color(0xFF1B263B),
+                ],
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.65),
+                  blurRadius: 18,
+                  offset: const Offset(0, 10),
+                ),
+              ],
+              borderRadius: BorderRadius.vertical(
+                bottom: Radius.circular(18.r),
+              ),
+              border: Border(
+                bottom: BorderSide(
+                  color: Colors.white.withValues(alpha: 0.16),
+                  width: 0.6,
+                ),
+              ),
+            ),
+          ),
           title: Text(
             title,
             style: TextStyle(
               fontFamily: AppTextStyles.fontFamily,
               fontSize: 18.sp,
-              fontWeight: FontWeight.bold,
+              fontWeight: FontWeight.w700,
+              letterSpacing: 0.1,
+              color: Colors.white.withValues(alpha: 0.96),
             ),
           ),
-          centerTitle: true,
-          backgroundColor: AppColors.primary,
-          foregroundColor: AppColors.textOnPrimary,
-          elevation: 0,
           // Show a back button on all admin screens except the dashboard.
           leading: currentRoute == RouteNames.adminDashboard
-              ? null
+              ? (showDrawer
+                  ? Builder(
+                      builder: (context) => IconButton(
+                        icon: Icon(
+                          Icons.menu_rounded,
+                          size: 22.r,
+                          color: Colors.white.withValues(alpha: 0.92),
+                        ),
+                        onPressed: () => Scaffold.of(context).openDrawer(),
+                        tooltip: 'القائمة',
+                      ),
+                    )
+                  : null)
               : IconButton(
-                  icon: const Icon(Icons.arrow_back),
+                  icon: Icon(
+                    Icons.arrow_back_rounded,
+                    size: 22.r,
+                    color: Colors.white.withValues(alpha: 0.92),
+                  ),
                   onPressed: () {
                     // Pop back to the previous route in the navigator stack.
                     if (Navigator.of(context).canPop()) {
@@ -75,7 +124,43 @@ class AdminShell extends StatelessWidget {
                     }
                   },
                 ),
-          actions: actions,
+          actions: actions ??
+              [
+                // subtle status dot / brand accent on the right
+                Padding(
+                  padding: EdgeInsetsDirectional.only(end: 12.w),
+                  child: Container(
+                    width: 20.r,
+                    height: 20.r,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: Colors.white.withValues(alpha: 0.24),
+                        width: 1.1,
+                      ),
+                      gradient: LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [
+                          AppColors.primary.withValues(alpha: 0.95),
+                          AppColors.secondary.withValues(alpha: 0.85),
+                        ],
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: AppColors.primary.withValues(alpha: 0.50),
+                          blurRadius: 16,
+                          offset: const Offset(0, 8),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+          iconTheme: IconThemeData(
+            color: Colors.white.withValues(alpha: 0.92),
+            size: 22.r,
+          ),
         ),
         drawer: showDrawer ? AdminDrawer(currentRoute: currentRoute) : null,
         floatingActionButton: floatingActionButton,

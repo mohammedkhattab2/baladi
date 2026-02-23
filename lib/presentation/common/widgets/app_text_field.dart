@@ -386,23 +386,57 @@ class AppSearchField extends StatelessWidget {
     this.onChanged,
     this.onSubmitted,
     this.onClear,
+    this.backgroundColor,
+    this.textColor,
+    this.iconColor,
+    this.hintColor,
   });
+
+  /// Optional background color for the search field.
+  /// Defaults to [AppColors.surfaceVariant].
+  final Color? backgroundColor;
+
+  /// Optional text color for the search query.
+  /// Defaults to [AppColors.textPrimary].
+  final Color? textColor;
+
+  /// Optional color for prefix/suffix icons.
+  /// Defaults to [AppColors.textSecondary].
+  final Color? iconColor;
+
+  /// Optional color for the hint text.
+  /// Defaults to a slightly transparent [AppColors.textSecondary].
+  final Color? hintColor;
 
   @override
   Widget build(BuildContext context) {
+    final Color effectiveBg =
+        backgroundColor ?? AppColors.surfaceVariant;
+    final Color effectiveTextColor =
+        textColor ?? AppColors.textPrimary;
+    final Color effectiveIconColor =
+        iconColor ?? AppColors.textSecondary;
+    final Color effectiveHintColor =
+        hintColor ?? AppColors.textSecondary.withValues(alpha: 0.8);
+
     return TextField(
       controller: controller,
       onChanged: onChanged,
       onSubmitted: onSubmitted,
       textInputAction: TextInputAction.search,
-      style: AppTextStyles.bodyMedium,
+      style: AppTextStyles.bodyMedium.copyWith(
+        color: effectiveTextColor,
+      ),
       decoration: InputDecoration(
         hintText: hint,
+        hintStyle: AppTextStyles.bodyMedium.copyWith(
+          color: effectiveHintColor,
+        ),
         filled: true,
-        fillColor: AppColors.surfaceVariant,
-        prefixIcon: const Icon(
+        fillColor: effectiveBg,
+        prefixIcon: Icon(
           Icons.search,
-          color: AppColors.textSecondary,
+          color: effectiveIconColor,
           size: 22,
         ),
         suffixIcon: controller != null
@@ -411,9 +445,9 @@ class AppSearchField extends StatelessWidget {
                 builder: (_, value, child) {
                   if (value.text.isEmpty) return const SizedBox.shrink();
                   return IconButton(
-                    icon: const Icon(
+                    icon: Icon(
                       Icons.close,
-                      color: AppColors.textSecondary,
+                      color: effectiveIconColor,
                       size: 20,
                     ),
                     onPressed: () {

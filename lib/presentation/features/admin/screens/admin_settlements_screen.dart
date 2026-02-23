@@ -40,59 +40,130 @@ class _AdminSettlementsView extends StatelessWidget {
     return AdminShell(
       currentRoute: RouteNames.adminSettlements,
       title: 'تسويات النظام',
-      child: BlocConsumer<SettlementCubit, SettlementState>(
-        listener: (context, state) {
-          if (state is SettlementError) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(
-                  state.message,
-                  style: const TextStyle(fontFamily: AppTextStyles.fontFamily),
-                ),
-                backgroundColor: AppColors.error,
+      child: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              Color(0xFF0D1B2A),
+              Color(0xFF1B263B),
+              Color(0xFF2D5A27),
+              Color(0xFF1A3A16),
+            ],
+            stops: [0.0, 0.35, 0.7, 1.0],
+          ),
+        ),
+        child: Stack(
+          children: [
+            Positioned(
+              top: -80,
+              left: -40,
+              child: _GlowOrb(
+                size: 180,
+                color: AppColors.primary,
+                opacity: 0.22,
               ),
-            );
-          }
-          if (state is SettlementWeekClosed) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(
-                  'تم إغلاق الفترة بنجاح: ${state.closedPeriod.displayLabel}',
-                  style: const TextStyle(fontFamily: AppTextStyles.fontFamily),
-                ),
-                backgroundColor: AppColors.success,
+            ),
+            Positioned(
+              bottom: -60,
+              right: -30,
+              child: _GlowOrb(
+                size: 160,
+                color: AppColors.secondary,
+                opacity: 0.20,
               ),
-            );
-          }
-        },
-        builder: (context, state) {
-          if (state is SettlementLoading) {
-            return const Center(child: LoadingWidget());
-          }
+            ),
+            BlocConsumer<SettlementCubit, SettlementState>(
+              listener: (context, state) {
+                if (state is SettlementError) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        state.message,
+                        style:
+                            const TextStyle(fontFamily: AppTextStyles.fontFamily),
+                      ),
+                      backgroundColor: AppColors.error,
+                    ),
+                  );
+                }
+                if (state is SettlementWeekClosed) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        'تم إغلاق الفترة بنجاح: ${state.closedPeriod.displayLabel}',
+                        style: const TextStyle(
+                            fontFamily: AppTextStyles.fontFamily),
+                      ),
+                      backgroundColor: AppColors.success,
+                    ),
+                  );
+                }
+              },
+              builder: (context, state) {
+                if (state is SettlementLoading) {
+                  return const Center(child: LoadingWidget());
+                }
 
-          if (state is SettlementError) {
-            return AppErrorWidget(
-              message: state.message,
-              onRetry: () => context.read<SettlementCubit>().loadPeriods(),
-            );
-          }
+                if (state is SettlementError) {
+                  return AppErrorWidget(
+                    message: state.message,
+                    onRetry: () =>
+                        context.read<SettlementCubit>().loadPeriods(),
+                  );
+                }
 
-          if (state is SettlementReportLoaded) {
-            return _SettlementReportView(report: state.report);
-          }
+                if (state is SettlementReportLoaded) {
+                  return _SettlementReportView(report: state.report);
+                }
 
-          if (state is SettlementPeriodsLoaded) {
-            return _PeriodsSelectionView(
-              periods: state.periods,
-              currentPeriod: state.currentPeriod,
-            );
-          }
+                if (state is SettlementPeriodsLoaded) {
+                  return _PeriodsSelectionView(
+                    periods: state.periods,
+                    currentPeriod: state.currentPeriod,
+                  );
+                }
 
-          return const SizedBox.shrink();
-        },
+                return const SizedBox.shrink();
+              },
+            ),
+          ],
+        ),
       ),
     );
   }
+}
+
+/// Soft glowing background orb reused from admin dashboard/points screens
+class _GlowOrb extends StatelessWidget {
+ final double size;
+ final Color color;
+ final double opacity;
+
+ const _GlowOrb({
+   required this.size,
+   required this.color,
+   required this.opacity,
+ });
+
+ @override
+ Widget build(BuildContext context) {
+   return Container(
+     width: size,
+     height: size,
+     decoration: BoxDecoration(
+       shape: BoxShape.circle,
+       boxShadow: [
+         BoxShadow(
+           color: color.withValues(alpha: opacity),
+           blurRadius: size / 2,
+           spreadRadius: size / 6,
+         ),
+       ],
+     ),
+   );
+ }
 }
 
 class _PeriodsSelectionView extends StatefulWidget {
@@ -140,26 +211,69 @@ class _PeriodsSelectionViewState extends State<_PeriodsSelectionView> {
               fontFamily: AppTextStyles.fontFamily,
               fontSize: 16.sp,
               fontWeight: FontWeight.w600,
-              color: AppColors.textPrimary,
+              color: Colors.white,
             ),
           ),
           SizedBox(height: 12.h),
           DropdownButtonFormField<WeeklyPeriod>(
-            value: _selected,
+            initialValue: _selected,
             isExpanded: true,
+            dropdownColor: const Color(0xFF0B1722),
+            icon: Icon(
+              Icons.keyboard_arrow_down_rounded,
+              color: AppColors.primary,
+              size: 22.r,
+            ),
             decoration: InputDecoration(
               labelText: 'الفترة الأسبوعية',
-              labelStyle: const TextStyle(
+              labelStyle: TextStyle(
                 fontFamily: AppTextStyles.fontFamily,
+                fontSize: 13.sp,
+                fontWeight: FontWeight.w500,
+                color: Colors.white.withValues(alpha: 0.86),
               ),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12.r),
+              filled: true,
+              fillColor: Colors.white.withValues(alpha: 0.04),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(16.r),
+                borderSide: BorderSide(
+                  color: Colors.white.withValues(alpha: 0.28),
+                  width: 1.1,
+                ),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(16.r),
+                borderSide: BorderSide(
+                  color: AppColors.primary.withValues(alpha: 0.85),
+                  width: 1.4,
+                ),
+              ),
+              errorBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(16.r),
+                borderSide: BorderSide(
+                  color: AppColors.error.withValues(alpha: 0.9),
+                  width: 1.3,
+                ),
+              ),
+              focusedErrorBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(16.r),
+                borderSide: BorderSide(
+                  color: AppColors.error.withValues(alpha: 0.9),
+                  width: 1.4,
+                ),
               ),
               contentPadding: EdgeInsets.symmetric(
-                horizontal: 12.w,
-                vertical: 10.h,
+                horizontal: 14.w,
+                vertical: 12.h,
               ),
             ),
+            style: TextStyle(
+              fontFamily: AppTextStyles.fontFamily,
+              fontSize: 13.sp,
+              color: Colors.white,
+            ),
+            iconEnabledColor: AppColors.primary,
+            iconDisabledColor: Colors.white.withValues(alpha: 0.5),
             items: widget.periods
                 .map(
                   (p) => DropdownMenuItem<WeeklyPeriod>(
@@ -168,8 +282,10 @@ class _PeriodsSelectionViewState extends State<_PeriodsSelectionView> {
                       '${p.displayLabel} • '
                       '${Formatters.formatDate(p.startDate)} - '
                       '${Formatters.formatDate(p.endDate)}',
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontFamily: AppTextStyles.fontFamily,
+                        fontSize: 13.sp,
+                        color: Colors.white.withValues(alpha: 0.94),
                       ),
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -274,18 +390,35 @@ class _ReportHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     return AppCard(
       padding: EdgeInsets.all(16.r),
+      backgroundColor: const Color(0xFF0B1722),
+      borderColor: Colors.white24,
+      elevation: 0,
       child: Row(
         children: [
           Container(
             width: 44.r,
             height: 44.r,
             decoration: BoxDecoration(
-              color: AppColors.primary.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(12.r),
+              gradient: const LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  AppColors.primary,
+                  AppColors.primaryLight,
+                ],
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: AppColors.primary.withValues(alpha: 0.45),
+                  blurRadius: 18,
+                  offset: const Offset(0, 8),
+                ),
+              ],
             ),
             child: Icon(
               Icons.date_range,
-              color: AppColors.primary,
+              color: Colors.white,
               size: 22.r,
             ),
           ),
@@ -300,7 +433,7 @@ class _ReportHeader extends StatelessWidget {
                     fontFamily: AppTextStyles.fontFamily,
                     fontSize: 14.sp,
                     fontWeight: FontWeight.w600,
-                    color: AppColors.textPrimary,
+                    color: Colors.white,
                   ),
                 ),
                 SizedBox(height: 4.h),
@@ -309,7 +442,7 @@ class _ReportHeader extends StatelessWidget {
                   style: TextStyle(
                     fontFamily: AppTextStyles.fontFamily,
                     fontSize: 13.sp,
-                    color: AppColors.textSecondary,
+                    color: Colors.white70,
                   ),
                 ),
                 SizedBox(height: 2.h),
@@ -319,7 +452,7 @@ class _ReportHeader extends StatelessWidget {
                   style: TextStyle(
                     fontFamily: AppTextStyles.fontFamily,
                     fontSize: 12.sp,
-                    color: AppColors.textSecondary,
+                    color: Colors.white70,
                   ),
                 ),
               ],
@@ -329,7 +462,11 @@ class _ReportHeader extends StatelessWidget {
             onPressed: () {
               context.read<SettlementCubit>().loadPeriods();
             },
-            icon: const Icon(Icons.swap_horiz),
+            icon: Icon(
+              Icons.swap_horiz,
+              color: Colors.white70,
+              size: 20.r,
+            ),
             tooltip: 'تغيير الفترة',
           ),
         ],
@@ -469,88 +606,130 @@ class _ShopsSettlementsSection extends StatelessWidget {
           separatorBuilder: (_, __) => SizedBox(height: 8.h),
           itemBuilder: (context, index) {
             final s = settlements[index];
-            return AppCard(
-              onTap: () {
-                context
-                    .read<SettlementCubit>()
-                    .loadShopSettlementDetail(s.id);
-              },
-              child: Row(
-                children: [
-                  Container(
-                    width: 40.r,
-                    height: 40.r,
-                    decoration: BoxDecoration(
-                      color: AppColors.primary.withValues(alpha: 0.08),
-                      borderRadius: BorderRadius.circular(10.r),
-                    ),
-                    child: Icon(
-                      Icons.storefront,
-                      color: AppColors.primary,
-                      size: 20.r,
-                    ),
+            return Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(18.r),
+                color: const Color(0xFF0B1722),
+                border: Border.all(
+                  color: Colors.white.withValues(alpha: 0.22),
+                  width: 1.0,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.45),
+                    blurRadius: 20,
+                    offset: const Offset(0, 10),
                   ),
-                  SizedBox(width: 12.w),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                  BoxShadow(
+                    color: AppColors.primary.withValues(alpha: 0.22),
+                    blurRadius: 24,
+                    offset: const Offset(0, 14),
+                  ),
+                ],
+              ),
+              child: AppCard(
+                margin: EdgeInsets.zero,
+                padding:
+                    EdgeInsets.symmetric(horizontal: 14.w, vertical: 12.h),
+                backgroundColor: const Color(0xFF0B1722),
+                borderColor: Colors.transparent,
+                onTap: () {
+                  context
+                      .read<SettlementCubit>()
+                      .loadShopSettlementDetail(s.id);
+                },
+                child: Row(
+                  children: [
+                    Container(
+                      width: 40.r,
+                      height: 40.r,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(10.r),
+                        gradient: LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: [
+                            AppColors.primary.withValues(alpha: 0.95),
+                            AppColors.primary.withValues(alpha: 0.75),
+                          ],
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: AppColors.primary.withValues(alpha: 0.55),
+                            blurRadius: 14,
+                            offset: const Offset(0, 6),
+                          ),
+                        ],
+                      ),
+                      child: Icon(
+                        Icons.storefront,
+                        color: Colors.white,
+                        size: 20.r,
+                      ),
+                    ),
+                    SizedBox(width: 12.w),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'متجر #${s.shopId}',
+                            style: TextStyle(
+                              fontFamily: AppTextStyles.fontFamily,
+                              fontSize: 14.sp,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.white,
+                            ),
+                          ),
+                          SizedBox(height: 2.h),
+                          Text(
+                            'طلبات مكتملة: ${s.completedOrders} • ملغاة: ${s.cancelledOrders}',
+                            style: TextStyle(
+                              fontFamily: AppTextStyles.fontFamily,
+                              fontSize: 12.sp,
+                              color: Colors.white70,
+                            ),
+                          ),
+                          SizedBox(height: 2.h),
+                          Text(
+                            'إجمالي المبيعات: ${Formatters.formatCurrency(s.grossSales)}',
+                            style: TextStyle(
+                              fontFamily: AppTextStyles.fontFamily,
+                              fontSize: 12.sp,
+                              color: Colors.white70,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    SizedBox(width: 8.w),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
                         Text(
-                          'متجر #${s.shopId}',
+                          Formatters.formatCurrency(s.netAmount),
                           style: TextStyle(
                             fontFamily: AppTextStyles.fontFamily,
-                            fontSize: 14.sp,
+                            fontSize: 13.sp,
                             fontWeight: FontWeight.w600,
-                            color: AppColors.textPrimary,
+                            color: AppColors.success,
                           ),
                         ),
-                        SizedBox(height: 2.h),
+                        SizedBox(height: 4.h),
                         Text(
-                          'طلبات مكتملة: ${s.completedOrders} • ملغاة: ${s.cancelledOrders}',
+                          s.status.labelAr,
                           style: TextStyle(
                             fontFamily: AppTextStyles.fontFamily,
-                            fontSize: 12.sp,
-                            color: AppColors.textSecondary,
-                          ),
-                        ),
-                        SizedBox(height: 2.h),
-                        Text(
-                          'إجمالي المبيعات: ${Formatters.formatCurrency(s.grossSales)}',
-                          style: TextStyle(
-                            fontFamily: AppTextStyles.fontFamily,
-                            fontSize: 12.sp,
-                            color: AppColors.textSecondary,
+                            fontSize: 11.sp,
+                            color: s.isPaid
+                                ? AppColors.success
+                                : AppColors.warning,
                           ),
                         ),
                       ],
                     ),
-                  ),
-                  SizedBox(width: 8.w),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      Text(
-                        Formatters.formatCurrency(s.netAmount),
-                        style: TextStyle(
-                          fontFamily: AppTextStyles.fontFamily,
-                          fontSize: 13.sp,
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.success,
-                        ),
-                      ),
-                      SizedBox(height: 4.h),
-                      Text(
-                        s.status.labelAr,
-                        style: TextStyle(
-                          fontFamily: AppTextStyles.fontFamily,
-                          fontSize: 11.sp,
-                          color:
-                              s.isPaid ? AppColors.success : AppColors.warning,
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
+                  ],
+                ),
               ),
             );
           },
@@ -595,78 +774,120 @@ class _RidersSettlementsSection extends StatelessWidget {
           separatorBuilder: (_, __) => SizedBox(height: 8.h),
           itemBuilder: (context, index) {
             final s = settlements[index];
-            return AppCard(
-              onTap: () {
-                context
-                    .read<SettlementCubit>()
-                    .loadRiderSettlementDetail(s.id);
-              },
-              child: Row(
-                children: [
-                  Container(
-                    width: 40.r,
-                    height: 40.r,
-                    decoration: BoxDecoration(
-                      color: AppColors.info.withValues(alpha: 0.08),
-                      borderRadius: BorderRadius.circular(10.r),
-                    ),
-                    child: Icon(
-                      Icons.delivery_dining,
-                      color: AppColors.info,
-                      size: 20.r,
-                    ),
+            return Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(18.r),
+                color: const Color(0xFF0B1722),
+                border: Border.all(
+                  color: Colors.white.withValues(alpha: 0.22),
+                  width: 1.0,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.45),
+                    blurRadius: 20,
+                    offset: const Offset(0, 10),
                   ),
-                  SizedBox(width: 12.w),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                  BoxShadow(
+                    color: AppColors.info.withValues(alpha: 0.22),
+                    blurRadius: 24,
+                    offset: const Offset(0, 14),
+                  ),
+                ],
+              ),
+              child: AppCard(
+                margin: EdgeInsets.zero,
+                padding:
+                    EdgeInsets.symmetric(horizontal: 14.w, vertical: 12.h),
+                backgroundColor: const Color(0xFF0B1722),
+                borderColor: Colors.transparent,
+                onTap: () {
+                  context
+                      .read<SettlementCubit>()
+                      .loadRiderSettlementDetail(s.id);
+                },
+                child: Row(
+                  children: [
+                    Container(
+                      width: 40.r,
+                      height: 40.r,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(10.r),
+                        gradient: LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: [
+                            AppColors.info.withValues(alpha: 0.95),
+                            AppColors.info.withValues(alpha: 0.75),
+                          ],
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: AppColors.info.withValues(alpha: 0.55),
+                            blurRadius: 14,
+                            offset: const Offset(0, 6),
+                          ),
+                        ],
+                      ),
+                      child: Icon(
+                        Icons.delivery_dining,
+                        color: Colors.white,
+                        size: 20.r,
+                      ),
+                    ),
+                    SizedBox(width: 12.w),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'سائق #${s.riderId}',
+                            style: TextStyle(
+                              fontFamily: AppTextStyles.fontFamily,
+                              fontSize: 14.sp,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.white,
+                            ),
+                          ),
+                          SizedBox(height: 2.h),
+                          Text(
+                            'تسليمات: ${s.totalDeliveries} • نقدية: ${Formatters.formatCurrency(s.totalCashHandled)}',
+                            style: TextStyle(
+                              fontFamily: AppTextStyles.fontFamily,
+                              fontSize: 12.sp,
+                              color: Colors.white70,
+                            ),
+                          ),
+                          SizedBox(height: 2.h),
+                          Text(
+                            'إجمالي أرباح التوصيل: ${Formatters.formatCurrency(s.totalEarnings)}',
+                            style: TextStyle(
+                              fontFamily: AppTextStyles.fontFamily,
+                              fontSize: 12.sp,
+                              color: Colors.white70,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    SizedBox(width: 8.w),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
                         Text(
-                          'سائق #${s.riderId}',
+                          s.status.labelAr,
                           style: TextStyle(
                             fontFamily: AppTextStyles.fontFamily,
-                            fontSize: 14.sp,
-                            fontWeight: FontWeight.w600,
-                            color: AppColors.textPrimary,
-                          ),
-                        ),
-                        SizedBox(height: 2.h),
-                        Text(
-                          'تسليمات: ${s.totalDeliveries} • نقدية: ${Formatters.formatCurrency(s.totalCashHandled)}',
-                          style: TextStyle(
-                            fontFamily: AppTextStyles.fontFamily,
-                            fontSize: 12.sp,
-                            color: AppColors.textSecondary,
-                          ),
-                        ),
-                        SizedBox(height: 2.h),
-                        Text(
-                          'إجمالي أرباح التوصيل: ${Formatters.formatCurrency(s.totalEarnings)}',
-                          style: TextStyle(
-                            fontFamily: AppTextStyles.fontFamily,
-                            fontSize: 12.sp,
-                            color: AppColors.textSecondary,
+                            fontSize: 11.sp,
+                            color: s.isPaid
+                                ? AppColors.success
+                                : AppColors.warning,
                           ),
                         ),
                       ],
                     ),
-                  ),
-                  SizedBox(width: 8.w),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      Text(
-                        s.status.labelAr,
-                        style: TextStyle(
-                          fontFamily: AppTextStyles.fontFamily,
-                          fontSize: 11.sp,
-                          color:
-                              s.isPaid ? AppColors.success : AppColors.warning,
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
+                  ],
+                ),
               ),
             );
           },

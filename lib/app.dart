@@ -6,11 +6,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'core/config/app_config.dart';
 import 'core/di/injection.dart';
 import 'core/router/app_router.dart';
 import 'core/theme/app_theme.dart';
+import 'presentation/cubits/auth/auth_cubit.dart';
 
 /// The root widget of the Baladi application.
 ///
@@ -31,42 +33,45 @@ class BaladiApp extends StatelessWidget {
       minTextAdapt: true,
       splitScreenMode: true,
       builder: (context, child) {
-        return MaterialApp.router(
-          // ─── App Identity ─────────────────────────────────────
-          title: AppConfig.appName,
-          debugShowCheckedModeBanner: false,
+        return BlocProvider<AuthCubit>(
+          create: (_) => getIt<AuthCubit>(),
+          child: MaterialApp.router(
+            // ─── App Identity ─────────────────────────────────────
+            title: AppConfig.appName,
+            debugShowCheckedModeBanner: false,
 
-          // ─── Theme ────────────────────────────────────────────
-          theme: AppTheme.light,
+            // ─── Theme ────────────────────────────────────────────
+            theme: AppTheme.light,
 
-          // ─── Routing ──────────────────────────────────────────
-          routerConfig: appRouter.router,
+            // ─── Routing ──────────────────────────────────────────
+            routerConfig: appRouter.router,
 
-          // ─── Localization ─────────────────────────────────────
-          locale: const Locale('ar', 'EG'),
-          supportedLocales: const [
-            Locale('ar', 'EG'),
-            Locale('en', 'US'),
-          ],
-          localizationsDelegates: const [
-            GlobalMaterialLocalizations.delegate,
-            GlobalWidgetsLocalizations.delegate,
-            GlobalCupertinoLocalizations.delegate,
-          ],
+            // ─── Localization ─────────────────────────────────────
+            locale: const Locale('ar', 'EG'),
+            supportedLocales: const [
+              Locale('ar', 'EG'),
+              Locale('en', 'US'),
+            ],
+            localizationsDelegates: const [
+              GlobalMaterialLocalizations.delegate,
+              GlobalWidgetsLocalizations.delegate,
+              GlobalCupertinoLocalizations.delegate,
+            ],
 
-          // ─── Builder ──────────────────────────────────────────
-          builder: (context, child) {
-            // تثبيت حجم الخط — يمنع إعدادات الموبايل من تكسير الـ layout
-            return MediaQuery(
-              data: MediaQuery.of(context).copyWith(
-                textScaler: const TextScaler.linear(1.0),
-              ),
-              child: Directionality(
-                textDirection: TextDirection.rtl,
-                child: child ?? const SizedBox.shrink(),
-              ),
-            );
-          },
+            // ─── Builder ──────────────────────────────────────────
+            builder: (context, child) {
+              // تثبيت حجم الخط — يمنع إعدادات الموبايل من تكسير الـ layout
+              return MediaQuery(
+                data: MediaQuery.of(context).copyWith(
+                  textScaler: const TextScaler.linear(1.0),
+                ),
+                child: Directionality(
+                  textDirection: TextDirection.rtl,
+                  child: child ?? const SizedBox.shrink(),
+                ),
+              );
+            },
+          ),
         );
       },
     );

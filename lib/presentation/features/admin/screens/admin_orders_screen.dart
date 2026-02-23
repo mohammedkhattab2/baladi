@@ -195,6 +195,11 @@ class _AdminOrdersViewState extends State<_AdminOrdersView> {
             AppSearchField(
               controller: _searchController,
               hint: 'بحث برقم الطلب...',
+              // نفس ستايل البحث في عالم الـ Admin الداكن (مطابق للمستخدمين/المحلات/السائقين)
+              backgroundColor: Colors.white.withValues(alpha: 0.12),
+              textColor: Colors.white,
+              iconColor: Colors.white70,
+              hintColor: Colors.white60,
               onChanged: (value) {
                 // فلترة محلية بدون استدعاء API
                 setState(() {});
@@ -619,8 +624,9 @@ class _StatusBadge extends StatelessWidget {
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
       decoration: BoxDecoration(
-        color: color.withValues(alpha:  0.1),
-        borderRadius: BorderRadius.circular(4.r),
+        // خلفية ملونة بشفافية ونص أبيض زي بادجات الحالات في باقي شاشات الـ Admin
+        color: color.withValues(alpha: 0.22),
+        borderRadius: BorderRadius.circular(6.r),
       ),
       child: Text(
         status.labelAr,
@@ -628,7 +634,7 @@ class _StatusBadge extends StatelessWidget {
           fontFamily: AppTextStyles.fontFamily,
           fontSize: 10.sp,
           fontWeight: FontWeight.w600,
-          color: color,
+          color: Colors.white,
         ),
       ),
     );

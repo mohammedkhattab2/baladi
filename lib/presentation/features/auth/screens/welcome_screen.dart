@@ -346,13 +346,13 @@ class _ParticlesPainter extends CustomPainter {
 
       // Outer glow
       final glowPaint = Paint()
-        ..color = particle.color.withOpacity(particle.opacity * 0.3)
+        ..color = particle.color.withValues(alpha:  particle.opacity * 0.3)
         ..maskFilter = MaskFilter.blur(BlurStyle.normal, glowSize * 3);
       canvas.drawCircle(Offset(x, y), glowSize * 2, glowPaint);
 
       // Inner core
       final corePaint = Paint()
-        ..color = particle.color.withOpacity(particle.opacity * 0.8)
+        ..color = particle.color.withValues(alpha:  particle.opacity * 0.8)
         ..maskFilter = MaskFilter.blur(BlurStyle.normal, glowSize * 0.5);
       canvas.drawCircle(Offset(x, y), glowSize, corePaint);
     }
@@ -417,8 +417,8 @@ class _LuxuryBrandSection extends StatelessWidget {
                     shape: BoxShape.circle,
                     gradient: RadialGradient(
                       colors: [
-                        AppColors.primary.withOpacity(0.3),
-                        AppColors.primary.withOpacity(0.1),
+                        AppColors.primary.withValues(alpha: 0.3),
+                        AppColors.primary.withValues(alpha: 0.1),
                         Colors.transparent,
                       ],
                       stops: const [0.3, 0.6, 1.0],
@@ -427,14 +427,14 @@ class _LuxuryBrandSection extends StatelessWidget {
                       // Outer glow
                       BoxShadow(
                         color:
-                            AppColors.primary.withOpacity(0.4 * pulseAnimation.value),
+                            AppColors.primary.withValues(alpha: 0.4 * pulseAnimation.value),
                         blurRadius: 40 * pulseAnimation.value,
                         spreadRadius: 10 * pulseAnimation.value,
                       ),
                       // Secondary glow
                       BoxShadow(
                         color: AppColors.secondary
-                            .withOpacity(0.2 * pulseAnimation.value),
+                            .withValues(alpha: 0.2 * pulseAnimation.value),
                         blurRadius: 60 * pulseAnimation.value,
                         spreadRadius: 5,
                       ),
@@ -449,12 +449,12 @@ class _LuxuryBrandSection extends StatelessWidget {
                         end: Alignment.bottomRight,
                         colors: [
                           AppColors.surface,
-                          AppColors.surface.withOpacity(0.95),
+                          AppColors.surface.withValues(alpha: 0.95),
                         ],
                       ),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.2),
+                          color: Colors.black.withValues(alpha: 0.2),
                           blurRadius: 20,
                           offset: const Offset(0, 10),
                         ),
@@ -510,7 +510,7 @@ class _LuxuryBrandSection extends StatelessWidget {
                       blurRadius: 20,
                     ),
                     Shadow(
-                      color: AppColors.secondary.withOpacity(0.3),
+                      color: AppColors.secondary.withValues(alpha: 0.3),
                       blurRadius: 40,
                     ),
                   ],
