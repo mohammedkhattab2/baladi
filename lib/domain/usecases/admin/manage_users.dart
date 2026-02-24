@@ -99,10 +99,20 @@ class CreateShopAsAdminParams extends Equatable {
   /// Raw payload that will be sent as-is to the backend.
   final Map<String, dynamic> payload;
 
-  const CreateShopAsAdminParams({required this.payload});
+  /// Optional local path for shop logo image.
+  final String? logoPath;
+
+  /// Optional local path for shop cover image.
+  final String? coverImagePath;
+
+  const CreateShopAsAdminParams({
+    required this.payload,
+    this.logoPath,
+    this.coverImagePath,
+  });
 
   @override
-  List<Object?> get props => [payload];
+  List<Object?> get props => [payload, logoPath, coverImagePath];
 }
 
 /// Creates a new shop (and its owner user) from the admin panel.
@@ -114,7 +124,11 @@ class CreateShopAsAdmin extends UseCase<Shop, CreateShopAsAdminParams> {
 
   @override
   Future<Result<Shop>> call(CreateShopAsAdminParams params) {
-    return _repository.createShopAsAdmin(payload: params.payload);
+    return _repository.createShopAsAdmin(
+      payload: params.payload,
+      logoPath: params.logoPath,
+      coverImagePath: params.coverImagePath,
+    );
   }
 }
 

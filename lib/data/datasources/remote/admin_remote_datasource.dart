@@ -37,8 +37,14 @@ abstract class AdminRemoteDatasource {
   /// Backend:
   ///   POST /api/admin/shops
   ///   Body contains both shop profile and owner user data.
+  ///
+  /// If [logoPath] or [coverImagePath] are provided, the request will be sent
+  /// as `multipart/form-data` with these files attached using the expected
+  /// field names `logo` and `cover_image`.
   Future<ShopModel> createShopAsAdmin({
     required Map<String, dynamic> body,
+    String? logoPath,
+    String? coverImagePath,
   });
 
   /// Updates an existing shop (and optionally its owner user) from admin.
@@ -213,10 +219,43 @@ class AdminRemoteDatasourceImpl implements AdminRemoteDatasource {
   @override
   Future<ShopModel> createShopAsAdmin({
     required Map<String, dynamic> body,
+    String? logoPath,
+    String? coverImagePath,
   }) async {
     // Backend route:
     //   POST /api/admin/shops
     //   Body includes both shop and owner user data.
+    //
+    // If image paths are provided, send multipart/form-data with files attached.
+    final bool hasLogo = logoPath != null && logoPath.isNotEmpty;
+    final bool hasCover = coverImagePath != null && coverImagePath.isNotEmpty;
+
+    if (hasLogo || hasCover) {
+      final files = <String, String>{};
+      if (hasLogo) {
+        files['logo'] = logoPath!;
+      }
+      if (hasCover) {
+        files['cover_image'] = coverImagePath!;
+      }
+
+      final response = await _apiClient.uploadMultipleFiles<ShopModel>(
+        ApiEndpoints.adminShops,
+        files: files,
+        data: body,
+        fromJson: (json) {
+          // Support both wrapped and direct shop JSON:
+          // { success, data: { shop: {...} } }
+          final data = json['data'] as Map<String, dynamic>?;
+          final shopJson =
+              data?['shop'] as Map<String, dynamic>? ?? data ?? json;
+          return ShopModel.fromJson(shopJson);
+        },
+      );
+      return response.data!;
+    }
+
+    // Fallback to JSON body when no images are provided.
     final response = await _apiClient.post(
       ApiEndpoints.adminShops,
       body: body,

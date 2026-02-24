@@ -1,3 +1,5 @@
+// lib/presentation/features/rider/widgets/rider_drawer.dart
+
 import 'package:baladi/core/router/route_names.dart';
 import 'package:baladi/core/theme/app_colors.dart';
 import 'package:baladi/core/theme/app_text_styles.dart';
@@ -5,10 +7,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 
-class ShopDrawer extends StatelessWidget {
+class RiderDrawer extends StatelessWidget {
   final String currentRoute;
 
-  const ShopDrawer({super.key, required this.currentRoute});
+  const RiderDrawer({super.key, required this.currentRoute});
 
   @override
   Widget build(BuildContext context) {
@@ -25,33 +27,28 @@ class ShopDrawer extends StatelessWidget {
                   _DrawerItem(
                     icon: Icons.dashboard_outlined,
                     label: 'لوحة التحكم',
-                    routeName: RouteNames.shopDashboard,
+                    routeName: RouteNames.riderDashboard,
                     currentRoute: currentRoute,
                   ),
                   _DrawerItem(
-                    icon: Icons.receipt_long_outlined,
-                    label: 'الطلبات',
-                    routeName: RouteNames.shopOrders,
-                    currentRoute: currentRoute,
-                  ),
-                  _DrawerItem(
-                    icon: Icons.inventory_2_outlined,
-                    label: 'المنتجات',
-                    routeName: RouteNames.shopProducts,
+                    icon: Icons.assignment_outlined,
+                    label: 'طلبات متاحة',
+                    routeName: RouteNames.riderAvailableOrders,
                     currentRoute: currentRoute,
                   ),
                   _DrawerItem(
                     icon: Icons.account_balance_wallet_outlined,
-                    label: 'التسويات',
-                    routeName: RouteNames.shopSettlements,
+                    label: 'أرباحي',
+                    routeName: RouteNames.riderEarnings,
                     currentRoute: currentRoute,
                   ),
                   _DrawerItem(
-                    icon: Icons.settings_outlined,
-                    label: 'الإعدادات',
-                    routeName: RouteNames.shopSettings,
+                    icon: Icons.person_outline,
+                    label: 'الملف الشخصي',
+                    routeName: RouteNames.riderProfile,
                     currentRoute: currentRoute,
                   ),
+                  // مفيش عنصر للـ riderCurrentDelivery لأنه غالباً شاشة تفاصيل بتتنادى من جوّا الكود
                 ],
               ),
             ),
@@ -67,8 +64,8 @@ class ShopDrawer extends StatelessWidget {
                 ),
               ),
               onTap: () {
-                // TODO: تنفيذ تسجيل الخروج فعلياً
-                Navigator.of(context).pop(); // يقفل الدروار بس حالياً
+                // TODO: تنفيذ تسجيل الخروج
+                Navigator.of(context).pop();
               },
             ),
           ],
@@ -85,10 +82,11 @@ class ShopDrawer extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(Icons.storefront, color: AppColors.textOnPrimary, size: 32.r),
+          Icon(Icons.delivery_dining,
+              color: AppColors.textOnPrimary, size: 32.r),
           SizedBox(height: 8.h),
           Text(
-            'لوحة تحكم المتجر',
+            'لوحة تحكم السائق',
             style: TextStyle(
               fontFamily: AppTextStyles.fontFamily,
               fontSize: 16.sp,
@@ -98,7 +96,7 @@ class ShopDrawer extends StatelessWidget {
           ),
           SizedBox(height: 4.h),
           Text(
-            'إدارة الطلبات والمنتجات والتسويات',
+            'إدارة التوفر والطلبات والأرباح',
             style: TextStyle(
               fontFamily: AppTextStyles.fontFamily,
               fontSize: 12.sp,
@@ -126,7 +124,7 @@ class _DrawerItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final bool selected = currentRoute == routeName;
+    final selected = currentRoute == routeName;
 
     return ListTile(
       leading: Icon(
@@ -143,7 +141,7 @@ class _DrawerItem extends StatelessWidget {
         ),
       ),
       selected: selected,
-      selectedTileColor: AppColors.primary.withValues(alpha:  0.08),
+      selectedTileColor: AppColors.primary.withValues(alpha: 0.08),
       onTap: () {
         Navigator.of(context).pop();
         if (!selected) {

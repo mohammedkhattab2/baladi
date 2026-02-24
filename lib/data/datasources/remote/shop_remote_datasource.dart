@@ -99,13 +99,15 @@ class ShopRemoteDatasourceImpl implements ShopRemoteDatasource {
     int page = 1,
     int perPage = 20,
   }) async {
-    final response = await _apiClient.get<List<ProductModel>>(
+    // Backend returns: { success, data: [ ...products... ], meta: { ... } }
+    // and expects "limit" for pagination.
+    final response = await _apiClient.getList<ProductModel>(
       ApiEndpoints.shopProducts(shopId),
       queryParameters: {
         'page': page.toString(),
-        'per_page': perPage.toString(),
+        'limit': perPage.toString(),
       },
-      fromJson: (json) => _parseList(json, ProductModel.fromJson),
+      fromJson: (json) => ProductModel.fromJson(json),
     );
     return response.data ?? [];
   }
@@ -145,13 +147,15 @@ class ShopRemoteDatasourceImpl implements ShopRemoteDatasource {
     int page = 1,
     int perPage = 20,
   }) async {
-    final response = await _apiClient.get<List<ProductModel>>(
+    // Backend returns: { success, data: [ ...products... ], meta: { ... } }
+    // and expects "limit" for pagination.
+    final response = await _apiClient.getList<ProductModel>(
       ApiEndpoints.shopProductsManage,
       queryParameters: {
         'page': page.toString(),
-        'per_page': perPage.toString(),
+        'limit': perPage.toString(),
       },
-      fromJson: (json) => _parseList(json, ProductModel.fromJson),
+      fromJson: (json) => ProductModel.fromJson(json),
     );
     return response.data ?? [];
   }
@@ -213,25 +217,17 @@ class ShopRemoteDatasourceImpl implements ShopRemoteDatasource {
     int page = 1,
     int perPage = 20,
   }) async {
-    final response = await _apiClient.get<List<ShopSettlementModel>>(
+    // Backend returns: { success, data: [ ...settlements... ], meta: { ... } }
+    // and expects "limit" for pagination.
+    final response = await _apiClient.getList<ShopSettlementModel>(
       ApiEndpoints.shopSettlements,
       queryParameters: {
         'page': page.toString(),
-        'per_page': perPage.toString(),
+        'limit': perPage.toString(),
       },
-      fromJson: (json) => _parseList(json, ShopSettlementModel.fromJson),
+      fromJson: (json) => ShopSettlementModel.fromJson(json),
     );
     return response.data ?? [];
   }
 
-  /// Parses a list of items from the standard API list response format.
-  static List<T> _parseList<T>(
-    Map<String, dynamic> json,
-    T Function(Map<String, dynamic>) fromJson,
-  ) {
-    final items = json['items'] as List<dynamic>? ?? [];
-    return items
-        .map((e) => fromJson(e as Map<String, dynamic>))
-        .toList();
-  }
 }

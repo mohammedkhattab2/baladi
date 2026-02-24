@@ -1010,7 +1010,7 @@ class _LuxuryTextFieldState extends State<_LuxuryTextField> {
                 boxShadow: _isFocused
                     ? [
                         BoxShadow(
-                          color: AppColors.primary.withOpacity(0.4 * pulseValue),
+                          color: AppColors.primary.withValues(alpha:  0.4 * pulseValue),
                           blurRadius: 20 * pulseValue,
                           spreadRadius: 2,
                         ),
@@ -1037,16 +1037,16 @@ class _LuxuryTextFieldState extends State<_LuxuryTextField> {
                   hintStyle: TextStyle(
                     fontFamily: AppTextStyles.fontFamily,
                     fontSize: 14.sp,
-                    color: Colors.white.withOpacity(0.4),
+                    color: Colors.white.withValues(alpha: 0.4),
                   ),
                   counterText: '',
                   filled: true,
-                  fillColor: Colors.white.withOpacity(_isFocused ? 0.15 : 0.1),
+                  fillColor: Colors.white.withValues(alpha: _isFocused ? 0.15 : 0.1),
                   prefixIcon: Icon(
                     widget.prefixIcon,
                     color: _isFocused
                         ? AppColors.secondary
-                        : Colors.white.withOpacity(0.6),
+                        : Colors.white.withValues(alpha: 0.6),
                     size: 22.r,
                   ),
                   suffixIcon: widget.suffixIcon,
@@ -1055,28 +1055,28 @@ class _LuxuryTextFieldState extends State<_LuxuryTextField> {
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(16.r),
                     borderSide: BorderSide(
-                      color: Colors.white.withOpacity(0.3),
+                      color: Colors.white.withValues(alpha: 0.3),
                       width: 1.5,
                     ),
                   ),
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(16.r),
                     borderSide: BorderSide(
-                      color: Colors.white.withOpacity(0.2),
+                      color: Colors.white.withValues(alpha: 0.2),
                       width: 1.5,
                     ),
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(16.r),
                     borderSide: BorderSide(
-                      color: AppColors.secondary.withOpacity(0.8),
+                      color: AppColors.secondary.withValues(alpha: 0.8),
                       width: 2,
                     ),
                   ),
                   errorBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(16.r),
                     borderSide: BorderSide(
-                      color: AppColors.error.withOpacity(0.8),
+                      color: AppColors.error.withValues(alpha: 0.8),
                       width: 1.5,
                     ),
                   ),
@@ -1148,8 +1148,8 @@ class _GlowingButtonState extends State<_GlowingButton> {
                 end: Alignment.bottomRight,
                 colors: isDisabled
                     ? [
-                        AppColors.primary.withOpacity(0.5),
-                        AppColors.primaryLight.withOpacity(0.5),
+                        AppColors.primary.withValues(alpha: 0.5),
+                        AppColors.primaryLight.withValues(alpha: 0.5),
                       ]
                     : [
                         AppColors.primary,
@@ -1160,13 +1160,13 @@ class _GlowingButtonState extends State<_GlowingButton> {
                   ? []
                   : [
                       BoxShadow(
-                        color: AppColors.primary.withOpacity(0.5 * pulseValue),
+                        color: AppColors.primary.withValues(alpha: 0.5 * pulseValue),
                         blurRadius: 25 * pulseValue,
                         spreadRadius: 2,
                         offset: const Offset(0, 5),
                       ),
                       BoxShadow(
-                        color: AppColors.secondary.withOpacity(0.2 * pulseValue),
+                        color: AppColors.secondary.withValues(alpha: 0.2 * pulseValue),
                         blurRadius: 40 * pulseValue,
                         spreadRadius: 0,
                       ),
@@ -1279,7 +1279,7 @@ class _PhoneStep extends StatelessWidget {
                     Icon(
                       Icons.arrow_forward_ios_rounded,
                       size: 14.r,
-                      color: Colors.white.withOpacity(0.7),
+                      color: Colors.white.withValues(alpha: 0.7),
                     ),
                     SizedBox(width: 6.w),
                     Text(
@@ -1287,7 +1287,7 @@ class _PhoneStep extends StatelessWidget {
                       style: TextStyle(
                         fontFamily: AppTextStyles.fontFamily,
                         fontSize: 14.sp,
-                        color: Colors.white.withOpacity(0.7),
+                        color: Colors.white.withValues(alpha: 0.7),
                       ),
                     ),
                   ],
@@ -1441,7 +1441,7 @@ class _ResetStep extends StatelessWidget {
                     Icon(
                       Icons.arrow_forward_ios_rounded,
                       size: 14.r,
-                      color: Colors.white.withOpacity(0.7),
+                      color: Colors.white.withValues(alpha: 0.7),
                     ),
                     SizedBox(width: 6.w),
                     Text(
@@ -1449,7 +1449,7 @@ class _ResetStep extends StatelessWidget {
                       style: TextStyle(
                         fontFamily: AppTextStyles.fontFamily,
                         fontSize: 14.sp,
-                        color: Colors.white.withOpacity(0.7),
+                        color: Colors.white.withValues(alpha: 0.7),
                       ),
                     ),
                   ],
@@ -1487,17 +1487,17 @@ class _SecurityQuestionCard extends StatelessWidget {
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
               colors: [
-                AppColors.primary.withOpacity(0.3),
-                AppColors.primary.withOpacity(0.15),
+                AppColors.primary.withValues(alpha: 0.3),
+                AppColors.primary.withValues(alpha: 0.15),
               ],
             ),
             border: Border.all(
-              color: AppColors.primary.withOpacity(0.4),
+              color: AppColors.primary.withValues(alpha: 0.4),
               width: 1,
             ),
             boxShadow: [
               BoxShadow(
-                color: AppColors.primary.withOpacity(0.2 * pulseValue),
+                color: AppColors.primary.withValues(alpha: 0.2 * pulseValue),
                 blurRadius: 15 * pulseValue,
                 spreadRadius: 1,
               ),
@@ -1521,7 +1521,7 @@ class _SecurityQuestionCard extends StatelessWidget {
                   ),
                   boxShadow: [
                     BoxShadow(
-                      color: AppColors.primary.withOpacity(0.4 * pulseValue),
+                      color: AppColors.primary.withValues(alpha: 0.4 * pulseValue),
                       blurRadius: 10 * pulseValue,
                       spreadRadius: 1,
                     ),
@@ -1543,7 +1543,7 @@ class _SecurityQuestionCard extends StatelessWidget {
                       style: TextStyle(
                         fontFamily: AppTextStyles.fontFamily,
                         fontSize: 12.sp,
-                        color: Colors.white.withOpacity(0.7),
+                        color: Colors.white.withValues(alpha: 0.7),
                       ),
                     ),
                     SizedBox(height: 4.h),
@@ -1596,13 +1596,13 @@ class _SectionLabel extends StatelessWidget {
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                   colors: [
-                    AppColors.primary.withOpacity(0.8),
-                    AppColors.primaryLight.withOpacity(0.6),
+                    AppColors.primary.withValues(alpha: 0.8),
+                    AppColors.primaryLight.withValues(alpha: 0.6),
                   ],
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: AppColors.primary.withOpacity(0.4 * pulseValue),
+                    color: AppColors.primary.withValues(alpha: 0.4 * pulseValue),
                     blurRadius: 10 * pulseValue,
                     spreadRadius: 1,
                   ),
@@ -1620,7 +1620,7 @@ class _SectionLabel extends StatelessWidget {
                 color: Colors.white,
                 shadows: [
                   Shadow(
-                    color: Colors.black.withOpacity(0.3),
+                    color: Colors.black.withValues(alpha: 0.3),
                     blurRadius: 5,
                   ),
                 ],
@@ -1671,13 +1671,13 @@ class _SuccessStep extends StatelessWidget {
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
                       colors: [
-                        AppColors.success.withOpacity(0.3),
-                        AppColors.success.withOpacity(0.1),
+                        AppColors.success.withValues(alpha: 0.3),
+                        AppColors.success.withValues(alpha: 0.1),
                       ],
                     ),
                     boxShadow: [
                       BoxShadow(
-                        color: AppColors.success.withOpacity(0.5 * pulseValue),
+                        color: AppColors.success.withValues(alpha: 0.5 * pulseValue),
                         blurRadius: 40 * pulseValue,
                         spreadRadius: 10,
                       ),
@@ -1692,7 +1692,7 @@ class _SuccessStep extends StatelessWidget {
                         end: Alignment.bottomRight,
                         colors: [
                           AppColors.success,
-                          AppColors.success.withOpacity(0.8),
+                          AppColors.success.withValues(alpha: 0.8),
                         ],
                       ),
                     ),
@@ -1734,7 +1734,7 @@ class _SuccessStep extends StatelessWidget {
               fontFamily: AppTextStyles.fontFamily,
               fontSize: 15.sp,
               height: 1.6,
-              color: Colors.white.withOpacity(0.8),
+              color: Colors.white.withValues(alpha: 0.8),
             ),
             textAlign: TextAlign.center,
           ),
@@ -1775,12 +1775,12 @@ class _GlowingLoader extends StatelessWidget {
             shape: BoxShape.circle,
             boxShadow: [
               BoxShadow(
-                color: AppColors.primary.withOpacity(0.5 * pulseValue),
+                color: AppColors.primary.withValues(alpha: 0.5 * pulseValue),
                 blurRadius: 30 * pulseValue,
                 spreadRadius: 10,
               ),
               BoxShadow(
-                color: AppColors.secondary.withOpacity(0.3 * pulseValue),
+                color: AppColors.secondary.withValues(alpha: 0.3 * pulseValue),
                 blurRadius: 50 * pulseValue,
                 spreadRadius: 5,
               ),
@@ -1794,7 +1794,7 @@ class _GlowingLoader extends StatelessWidget {
                 end: Alignment.bottomRight,
                 colors: [
                   AppColors.surface,
-                  AppColors.surface.withOpacity(0.9),
+                  AppColors.surface.withValues(alpha: 0.9),
                 ],
               ),
             ),

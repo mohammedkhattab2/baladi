@@ -1,4 +1,5 @@
 import 'dart:ui';
+import 'dart:io';
 
 import 'package:baladi/core/di/injection_container.dart';
 import 'package:baladi/core/router/route_names.dart';
@@ -21,6 +22,7 @@ import 'package:baladi/presentation/features/admin/shell/admin_shell.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:image_picker/image_picker.dart';
 
 class AdminShopsScreen extends StatelessWidget {
   const AdminShopsScreen({super.key});
@@ -49,6 +51,10 @@ class _AdminShopViewState extends State<_AdminShopView> {
   List<Category> _categories = const <Category>[];
   bool _isLoadingCategories = false;
   String? _categoriesError;
+
+  // Local image paths for new shop creation (logo optional, cover required).
+  String? _newShopLogoPath;
+  String? _newShopCoverPath;
 
   @override
   void initState() {
@@ -299,8 +305,15 @@ class _AdminShopViewState extends State<_AdminShopView> {
 
     // بيانات مالك المحل (لإنشاء يوزر جديد) – لن نعدلها في وضع التعديل.
     final ownerNameController = TextEditingController();
+    final ownerUsernameController = TextEditingController();
     final ownerPhoneController = TextEditingController();
     final ownerPasswordController = TextEditingController();
+
+    // Reset picked images on create.
+    if (!isEdit) {
+      _newShopLogoPath = null;
+      _newShopCoverPath = null;
+    }
 
     await showModalBottomSheet<void>(
       context: context,
@@ -625,6 +638,221 @@ class _AdminShopViewState extends State<_AdminShopView> {
                     keyboardType:
                         const TextInputType.numberWithOptions(decimal: true),
                   ),
+                  // صور المحل (لوجو اختياري، غلاف إجباري عند الإضافة)
+                  SizedBox(height: 8.h),
+                  Text(
+                    'صور المحل',
+                    style: TextStyle(
+                      fontFamily: AppTextStyles.fontFamily,
+                      fontSize: 14.sp,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.white,
+                    ),
+                  ),
+                  SizedBox(height: 8.h),
+                  Text(
+                    'اختيار لوجو (اختياري) وصورة غلاف (إجباري عند إضافة محل جديد).',
+                    style: TextStyle(
+                      fontFamily: AppTextStyles.fontFamily,
+                      fontSize: 11.sp,
+                      color: Colors.white.withValues(alpha: 0.8),
+                    ),
+                  ),
+                  SizedBox(height: 10.h),
+                  // Logo (optional)
+                  Text(
+                    'لوجو المحل (اختياري)',
+                    style: TextStyle(
+                      fontFamily: AppTextStyles.fontFamily,
+                      fontSize: 12.sp,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.white.withValues(alpha: 0.9),
+                    ),
+                  ),
+                  SizedBox(height: 6.h),
+                  GestureDetector(
+                    onTap: () async {
+                      final picker = ImagePicker();
+                      final picked = await picker.pickImage(
+                        source: ImageSource.gallery,
+                        imageQuality: 85,
+                      );
+                      if (picked != null && mounted) {
+                        setState(() {
+                          _newShopLogoPath = picked.path;
+                        });
+                      }
+                    },
+                    child: Container(
+                      width: double.infinity,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(14.r),
+                        border: Border.all(
+                          color: AppColors.primary.withValues(alpha: 0.45),
+                          width: 1.2,
+                        ),
+                        color: Colors.white.withValues(alpha: 0.06),
+                      ),
+                      padding: EdgeInsets.all(10.r),
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 40.r,
+                            height: 40.r,
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(12.r),
+                              color: AppColors.primary.withValues(alpha: 0.18),
+                            ),
+                            child: Icon(
+                              Icons.logo_dev_rounded,
+                              color: AppColors.primaryLight,
+                              size: 22.r,
+                            ),
+                          ),
+                          SizedBox(width: 10.w),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  _newShopLogoPath == null
+                                      ? 'اختر لوجو من المعرض (اختياري)'
+                                      : 'تم اختيار لوجو',
+                                  style: TextStyle(
+                                    fontFamily: AppTextStyles.fontFamily,
+                                    fontSize: 13.sp,
+                                    fontWeight: FontWeight.w600,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                                SizedBox(height: 4.h),
+                                Text(
+                                  _newShopLogoPath ?? 'سيتم استخدام أيقونة افتراضية عند عدم اختيار لوجو',
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: TextStyle(
+                                    fontFamily: AppTextStyles.fontFamily,
+                                    fontSize: 11.sp,
+                                    color: Colors.white.withValues(alpha: 0.8),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          if (_newShopLogoPath != null) ...[
+                            SizedBox(width: 8.w),
+                            ClipRRect(
+                              borderRadius: BorderRadius.circular(10.r),
+                              child: Image.file(
+                                File(_newShopLogoPath!),
+                                width: 42.r,
+                                height: 42.r,
+                                fit: BoxFit.cover,
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+                  ),
+                  SizedBox(height: 10.h),
+                  // Cover image (required for create)
+                  Text(
+                    'صورة الغلاف (إجباري عند الإضافة)',
+                    style: TextStyle(
+                      fontFamily: AppTextStyles.fontFamily,
+                      fontSize: 12.sp,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.white.withValues(alpha: 0.9),
+                    ),
+                  ),
+                  SizedBox(height: 6.h),
+                  GestureDetector(
+                    onTap: () async {
+                      final picker = ImagePicker();
+                      final picked = await picker.pickImage(
+                        source: ImageSource.gallery,
+                        imageQuality: 85,
+                      );
+                      if (picked != null && mounted) {
+                        setState(() {
+                          _newShopCoverPath = picked.path;
+                        });
+                      }
+                    },
+                    child: Container(
+                      width: double.infinity,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(14.r),
+                        border: Border.all(
+                          color: AppColors.secondary.withValues(alpha: 0.6),
+                          width: 1.2,
+                        ),
+                        color: Colors.white.withValues(alpha: 0.06),
+                      ),
+                      padding: EdgeInsets.all(10.r),
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 40.r,
+                            height: 40.r,
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(12.r),
+                              color: AppColors.secondary.withValues(alpha: 0.18),
+                            ),
+                            child: Icon(
+                              Icons.photo_library_rounded,
+                              color: AppColors.secondary,
+                              size: 22.r,
+                            ),
+                          ),
+                          SizedBox(width: 10.w),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  _newShopCoverPath == null
+                                      ? 'اختر صورة غلاف من المعرض'
+                                      : 'تم اختيار صورة الغلاف',
+                                  style: TextStyle(
+                                    fontFamily: AppTextStyles.fontFamily,
+                                    fontSize: 13.sp,
+                                    fontWeight: FontWeight.w600,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                                SizedBox(height: 4.h),
+                                Text(
+                                  _newShopCoverPath ??
+                                      'هذه الصورة ستظهر كغلاف للمحل داخل التطبيق',
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: TextStyle(
+                                    fontFamily: AppTextStyles.fontFamily,
+                                    fontSize: 11.sp,
+                                    color: Colors.white.withValues(alpha: 0.8),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          if (_newShopCoverPath != null) ...[
+                            SizedBox(width: 8.w),
+                            ClipRRect(
+                              borderRadius: BorderRadius.circular(10.r),
+                              child: Image.file(
+                                File(_newShopCoverPath!),
+                                width: 42.r,
+                                height: 42.r,
+                                fit: BoxFit.cover,
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+                  ),
                   if (!isEdit) ...[
                     SizedBox(height: 16.h),
                     Text(
@@ -644,6 +872,21 @@ class _AdminShopViewState extends State<_AdminShopView> {
                       validator: (value) {
                         if (value == null || value.trim().isEmpty) {
                           return 'من فضلك أدخل اسم صاحب المحل';
+                        }
+                        return null;
+                      },
+                    ),
+                    SizedBox(height: 8.h),
+                    AppTextField(
+                      controller: ownerUsernameController,
+                      label: 'اسم المستخدم (للدخول للتطبيق)',
+                      validator: (value) {
+                        final v = value?.trim() ?? '';
+                        if (v.isEmpty) {
+                          return 'من فضلك أدخل اسم المستخدم';
+                        }
+                        if (v.length < 3) {
+                          return 'اسم المستخدم يجب أن يكون 3 أحرف على الأقل';
                         }
                         return null;
                       },
@@ -720,81 +963,106 @@ class _AdminShopViewState extends State<_AdminShopView> {
                                               .withValues(alpha: 0.3),
                                         ),
                                         onPressed: () async {
-                            if (!formKey.currentState!.validate()) {
-                              return;
-                            }
+                             if (!formKey.currentState!.validate()) {
+                               return;
+                             }
 
-                            final commission =
-                                double.tryParse(commissionController.text
-                                        .replaceAll(',', '.')) ??
-                                    10;
-                            final minOrder =
-                                double.tryParse(minOrderController.text
-                                        .replaceAll(',', '.')) ??
-                                    0;
+                             // For create flow, require a cover image.
+                             if (!isEdit &&
+                                 (_newShopCoverPath == null ||
+                                     _newShopCoverPath!.isEmpty)) {
+                               ScaffoldMessenger.of(context).showSnackBar(
+                                 SnackBar(
+                                   behavior: SnackBarBehavior.floating,
+                                   margin: EdgeInsets.all(16.r),
+                                   shape: RoundedRectangleBorder(
+                                     borderRadius: BorderRadius.circular(16.r),
+                                   ),
+                                   content: Text(
+                                     'من فضلك اختر صورة غلاف للمحل قبل الحفظ',
+                                     style: TextStyle(
+                                       fontFamily: AppTextStyles.fontFamily,
+                                     ),
+                                   ),
+                                   backgroundColor: AppColors.error,
+                                 ),
+                               );
+                               return;
+                             }
 
-                            // Backend expects a FLAT body (no nested shop/owner objects)
-                            // according to createShopSchema in admin.validation.js:
-                            // {
-                            //   username, password, name, name_ar, category_id,
-                            //   phone, address, area, commission_rate, min_order_amount, delivery_fee
-                            // }
-                            final payload = <String, dynamic>{
-                              'username': ownerPhoneController.text.trim(),
-                              'password': ownerPasswordController.text.trim(),
-                              'name': nameController.text.trim(),
-                              'name_ar': nameArController.text.trim(),
-                              'category_id': categoryIdController.text.trim(),
-                              'phone': phoneController.text.trim(),
-                              'address': addressController.text.trim(),
-                              'commission_rate': commission / 100,
-                              'min_order_amount': minOrder,
-                              // Optional fields not currently collected in UI:
-                              // 'area': null,
-                              // 'delivery_fee': 10, // backend default
-                            };
+                             final commission =
+                                 double.tryParse(commissionController.text
+                                         .replaceAll(',', '.')) ??
+                                     10;
+                             final minOrder =
+                                 double.tryParse(minOrderController.text
+                                         .replaceAll(',', '.')) ??
+                                     0;
 
-                            Navigator.of(ctx).pop();
+                             // Backend expects a FLAT body (no nested shop/owner objects)
+                             // according to createShopSchema in admin.validation.js:
+                             // {
+                             //   username, password, name, name_ar, category_id,
+                             //   phone, address, area, commission_rate, min_order_amount, delivery_fee
+                             // }
+                             final payload = <String, dynamic>{
+                               'username': ownerUsernameController.text.trim(),
+                               'password': ownerPasswordController.text.trim(),
+                               'name': nameController.text.trim(),
+                               'name_ar': nameArController.text.trim(),
+                               'category_id': categoryIdController.text.trim(),
+                               'phone': phoneController.text.trim(),
+                               'address': addressController.text.trim(),
+                               'commission_rate': commission / 100,
+                               'min_order_amount': minOrder,
+                               // Optional fields not currently collected in UI:
+                               // 'area': null,
+                               // 'delivery_fee': 10, // backend default
+                             };
 
-                            final cubit = context.read<AdminCubit>();
-                            if (isEdit) {
-                              await cubit.updateShopAsAdmin(
-                                shopId: shop.id,
-                                payload: {
-                                  'name': nameController.text.trim(),
-                                  'name_ar': nameArController.text.trim(),
-                                  'category_id':
-                                      categoryIdController.text.trim(),
-                                  'phone': phoneController.text.trim(),
-                                  'address': addressController.text.trim(),
-                                  'commission_rate': commission / 100,
-                                  'min_order_amount': minOrder,
-                                },
-                              );
-                            } else {
-                              await cubit.createShopAsAdmin(
-                                payload: payload,
-                              );
-                            }
+                             Navigator.of(ctx).pop();
 
-                            // في حالة النجاح، حالة الـ Cubit هتكون AdminShopsLoaded (أما الأخطاء فيتم عرضها في الـ listener)
-                            final currentState = cubit.state;
-                            if (currentState is AdminShopsLoaded && context.mounted) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text(
-                                    isEdit
-                                        ? 'تم تحديث بيانات المحل بنجاح'
-                                        : 'تم إضافة المحل بنجاح',
-                                    style: TextStyle(
-                                      fontFamily: AppTextStyles.fontFamily,
-                                    ),
-                                  ),
-                                  backgroundColor: AppColors.success,
-                                ),
-                              );
-                            }
-                                          },
+                             final cubit = context.read<AdminCubit>();
+                             if (isEdit) {
+                               await cubit.updateShopAsAdmin(
+                                 shopId: shop.id,
+                                 payload: {
+                                   'name': nameController.text.trim(),
+                                   'name_ar': nameArController.text.trim(),
+                                   'category_id':
+                                       categoryIdController.text.trim(),
+                                   'phone': phoneController.text.trim(),
+                                   'address': addressController.text.trim(),
+                                   'commission_rate': commission / 100,
+                                   'min_order_amount': minOrder,
+                                 },
+                               );
+                             } else {
+                               await cubit.createShopAsAdmin(
+                                 payload: payload,
+                                 logoPath: _newShopLogoPath,
+                                 coverImagePath: _newShopCoverPath,
+                               );
+                             }
+
+                             // في حالة النجاح، حالة الـ Cubit هتكون AdminShopsLoaded (أما الأخطاء فيتم عرضها في الـ listener)
+                             final currentState = cubit.state;
+                             if (currentState is AdminShopsLoaded && context.mounted) {
+                               ScaffoldMessenger.of(context).showSnackBar(
+                                 SnackBar(
+                                   content: Text(
+                                     isEdit
+                                         ? 'تم تحديث بيانات المحل بنجاح'
+                                         : 'تم إضافة المحل بنجاح',
+                                   style: TextStyle(
+                                     fontFamily: AppTextStyles.fontFamily,
+                                   ),
+                                   ),
+                                   backgroundColor: AppColors.success,
+                                 ),
+                               );
+                             }
+                                           },
                                         child: Text(
                                           isEdit ? 'تحديث' : 'حفظ',
                                           style: TextStyle(
@@ -822,6 +1090,74 @@ class _AdminShopViewState extends State<_AdminShopView> {
         );
       },
     );
+  }
+
+  IconData _getCategoryIconForShop(Shop shop) {
+    // نحاول نجيب الكاتيجوري المرتبطة بالمحل من اللي اتحملت في الشاشة
+    final category = _categories.firstWhere(
+      (c) => c.id == shop.categoryId,
+      orElse: () => Category(
+        id: '',
+        name: '',
+        nameAr: '',
+        slug: '',
+        icon: '',
+        isActive: true,
+        sortOrder: 0,
+      ),
+    );
+
+    final iconSource = category.icon?.isNotEmpty == true
+        ? category.icon!
+        : category.slug?.isNotEmpty == true
+            ? category.slug!
+            : (category.name ?? '');
+    final iconKey = iconSource.toLowerCase();
+
+    // مابين الكاتيجوريز المعروفة و أيقونات الـ Material
+    if (iconKey.contains('pharmacy') ||
+        iconKey.contains('صيد') ||
+        iconKey.contains('دواء')) {
+      return Icons.local_pharmacy;
+    }
+    if (iconKey.contains('restaurant') ||
+        iconKey.contains('مطعم') ||
+        iconKey.contains('food') ||
+        iconKey.contains('اكل') ||
+        iconKey.contains('وجبات')) {
+      return Icons.restaurant;
+    }
+    if (iconKey.contains('market') ||
+        iconKey.contains('grocery') ||
+        iconKey.contains('سوبر') ||
+        iconKey.contains('بقال')) {
+      return Icons.local_grocery_store;
+    }
+    if (iconKey.contains('butcher') ||
+        iconKey.contains('لحوم') ||
+        iconKey.contains('جزار')) {
+      return Icons.set_meal;
+    }
+    if (iconKey.contains('bakery') ||
+        iconKey.contains('مخبز') ||
+        iconKey.contains('حلويات') ||
+        iconKey.contains('كيك')) {
+      return Icons.cake;
+    }
+    if (iconKey.contains('phone') ||
+        iconKey.contains('mobile') ||
+        iconKey.contains('موبايل') ||
+        iconKey.contains('جوال')) {
+      return Icons.phone_iphone;
+    }
+    if (iconKey.contains('electronics') ||
+        iconKey.contains('الكترونيات') ||
+        iconKey.contains('كهرب')) {
+      return Icons.electrical_services;
+    }
+
+    // أي كاتيجوري مش متعرّفة هتستخدم أيقونة محل عامة
+    return Icons.storefront;
   }
 
   Widget _buildShopsList(AdminShopsLoaded state) {
@@ -873,6 +1209,7 @@ class _AdminShopViewState extends State<_AdminShopView> {
           final shop = filteredShops[index];
           return _ShopCard(
             shop: shop,
+            icon: _getCategoryIconForShop(shop),
             onEdit: () => _openEditShopForm(context, shop),
           );
         },
@@ -884,10 +1221,12 @@ class _AdminShopViewState extends State<_AdminShopView> {
 class _ShopCard extends StatelessWidget {
   final Shop shop;
   final VoidCallback onEdit;
+  final IconData icon;
 
   const _ShopCard({
     required this.shop,
     required this.onEdit,
+    required this.icon,
   });
 
   @override
@@ -947,33 +1286,33 @@ class _ShopCard extends StatelessWidget {
                         ),
                       ),
                     ),
-                    Container(
-                      width: 42.r,
-                      height: 42.r,
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(14.r),
-                        gradient: LinearGradient(
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                          colors: [
-                            baseColor.withValues(alpha: 0.95),
-                            baseColor.withValues(alpha: 0.75),
-                          ],
-                        ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: baseColor.withValues(alpha: 0.55),
-                            blurRadius: 16,
-                            offset: const Offset(0, 6),
-                          ),
-                        ],
-                      ),
-                      child: Icon(
-                        Icons.storefront,
-                        color: Colors.white,
-                        size: 22.r,
-                      ),
-                    ),
+                   Container(
+                     width: 42.r,
+                     height: 42.r,
+                     decoration: BoxDecoration(
+                       borderRadius: BorderRadius.circular(14.r),
+                       gradient: LinearGradient(
+                         begin: Alignment.topLeft,
+                         end: Alignment.bottomRight,
+                         colors: [
+                           baseColor.withValues(alpha: 0.95),
+                           baseColor.withValues(alpha: 0.75),
+                         ],
+                       ),
+                       boxShadow: [
+                         BoxShadow(
+                           color: baseColor.withValues(alpha: 0.55),
+                           blurRadius: 16,
+                           offset: const Offset(0, 6),
+                         ),
+                       ],
+                     ),
+                     child: Icon(
+                       icon,
+                       color: Colors.white,
+                       size: 22.r,
+                     ),
+                   ),
                   ],
                 ),
                 SizedBox(width: 14.w),

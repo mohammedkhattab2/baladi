@@ -118,14 +118,14 @@ class _CustomerBottomNavState extends State<CustomerBottomNav>
                 boxShadow: [
                   // Main shadow
                   BoxShadow(
-                    color: const Color(0xFF0A1628).withOpacity(0.25),
+                    color: const Color(0xFF0A1628).withValues(alpha:  0.25),
                     blurRadius: 30,
                     offset: const Offset(0, 15),
                     spreadRadius: 0,
                   ),
                   // Colored glow
                   BoxShadow(
-                    color: AppColors.primary.withOpacity(0.15 * _glowPulseAnimation.value),
+                    color: AppColors.primary.withValues(alpha: 0.15 * _glowPulseAnimation.value),
                     blurRadius: 40,
                     offset: const Offset(0, 10),
                     spreadRadius: 5,
@@ -143,14 +143,14 @@ class _CustomerBottomNavState extends State<CustomerBottomNav>
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
                         colors: [
-                          Colors.white.withOpacity(0.95),
-                          Colors.white.withOpacity(0.85),
-                          const Color(0xFFF8FAFC).withOpacity(0.95),
+                          Colors.white.withValues(alpha: 0.95),
+                          Colors.white.withValues(alpha: 0.85),
+                          const Color(0xFFF8FAFC).withValues(alpha: 0.95),
                         ],
                         stops: const [0.0, 0.5, 1.0],
                       ),
                       border: Border.all(
-                        color: Colors.white.withOpacity(0.8),
+                        color: Colors.white.withValues(alpha: 0.8),
                         width: 1.5,
                       ),
                     ),
@@ -298,15 +298,15 @@ class _ModernNavItemState extends State<_ModernNavItem>
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
                         colors: [
-                          widget.color.withOpacity(0.15),
-                          widget.color.withOpacity(0.05),
+                          widget.color.withValues(alpha: 0.15),
+                          widget.color.withValues(alpha: 0.05),
                         ],
                       )
                     : null,
                 boxShadow: widget.isSelected
                     ? [
                         BoxShadow(
-                          color: widget.color.withOpacity(0.2 * widget.glowIntensity),
+                          color: widget.color.withValues(alpha: 0.2 * widget.glowIntensity),
                           blurRadius: 15,
                           spreadRadius: 2,
                         ),
@@ -337,7 +337,7 @@ class _ModernNavItemState extends State<_ModernNavItem>
                                 decoration: BoxDecoration(
                                   shape: BoxShape.circle,
                                   border: Border.all(
-                                    color: widget.color.withOpacity(0.3 * widget.glowIntensity),
+                                    color: widget.color.withValues(alpha: 0.3 * widget.glowIntensity),
                                     width: 1.5,
                                   ),
                                 ),
@@ -362,12 +362,12 @@ class _ModernNavItemState extends State<_ModernNavItem>
                                           end: Alignment.bottomRight,
                                           colors: [
                                             widget.color,
-                                            widget.color.withOpacity(0.7),
+                                            widget.color.withValues(alpha: 0.7),
                                           ],
                                         ),
                                         boxShadow: [
                                           BoxShadow(
-                                            color: widget.color.withOpacity(0.4),
+                                            color: widget.color.withValues(alpha: 0.4),
                                             blurRadius: 8,
                                             offset: const Offset(0, 3),
                                           ),
@@ -481,15 +481,15 @@ class _CartNavItemState extends State<_CartNavItem>
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
                         colors: [
-                          color.withOpacity(0.2),
-                          color.withOpacity(0.08),
+                          color.withValues(alpha: 0.2),
+                          color.withValues(alpha: 0.08),
                         ],
                       )
                     : null,
                 boxShadow: widget.isSelected
                     ? [
                         BoxShadow(
-                          color: color.withOpacity(0.25 * widget.glowIntensity),
+                          color: color.withValues(alpha: 0.25 * widget.glowIntensity),
                           blurRadius: 20,
                           spreadRadius: 3,
                         ),
@@ -521,7 +521,7 @@ class _CartNavItemState extends State<_CartNavItem>
                                 decoration: BoxDecoration(
                                   shape: BoxShape.circle,
                                   border: Border.all(
-                                    color: color.withOpacity(0.4 * widget.glowIntensity),
+                                    color: color.withValues(alpha: 0.4 * widget.glowIntensity),
                                     width: 2,
                                   ),
                                 ),
@@ -546,7 +546,7 @@ class _CartNavItemState extends State<_CartNavItem>
                                           end: Alignment.bottomRight,
                                           colors: [
                                             color,
-                                            color.withOpacity(0.75),
+                                            color.withValues(alpha: 0.75),
                                           ],
                                         )
                                       : LinearGradient(
@@ -560,14 +560,14 @@ class _CartNavItemState extends State<_CartNavItem>
                                   boxShadow: widget.isSelected
                                       ? [
                                           BoxShadow(
-                                            color: color.withOpacity(0.5),
+                                            color: color.withValues(alpha: 0.5),
                                             blurRadius: 10,
                                             offset: const Offset(0, 4),
                                           ),
                                         ]
                                       : [
                                           BoxShadow(
-                                            color: Colors.black.withOpacity(0.05),
+                                            color: Colors.black.withValues(alpha: 0.05),
                                             blurRadius: 6,
                                             offset: const Offset(0, 2),
                                           ),
@@ -622,7 +622,7 @@ class _CartNavItemState extends State<_CartNavItem>
                                         ),
                                         boxShadow: [
                                           BoxShadow(
-                                            color: const Color(0xFFEF4444).withOpacity(0.5),
+                                            color: const Color(0xFFEF4444).withValues(alpha: 0.5),
                                             blurRadius: 8,
                                             spreadRadius: 0,
                                           ),
@@ -713,9 +713,9 @@ class _WaveBackgroundPainter extends CustomPainter {
         begin: Alignment.centerLeft,
         end: Alignment.centerRight,
         colors: [
-          selectedColor.withOpacity(0.03),
-          selectedColor.withOpacity(0.08),
-          selectedColor.withOpacity(0.03),
+          selectedColor.withValues(alpha: 0.03),
+          selectedColor.withValues(alpha: 0.08),
+          selectedColor.withValues(alpha: 0.03),
         ],
         stops: const [0.0, 0.5, 1.0],
       ).createShader(Rect.fromLTWH(0, 0, size.width, size.height));

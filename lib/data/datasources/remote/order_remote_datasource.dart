@@ -112,14 +112,15 @@ class OrderRemoteDatasourceImpl implements OrderRemoteDatasource {
     int page = 1,
     int perPage = 20,
   }) async {
-    final response = await _apiClient.get<List<OrderModel>>(
+    // Backend returns: { success, data: [ ...orders... ], meta: { ... } }
+    final response = await _apiClient.getList<OrderModel>(
       ApiEndpoints.orders,
       queryParameters: {
         'page': page.toString(),
-        'per_page': perPage.toString(),
+        'limit': perPage.toString(),
         if (status != null) 'status': status,
       },
-      fromJson: (json) => _parseList(json, OrderModel.fromJson),
+      fromJson: (json) => OrderModel.fromJson(json),
     );
     return response.data ?? [];
   }
@@ -199,14 +200,16 @@ class OrderRemoteDatasourceImpl implements OrderRemoteDatasource {
     int page = 1,
     int perPage = 20,
   }) async {
-    final response = await _apiClient.get<List<OrderModel>>(
+    // Backend returns: { success, data: [ ...orders... ], meta: { ... } }
+    // Use ApiClient.getList to correctly parse a list payload.
+    final response = await _apiClient.getList<OrderModel>(
       ApiEndpoints.shopOrders,
       queryParameters: {
         'page': page.toString(),
-        'per_page': perPage.toString(),
+        'limit': perPage.toString(),
         if (status != null) 'status': status,
       },
-      fromJson: (json) => _parseList(json, OrderModel.fromJson),
+      fromJson: (json) => OrderModel.fromJson(json),
     );
     return response.data ?? [];
   }

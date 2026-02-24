@@ -143,6 +143,8 @@ class AdminRepositoryImpl implements AdminRepository {
   @override
   Future<Result<Shop>> createShopAsAdmin({
     required Map<String, dynamic> payload,
+    String? logoPath,
+    String? coverImagePath,
   }) async {
     if (!await _networkInfo.isConnected) {
       return const ResultFailure(
@@ -150,7 +152,11 @@ class AdminRepositoryImpl implements AdminRepository {
       );
     }
     return Result.guard(
-      () => _remoteDatasource.createShopAsAdmin(body: payload),
+      () => _remoteDatasource.createShopAsAdmin(
+        body: payload,
+        logoPath: logoPath,
+        coverImagePath: coverImagePath,
+      ),
     );
   }
 

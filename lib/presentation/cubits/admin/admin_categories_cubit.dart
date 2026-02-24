@@ -49,16 +49,41 @@ class AdminCategoriesCubit extends Cubit<AdminCategoriesState> {
   }
 
   /// Creates a new category.
+  ///
+  /// The backend responds with:
+  /// {
+  ///   "success": true,
+  ///   "data": {
+  ///     "message": "Category created successfully",
+  ///     "category": { ... }
+  ///   }
+  /// }
+  ///
+  /// We parse the nested `data.message` and surface it to the UI.
+  ///
+  /// [imagePath] is the local path of the image file picked from the device.
+  /// When provided, the request is sent as `multipart/form-data` with the file
+  /// field named `image` (as expected by the backend) plus the rest of the
+  /// payload as normal form fields.
   Future<void> createCategory({
     required Map<String, dynamic> payload,
+    required String imagePath,
   }) async {
     emit(const AdminCategoriesActionLoading());
     try {
-      await _apiClient.post(
+      final response = await _apiClient.uploadFile<Map<String, dynamic>>(
         ApiEndpoints.categories,
-        body: payload,
+        filePath: imagePath,
+        fileField: 'image',
+        data: payload,
         fromJson: (json) => json,
       );
+
+      // Prefer the inner data.message; fall back to top-level message, then Arabic default.
+      final backendData = response.data;
+      final backendMessage = (backendData?['message'] as String?) ??
+          response.message ??
+          'تم إضافة التصنيف بنجاح';
 
       // Reload list after successful creation.
       await loadCategories();
@@ -69,7 +94,7 @@ class AdminCategoriesCubit extends Cubit<AdminCategoriesState> {
           : const <Category>[];
 
       emit(AdminCategoriesActionSuccess(
-        message: 'تم إضافة التصنيف بنجاح',
+        message: backendMessage,
         categories: categories,
       ));
     } catch (e) {

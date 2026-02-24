@@ -97,8 +97,15 @@ abstract class AdminRepository {
   ///
   /// [payload] is a raw map so that the presentation layer can mirror the
   /// backend validation schema without coupling the domain to admin DTOs.
+  ///
+  /// [logoPath] and [coverImagePath] are optional local file paths for the shop
+  /// logo and cover image. When provided, the request will be sent as
+  /// `multipart/form-data` with files attached using the field names
+  /// `logo` و `cover_image` (حسب ما هو متوقع من الباك إند).
   Future<Result<Shop>> createShopAsAdmin({
     required Map<String, dynamic> payload,
+    String? logoPath,
+    String? coverImagePath,
   });
 
   /// Updates an existing shop (and optionally its owner user) from admin.

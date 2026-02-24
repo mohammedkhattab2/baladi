@@ -231,14 +231,24 @@ class AdminCubit extends Cubit<AdminState> {
   ///
   /// [payload] should follow the backend Joi schema for:
   ///   POST /api/admin/shops
+  ///
+  /// [logoPath] و [coverImagePath] هي مسارات الصور على الجهاز (اختيارية للّوجو،
+  /// وإجبارية للغلاف من شاشة الإضافة). يتم رفعهم كـ multipart/form-data مع
+  /// الحقول `logo` و `cover_image`.
   Future<void> createShopAsAdmin({
     required Map<String, dynamic> payload,
+    String? logoPath,
+    String? coverImagePath,
     int perPage = AppConstants.defaultPageSize,
   }) async {
     emit(const AdminActionLoading());
 
     final result = await _createShopAsAdmin(
-      CreateShopAsAdminParams(payload: payload),
+      CreateShopAsAdminParams(
+        payload: payload,
+        logoPath: logoPath,
+        coverImagePath: coverImagePath,
+      ),
     );
 
     result.fold(

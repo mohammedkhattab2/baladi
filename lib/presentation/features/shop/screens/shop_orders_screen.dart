@@ -16,6 +16,7 @@ import 'package:baladi/presentation/features/shop/shell/shop_shell.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:go_router/go_router.dart';
 
 class ShopOrdersScreen extends StatelessWidget {
   const ShopOrdersScreen({super.key});
@@ -295,7 +296,10 @@ class _OrderCard extends StatelessWidget {
 
     return AppCard(
       margin: EdgeInsets.only(bottom: 12.h),
-      onTap: () => _showDetails(context),
+      onTap: () => context.pushNamed(
+        RouteNames.shopOrderManage,
+        pathParameters: {'id': order.id},
+      ),
       borderColor: _statusColor(order.status),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -445,7 +449,7 @@ class _StatusBadge extends StatelessWidget {
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha:  0.1),
         borderRadius: BorderRadius.circular(4.r),
       ),
       child: Text(

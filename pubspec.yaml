@@ -53,6 +53,9 @@ dependencies:
   
   # Image handling
   cached_network_image: ^3.4.1
+
+  # Image picker (gallery / camera)
+  image_picker: ^1.1.2
   
   # Navigation
   go_router: ^14.6.2

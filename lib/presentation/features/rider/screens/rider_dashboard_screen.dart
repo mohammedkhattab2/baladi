@@ -1,45 +1,47 @@
+// lib/presentation/features/rider/screens/rider_dashboard_screen.dart
+
 import 'package:baladi/core/di/injection_container.dart';
 import 'package:baladi/core/router/route_names.dart';
 import 'package:baladi/core/theme/app_colors.dart';
 import 'package:baladi/core/theme/app_text_styles.dart';
 import 'package:baladi/core/utils/formatters.dart';
-import 'package:baladi/domain/entities/shop.dart';
-import 'package:baladi/domain/repositories/shop_repository.dart';
+import 'package:baladi/domain/entities/rider.dart';
+import 'package:baladi/domain/repositories/rider_repository.dart';
 import 'package:baladi/presentation/common/widgets/app_card.dart';
 import 'package:baladi/presentation/common/widgets/error_widget.dart';
 import 'package:baladi/presentation/common/widgets/loading_widget.dart';
-import 'package:baladi/presentation/cubits/shop/shop_management_cubit.dart';
-import 'package:baladi/presentation/cubits/shop/shop_management_state.dart';
+import 'package:baladi/presentation/cubits/rider/rider_cubit.dart';
+import 'package:baladi/presentation/cubits/rider/rider_state.dart';
 import 'package:baladi/presentation/features/admin/widgets/admin_stat_card.dart';
-import 'package:baladi/presentation/features/shop/shell/shop_shell.dart';
+import 'package:baladi/presentation/features/rider/shell/rider_shell.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 
-class ShopDashboardScreen extends StatelessWidget {
-  const ShopDashboardScreen({super.key});
+class RiderDashboardScreen extends StatelessWidget {
+  const RiderDashboardScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (_) => getIt<ShopManagementCubit>()..loadDashboard(),
-      child: const _ShopDashboardView(),
+      create: (_) => getIt<RiderCubit>()..loadDashboard(),
+      child: const _RiderDashboardView(),
     );
   }
 }
 
-class _ShopDashboardView extends StatelessWidget {
-  const _ShopDashboardView();
+class _RiderDashboardView extends StatelessWidget {
+  const _RiderDashboardView();
 
   @override
   Widget build(BuildContext context) {
-    return ShopShell(
-      currentRoute: RouteNames.shopDashboard,
-      title: 'لوحة تحكم المتجر',
-      child: BlocConsumer<ShopManagementCubit, ShopManagementState>(
+    return RiderShell(
+      currentRoute: RouteNames.riderDashboard,
+      title: 'لوحة تحكم السائق',
+      child: BlocConsumer<RiderCubit, RiderState>(
         listener: (context, state) {
-          if (state is ShopManagementError) {
+          if (state is RiderError) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 content: Text(
@@ -52,20 +54,18 @@ class _ShopDashboardView extends StatelessWidget {
           }
         },
         builder: (context, state) {
-          if (state is ShopManagementLoading ||
-              state is ShopStatusToggling) {
+          if (state is RiderLoading || state is RiderTogglingAvailability) {
             return const Center(child: LoadingWidget());
           }
-          if (state is ShopManagementError) {
+          if (state is RiderError) {
             return AppErrorWidget(
               message: state.message,
-              onRetry: () =>
-                  context.read<ShopManagementCubit>().loadDashboard(),
+              onRetry: () => context.read<RiderCubit>().loadDashboard(),
             );
           }
-          if (state is ShopDashboardLoaded) {
+          if (state is RiderDashboardLoaded) {
             return _DashboardContent(
-              shop: state.shop,
+              rider: state.rider,
               dashboard: state.dashboard,
             );
           }
@@ -77,25 +77,25 @@ class _ShopDashboardView extends StatelessWidget {
 }
 
 class _DashboardContent extends StatelessWidget {
-  final ShopDashboard dashboard;
-  final Shop shop;
+  final Rider rider;
+  final RiderDashboard dashboard;
 
   const _DashboardContent({
+    required this.rider,
     required this.dashboard,
-    required this.shop,
   });
 
   @override
   Widget build(BuildContext context) {
     return RefreshIndicator(
-      onRefresh: () => context.read<ShopManagementCubit>().loadDashboard(),
+      onRefresh: () => context.read<RiderCubit>().loadDashboard(),
       child: SingleChildScrollView(
         physics: const AlwaysScrollableScrollPhysics(),
         padding: EdgeInsets.all(16.w),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _HeaderCard(shop: shop, dashboard: dashboard),
+            _HeaderCard(rider: rider, dashboard: dashboard),
             SizedBox(height: 24.h),
             _SectionTitle('إحصائيات الفترة الحالية'),
             SizedBox(height: 12.h),
@@ -113,36 +113,36 @@ class _DashboardContent extends StatelessWidget {
 }
 
 class _HeaderCard extends StatelessWidget {
-  final Shop shop;
-  final ShopDashboard dashboard;
+  final Rider rider;
+  final RiderDashboard dashboard;
 
   const _HeaderCard({
-    required this.shop,
+    required this.rider,
     required this.dashboard,
   });
 
   @override
   Widget build(BuildContext context) {
-    final cubit = context.read<ShopManagementCubit>();
+    final cubit = context.read<RiderCubit>();
 
     return AppCard(
       padding: EdgeInsets.all(16.w),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // اسم المتجر + حالة الفتح
+          // rider info
           Row(
             children: [
               Container(
                 width: 48.r,
                 height: 48.r,
                 decoration: BoxDecoration(
-                  color: AppColors.secondary.withValues(alpha:  0.1),
+                  color: AppColors.info.withValues(alpha:  0.1),
                   borderRadius: BorderRadius.circular(12.r),
                 ),
                 child: Icon(
-                  Icons.storefront,
-                  color: AppColors.secondary,
+                  Icons.delivery_dining,
+                  color: AppColors.info,
                   size: 26.r,
                 ),
               ),
@@ -152,7 +152,7 @@ class _HeaderCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      shop.displayName,
+                      rider.fullName,
                       style: TextStyle(
                         fontFamily: AppTextStyles.fontFamily,
                         fontSize: 16.sp,
@@ -162,9 +162,7 @@ class _HeaderCard extends StatelessWidget {
                     ),
                     SizedBox(height: 4.h),
                     Text(
-                      shop.address ?? '',
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
+                      rider.phone,
                       style: TextStyle(
                         fontFamily: AppTextStyles.fontFamily,
                         fontSize: 12.sp,
@@ -174,14 +172,16 @@ class _HeaderCard extends StatelessWidget {
                   ],
                 ),
               ),
-              _OpenStatusChip(isOpen: shop.isOpen),
+              _AvailabilityChip(isAvailable: rider.isAvailable),
             ],
           ),
           SizedBox(height: 16.h),
+
+          // availability switch
           Row(
             children: [
               Text(
-                'حالة المتجر:',
+                'متاح للتوصيل:',
                 style: TextStyle(
                   fontFamily: AppTextStyles.fontFamily,
                   fontSize: 13.sp,
@@ -190,27 +190,20 @@ class _HeaderCard extends StatelessWidget {
               ),
               SizedBox(width: 8.w),
               Switch(
-                value: shop.isOpen,
+                value: rider.isAvailable,
                 activeThumbColor: AppColors.primary,
                 onChanged: (value) {
-                  cubit.toggleShopStatus(isOpen: value);
+                  cubit.toggleAvailability(isAvailable: value);
                 },
-              ),
-              SizedBox(width: 8.w),
-              Text(
-                shop.isOpen ? 'يستقبل طلبات' : 'مغلق حالياً',
-                style: TextStyle(
-                  fontFamily: AppTextStyles.fontFamily,
-                  fontSize: 12.sp,
-                  color: AppColors.textSecondary,
-                ),
               ),
             ],
           ),
           SizedBox(height: 8.h),
+
+          // summary
           Text(
-            'إجمالي صافي الأرباح في الفترة الحالية: '
-            '${Formatters.formatCurrency(dashboard.netEarnings)}',
+            'إجمالي أرباح الفترة الحالية: '
+            '${Formatters.formatCurrency(dashboard.totalEarnings)}',
             style: TextStyle(
               fontFamily: AppTextStyles.fontFamily,
               fontSize: 13.sp,
@@ -224,15 +217,15 @@ class _HeaderCard extends StatelessWidget {
   }
 }
 
-class _OpenStatusChip extends StatelessWidget {
-  final bool isOpen;
+class _AvailabilityChip extends StatelessWidget {
+  final bool isAvailable;
 
-  const _OpenStatusChip({required this.isOpen});
+  const _AvailabilityChip({required this.isAvailable});
 
   @override
   Widget build(BuildContext context) {
-    final color = isOpen ? AppColors.success : AppColors.warning;
-    final label = isOpen ? 'مفتوح' : 'مغلق';
+    final color = isAvailable ? AppColors.success : AppColors.textSecondary;
+    final label = isAvailable ? 'متاح' : 'غير متاح';
 
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
@@ -244,7 +237,7 @@ class _OpenStatusChip extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(
-            isOpen ? Icons.check_circle : Icons.schedule,
+            isAvailable ? Icons.check_circle : Icons.schedule,
             size: 14.r,
             color: color,
           ),
@@ -284,7 +277,7 @@ class _SectionTitle extends StatelessWidget {
 }
 
 class _StatsGrid extends StatelessWidget {
-  final ShopDashboard dashboard;
+  final RiderDashboard dashboard;
 
   const _StatsGrid({required this.dashboard});
 
@@ -296,63 +289,43 @@ class _StatsGrid extends StatelessWidget {
           children: [
             Expanded(
               child: AdminStatCard(
-                icon: Icons.receipt_long,
-                color: AppColors.primary,
-                value: dashboard.totalOrders.toString(),
-                label: 'إجمالي الطلبات',
+                icon: Icons.delivery_dining,
+                color: AppColors.info,
+                value: dashboard.totalDeliveries.toString(),
+                label: 'توصيلات مكتملة',
               ),
             ),
             SizedBox(width: 12.w),
-            Expanded(
-              child: AdminStatCard(
-                icon: Icons.pending_actions,
-                color: AppColors.statusPending,
-                value: dashboard.pendingOrders.toString(),
-                label: 'طلبات قيد الانتظار',
-              ),
-            ),
-          ],
-        ),
-        SizedBox(height: 12.h),
-        Row(
-          children: [
-            Expanded(
-              child: AdminStatCard(
-                icon: Icons.check_circle_outline,
-                color: AppColors.statusCompleted,
-                value: dashboard.completedOrders.toString(),
-                label: 'طلبات مكتملة',
-              ),
-            ),
-            SizedBox(width: 12.w),
-            Expanded(
-              child: AdminStatCard(
-                icon: Icons.cancel_outlined,
-                color: AppColors.statusCancelled,
-                value: dashboard.cancelledOrders.toString(),
-                label: 'طلبات ملغاة',
-              ),
-            ),
-          ],
-        ),
-        SizedBox(height: 12.h),
-        Row(
-          children: [
             Expanded(
               child: AdminStatCard(
                 icon: Icons.account_balance_wallet_outlined,
                 color: AppColors.success,
-                value: Formatters.formatCurrency(dashboard.totalRevenue),
-                label: 'إجمالي المبيعات',
+                value: Formatters.formatCurrency(dashboard.totalEarnings),
+                label: 'إجمالي الأرباح',
+              ),
+            ),
+          ],
+        ),
+        SizedBox(height: 12.h),
+        Row(
+          children: [
+            Expanded(
+              child: AdminStatCard(
+                icon: Icons.attach_money,
+                color: AppColors.warning,
+                value: Formatters.formatCurrency(
+                  dashboard.totalCashHandled,
+                ),
+                label: 'إجمالي الكاش اللي استلمته',
               ),
             ),
             SizedBox(width: 12.w),
             Expanded(
               child: AdminStatCard(
-                icon: Icons.percent,
-                color: AppColors.warning,
-                value: Formatters.formatCurrency(dashboard.totalCommission),
-                label: 'إجمالي العمولة',
+                icon: Icons.assignment_outlined,
+                color: AppColors.primary,
+                value: dashboard.availableOrdersCount.toString(),
+                label: 'طلبات متاحة الآن',
               ),
             ),
           ],
@@ -363,7 +336,7 @@ class _StatsGrid extends StatelessWidget {
 }
 
 class _QuickActions extends StatelessWidget {
-  final ShopDashboard dashboard;
+  final RiderDashboard dashboard;
 
   const _QuickActions({required this.dashboard});
 
@@ -372,31 +345,24 @@ class _QuickActions extends StatelessWidget {
     return Column(
       children: [
         _QuickActionTile(
-          icon: Icons.receipt_long_outlined,
-          label: 'إدارة الطلبات',
-          subtitle: '${dashboard.pendingOrders} طلب في انتظار الإجراء',
-          onTap: () => context.goNamed(RouteNames.shopOrders),
-        ),
-        SizedBox(height: 8.h),
-        _QuickActionTile(
-          icon: Icons.inventory_2_outlined,
-          label: 'إدارة المنتجات',
-          subtitle: 'إضافة وتعديل وحذف المنتجات',
-          onTap: () => context.goNamed(RouteNames.shopProducts),
+          icon: Icons.assignment_outlined,
+          label: 'مشاهدة الطلبات المتاحة',
+          subtitle: '${dashboard.availableOrdersCount} طلب جاهز للاستلام',
+          onTap: () => context.goNamed(RouteNames.riderAvailableOrders),
         ),
         SizedBox(height: 8.h),
         _QuickActionTile(
           icon: Icons.account_balance_wallet_outlined,
-          label: 'عرض التسويات',
-          subtitle: 'تسويات الأسابيع السابقة وصافي الأرباح',
-          onTap: () => context.goNamed(RouteNames.shopSettlements),
+          label: 'أرباحي',
+          subtitle: 'ملخص أرباح الفترة الحالية',
+          onTap: () => context.goNamed(RouteNames.riderEarnings),
         ),
         SizedBox(height: 8.h),
         _QuickActionTile(
-          icon: Icons.settings_outlined,
-          label: 'إعدادات المتجر',
-          subtitle: 'بيانات المتجر وطرق التواصل',
-          onTap: () => context.goNamed(RouteNames.shopSettings),
+          icon: Icons.person_outline,
+          label: 'الملف الشخصي',
+          subtitle: 'بيانات حسابك',
+          onTap: () => context.goNamed(RouteNames.riderProfile),
         ),
       ],
     );
@@ -420,7 +386,6 @@ class _QuickActionTile extends StatelessWidget {
   Widget build(BuildContext context) {
     return AppCard(
       padding: EdgeInsets.all(16.r),
-      margin: EdgeInsets.zero,
       onTap: onTap,
       child: Row(
         children: [

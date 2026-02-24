@@ -18,18 +18,18 @@ class HomeSearchBar extends StatelessWidget {
           color: Colors.white,
           borderRadius: BorderRadius.circular(16.r),
           border: Border.all(
-            color: AppColors.primary.withOpacity(0.1),
+            color: AppColors.primary.withValues(alpha:  0.1),
             width: 1.5,
           ),
           boxShadow: [
             BoxShadow(
-              color: const Color(0xFF0A1628).withOpacity(0.06),
+              color: const Color(0xFF0A1628).withValues(alpha: 0.06),
               blurRadius: 20,
               offset: const Offset(0, 4),
               spreadRadius: 0,
             ),
             BoxShadow(
-              color: AppColors.primary.withOpacity(0.03),
+              color: AppColors.primary.withValues(alpha: 0.03),
               blurRadius: 10,
               offset: const Offset(0, 2),
             ),
@@ -44,8 +44,8 @@ class HomeSearchBar extends StatelessWidget {
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                   colors: [
-                    AppColors.primary.withOpacity(0.1),
-                    AppColors.primary.withOpacity(0.05),
+                    AppColors.primary.withValues(alpha: 0.1),
+                    AppColors.primary.withValues(alpha: 0.05),
                   ],
                 ),
                 borderRadius: BorderRadius.circular(10.r),
@@ -75,13 +75,13 @@ class HomeSearchBar extends StatelessWidget {
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                   colors: [
-                    const Color(0xFF0A1628).withOpacity(0.08),
-                    const Color(0xFF0A1628).withOpacity(0.04),
+                    const Color(0xFF0A1628).withValues(alpha: 0.08),
+                    const Color(0xFF0A1628).withValues(alpha: 0.04),
                   ],
                 ),
                 borderRadius: BorderRadius.circular(10.r),
                 border: Border.all(
-                  color: const Color(0xFF0A1628).withOpacity(0.05),
+                  color: const Color(0xFF0A1628).withValues(alpha: 0.05),
                   width: 1,
                 ),
               ),
@@ -90,7 +90,7 @@ class HomeSearchBar extends StatelessWidget {
                 children: [
                   Icon(
                     Icons.tune_rounded,
-                    color: const Color(0xFF0A1628).withOpacity(0.6),
+                    color: const Color(0xFF0A1628).withValues(alpha: 0.6),
                     size: 16.r,
                   ),
                   SizedBox(width: 4.w),
@@ -100,7 +100,7 @@ class HomeSearchBar extends StatelessWidget {
                       fontFamily: AppTextStyles.fontFamily,
                       fontSize: 11.sp,
                       fontWeight: FontWeight.w600,
-                      color: const Color(0xFF0A1628).withOpacity(0.6),
+                      color: const Color(0xFF0A1628).withValues(alpha: 0.6),
                     ),
                   ),
                 ],

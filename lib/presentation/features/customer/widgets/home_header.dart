@@ -23,7 +23,7 @@ class HomeHeader extends StatelessWidget {
           colors: [
             AppColors.primary,
             AppColors.primaryLight,
-            AppColors.primary.withOpacity(0.95),
+            AppColors.primary.withValues(alpha:  0.95),
           ],
           stops: const [0.0, 0.5, 1.0],
         ),
@@ -33,13 +33,13 @@ class HomeHeader extends StatelessWidget {
         ),
         boxShadow: [
           BoxShadow(
-            color: AppColors.primaryDark.withOpacity(0.4),
+            color: AppColors.primaryDark.withValues(alpha: 0.4),
             blurRadius: 24,
             offset: const Offset(0, 10),
             spreadRadius: 0,
           ),
           BoxShadow(
-            color: AppColors.secondary.withOpacity(0.15),
+            color: AppColors.secondary.withValues(alpha: 0.15),
             blurRadius: 40,
             offset: const Offset(0, 15),
           ),
@@ -58,8 +58,8 @@ class HomeHeader extends StatelessWidget {
                 shape: BoxShape.circle,
                 gradient: RadialGradient(
                   colors: [
-                    AppColors.secondary.withOpacity(0.25),
-                    AppColors.secondary.withOpacity(0.08),
+                    AppColors.secondary.withValues(alpha: 0.25),
+                    AppColors.secondary.withValues(alpha: 0.08),
                     Colors.transparent,
                   ],
                   stops: const [0.0, 0.5, 1.0],
@@ -78,8 +78,8 @@ class HomeHeader extends StatelessWidget {
                 shape: BoxShape.circle,
                 gradient: RadialGradient(
                   colors: [
-                    Colors.white.withOpacity(0.12),
-                    Colors.white.withOpacity(0.04),
+                    Colors.white.withValues(alpha: 0.12),
+                    Colors.white.withValues(alpha: 0.04),
                     Colors.transparent,
                   ],
                   stops: const [0.0, 0.5, 1.0],
@@ -99,7 +99,7 @@ class HomeHeader extends StatelessWidget {
                   width: 8.r,
                   height: 8.r,
                   decoration: BoxDecoration(
-                    color: AppColors.secondary.withOpacity(0.3),
+                    color: AppColors.secondary.withValues(alpha: 0.3),
                     borderRadius: BorderRadius.circular(1.5.r),
                   ),
                 ),
@@ -115,7 +115,7 @@ class HomeHeader extends StatelessWidget {
                   bottomRight: Radius.circular(32.r),
                 ),
                 border: Border.all(
-                  color: Colors.white.withOpacity(0.08),
+                  color: Colors.white.withValues(alpha: 0.08),
                   width: 1,
                 ),
               ),
@@ -150,7 +150,7 @@ class HomeHeader extends StatelessWidget {
                                     letterSpacing: 0.3,
                                     shadows: [
                                       Shadow(
-                                        color: AppColors.primaryDark.withOpacity(0.3),
+                                        color: AppColors.primaryDark.withValues(alpha: 0.3),
                                         offset: const Offset(0, 2),
                                         blurRadius: 4,
                                       ),
@@ -167,13 +167,13 @@ class HomeHeader extends StatelessWidget {
                                       end: Alignment.bottomRight,
                                       colors: [
                                         AppColors.secondary,
-                                        AppColors.secondary.withOpacity(0.7),
+                                        AppColors.secondary.withValues(alpha: 0.7),
                                       ],
                                     ),
                                     shape: BoxShape.circle,
                                     boxShadow: [
                                       BoxShadow(
-                                        color: AppColors.secondary.withOpacity(0.4),
+                                        color: AppColors.secondary.withValues(alpha: 0.4),
                                         blurRadius: 8,
                                         offset: const Offset(0, 2),
                                       ),
@@ -203,18 +203,18 @@ class HomeHeader extends StatelessWidget {
                                 begin: Alignment.topLeft,
                                 end: Alignment.bottomRight,
                                 colors: [
-                                  Colors.white.withOpacity(0.18),
-                                  Colors.white.withOpacity(0.08),
+                                  Colors.white.withValues(alpha: 0.18),
+                                  Colors.white.withValues(alpha: 0.08),
                                 ],
                               ),
                               borderRadius: BorderRadius.circular(14.r),
                               border: Border.all(
-                                color: Colors.white.withOpacity(0.15),
+                                color: Colors.white.withValues(alpha: 0.15),
                                 width: 1,
                               ),
                               boxShadow: [
                                 BoxShadow(
-                                  color: AppColors.primaryDark.withOpacity(0.15),
+                                  color: AppColors.primaryDark.withValues(alpha: 0.15),
                                   blurRadius: 8,
                                   offset: const Offset(0, 3),
                                 ),
@@ -232,13 +232,13 @@ class HomeHeader extends StatelessWidget {
                                       end: Alignment.bottomRight,
                                       colors: [
                                         AppColors.secondary,
-                                        AppColors.secondary.withOpacity(0.8),
+                                        AppColors.secondary.withValues(alpha: 0.8),
                                       ],
                                     ),
                                     shape: BoxShape.circle,
                                     boxShadow: [
                                       BoxShadow(
-                                        color: AppColors.secondary.withOpacity(0.3),
+                                        color: AppColors.secondary.withValues(alpha: 0.3),
                                         blurRadius: 6,
                                         offset: const Offset(0, 2),
                                       ),
@@ -271,7 +271,7 @@ class HomeHeader extends StatelessWidget {
                                           fontFamily: AppTextStyles.fontFamily,
                                           fontSize: 13.sp,
                                           fontWeight: FontWeight.w500,
-                                          color: Colors.white.withOpacity(0.95),
+                                          color: Colors.white.withValues(alpha: 0.95),
                                           letterSpacing: 0.2,
                                         ),
                                         overflow: TextOverflow.ellipsis,
@@ -283,12 +283,12 @@ class HomeHeader extends StatelessWidget {
                                 Container(
                                   padding: EdgeInsets.all(2.r),
                                   decoration: BoxDecoration(
-                                    color: Colors.white.withOpacity(0.15),
+                                    color: Colors.white.withValues(alpha: 0.15),
                                     shape: BoxShape.circle,
                                   ),
                                   child: Icon(
                                     Icons.keyboard_arrow_down_rounded,
-                                    color: Colors.white.withOpacity(0.9),
+                                    color: Colors.white.withValues(alpha: 0.9),
                                     size: 16.r,
                                   ),
                                 ),
@@ -325,23 +325,23 @@ class _LuxuryNotificationBell extends StatelessWidget {
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
             colors: [
-              Colors.white.withOpacity(0.22),
-              Colors.white.withOpacity(0.08),
+              Colors.white.withValues(alpha: 0.22),
+              Colors.white.withValues(alpha: 0.08),
             ],
           ),
           borderRadius: BorderRadius.circular(18.r),
           border: Border.all(
-            color: Colors.white.withOpacity(0.2),
+            color: Colors.white.withValues(alpha: 0.2),
             width: 1.5,
           ),
           boxShadow: [
             BoxShadow(
-              color: AppColors.primaryDark.withOpacity(0.2),
+              color: AppColors.primaryDark.withValues(alpha: 0.2),
               blurRadius: 12,
               offset: const Offset(0, 4),
             ),
             BoxShadow(
-              color: AppColors.secondary.withOpacity(0.1),
+              color: AppColors.secondary.withValues(alpha: 0.1),
               blurRadius: 20,
               offset: const Offset(0, 6),
             ),
@@ -357,7 +357,7 @@ class _LuxuryNotificationBell extends StatelessWidget {
               size: 24.r,
               shadows: [
                 Shadow(
-                  color: AppColors.primaryDark.withOpacity(0.3),
+                  color: AppColors.primaryDark.withValues(alpha: 0.3),
                   offset: const Offset(0, 2),
                   blurRadius: 4,
                 ),
@@ -383,7 +383,7 @@ class _LuxuryNotificationBell extends StatelessWidget {
                         end: Alignment.bottomRight,
                         colors: [
                           AppColors.secondary,
-                          AppColors.secondary.withOpacity(0.85),
+                          AppColors.secondary.withValues(alpha: 0.85),
                         ],
                       ),
                       borderRadius: BorderRadius.circular(10.r),
@@ -393,7 +393,7 @@ class _LuxuryNotificationBell extends StatelessWidget {
                       ),
                       boxShadow: [
                         BoxShadow(
-                          color: AppColors.secondary.withOpacity(0.5),
+                          color: AppColors.secondary.withValues(alpha: 0.5),
                           blurRadius: 8,
                           spreadRadius: 0,
                         ),

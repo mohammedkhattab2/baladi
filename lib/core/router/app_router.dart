@@ -4,6 +4,7 @@
 // shop, rider, admin). Includes redirect logic for authentication
 // guards and role-based access control.
 
+import 'package:baladi/domain/entities/shop.dart';
 import 'package:baladi/presentation/features/admin/screens/admin_dashboard_screen.dart';
 import 'package:baladi/presentation/features/admin/screens/admin_orders_screen.dart';
 import 'package:baladi/presentation/features/admin/screens/admin_periods_screen.dart';
@@ -18,9 +19,28 @@ import 'package:baladi/presentation/features/auth/screens/customer_register_scre
 import 'package:baladi/presentation/features/auth/screens/pin_recovery_screen.dart';
 import 'package:baladi/presentation/features/auth/screens/staff_login_screen.dart';
 import 'package:baladi/presentation/features/auth/screens/welcome_screen.dart';
+import 'package:baladi/presentation/features/customer/screens/cart_screen.dart';
+import 'package:baladi/presentation/features/customer/screens/category_shops_screen.dart';
+import 'package:baladi/presentation/features/customer/screens/checkout_screen.dart';
 import 'package:baladi/presentation/features/customer/screens/customer_home_screen.dart';
+import 'package:baladi/presentation/features/customer/screens/customer_order_details_screen.dart';
+import 'package:baladi/presentation/features/customer/screens/orders_history_screen.dart';
+import 'package:baladi/presentation/features/customer/screens/shop_details_screen.dart';
+import 'package:baladi/presentation/features/rider/screens/rider_available_orders_screen.dart';
+import 'package:baladi/presentation/features/rider/screens/rider_current_delivery_screen.dart';
+import 'package:baladi/presentation/features/rider/screens/rider_dashboard_screen.dart';
+import 'package:baladi/presentation/features/rider/screens/rider_earnings_screen.dart';
+import 'package:baladi/presentation/features/rider/screens/rider_profile_screen.dart';
+import 'package:baladi/presentation/features/customer/screens/customer_profile_screen.dart';
+import 'package:baladi/presentation/features/customer/screens/customer_notifications_screen.dart';
+import 'package:baladi/presentation/features/shop/screens/points_screen.dart';
+import 'package:baladi/presentation/features/shop/screens/referral_screen.dart';
 import 'package:baladi/presentation/features/shop/screens/shop_dashboard_screen.dart';
+import 'package:baladi/presentation/features/shop/screens/shop_order_manage_screen.dart';
 import 'package:baladi/presentation/features/shop/screens/shop_orders_screen.dart';
+import 'package:baladi/presentation/features/shop/screens/shop_products_screen.dart';
+import 'package:baladi/presentation/features/shop/screens/shop_settings_screen.dart';
+import 'package:baladi/presentation/features/shop/screens/shop_settlements_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:injectable/injectable.dart';
@@ -91,7 +111,7 @@ class AppRouter {
               name: RouteNames.categoryShops,
               builder: (context, state) {
                 final slug = state.pathParameters['slug']!;
-                return _PlaceholderScreen(title: 'Category: $slug');
+                return CategoryShopsScreen(categorySlug: slug);
               },
             ),
             GoRoute(
@@ -99,7 +119,8 @@ class AppRouter {
               name: RouteNames.shopDetails,
               builder: (context, state) {
                 final id = state.pathParameters['id']!;
-                return _PlaceholderScreen(title: 'Shop: $id');
+                final shop = state.extra as Shop?;
+                return ShopDetailsScreen(shopId: id, initialShop: shop);
               },
             ),
             GoRoute(
@@ -107,7 +128,7 @@ class AppRouter {
               name: RouteNames.customerOrderDetails,
               builder: (context, state) {
                 final id = state.pathParameters['id']!;
-                return _PlaceholderScreen(title: 'Order: $id');
+                return CustomerOrderDetailsScreen(orderId: id);
               },
             ),
           ],
@@ -115,37 +136,37 @@ class AppRouter {
         GoRoute(
           path: RouteNames.cartPath,
           name: RouteNames.cart,
-          builder: (context, state) => const _PlaceholderScreen(title: 'Cart'),
+          builder: (context, state) => const CustomerCartScreen(),
         ),
         GoRoute(
           path: RouteNames.checkoutPath,
           name: RouteNames.checkout,
-          builder: (context, state) =>
-              const _PlaceholderScreen(title: 'Checkout'),
+          builder: (context, state) => const CheckoutScreen(),
         ),
         GoRoute(
           path: RouteNames.ordersHistoryPath,
           name: RouteNames.ordersHistory,
-          builder: (context, state) =>
-              const _PlaceholderScreen(title: 'Orders History'),
+          builder: (context, state) => const OrdersHistoryScreen(),
         ),
         GoRoute(
           path: RouteNames.pointsPath,
           name: RouteNames.points,
-          builder: (context, state) =>
-              const _PlaceholderScreen(title: 'Points'),
+          builder: (context, state) => const PointsScreen(),
         ),
         GoRoute(
           path: RouteNames.referralPath,
           name: RouteNames.referral,
-          builder: (context, state) =>
-              const _PlaceholderScreen(title: 'Referral'),
+          builder: (context, state) => const ReferralScreen(),
         ),
         GoRoute(
           path: RouteNames.customerProfilePath,
           name: RouteNames.customerProfile,
-          builder: (context, state) =>
-              const _PlaceholderScreen(title: 'Profile'),
+          builder: (context, state) => const CustomerProfileScreen(),
+        ),
+        GoRoute(
+          path: RouteNames.notificationsPath,
+          name: RouteNames.notifications,
+          builder: (context, state) => const CustomerNotificationsScreen(),
         ),
 
         // ─── Shop Routes ──────────────────────────────────────────
@@ -159,7 +180,7 @@ class AppRouter {
               name: RouteNames.shopOrderManage,
               builder: (context, state) {
                 final id = state.pathParameters['id']!;
-                return _PlaceholderScreen(title: 'Manage Order: $id');
+                return ShopOrderManageScreen(orderId: id);
               },
             ),
           ],
@@ -172,54 +193,47 @@ class AppRouter {
         GoRoute(
           path: RouteNames.shopProductsPath,
           name: RouteNames.shopProducts,
-          builder: (context, state) =>
-              const _PlaceholderScreen(title: 'Shop Products'),
+          builder: (context, state) => const ShopProductsScreen(),
         ),
         GoRoute(
           path: RouteNames.shopSettingsPath,
           name: RouteNames.shopSettings,
-          builder: (context, state) =>
-              const _PlaceholderScreen(title: 'Shop Settings'),
+          builder: (context, state) => const ShopSettingsScreen(),
         ),
         GoRoute(
           path: RouteNames.shopSettlementsPath,
           name: RouteNames.shopSettlements,
-          builder: (context, state) =>
-              const _PlaceholderScreen(title: 'Shop Settlements'),
+          builder: (context, state) => const ShopSettlementsScreen(),
         ),
 
         // ─── Rider Routes ─────────────────────────────────────────
         GoRoute(
           path: RouteNames.riderDashboardPath,
           name: RouteNames.riderDashboard,
-          builder: (context, state) =>
-              const _PlaceholderScreen(title: 'Rider Dashboard'),
+          builder: (context, state) => const RiderDashboardScreen(),
         ),
         GoRoute(
           path: RouteNames.riderAvailableOrdersPath,
           name: RouteNames.riderAvailableOrders,
-          builder: (context, state) =>
-              const _PlaceholderScreen(title: 'Available Orders'),
+          builder: (context, state) => const RiderAvailableOrdersScreen(),
         ),
         GoRoute(
           path: RouteNames.riderCurrentDeliveryPath,
           name: RouteNames.riderCurrentDelivery,
           builder: (context, state) {
             final id = state.pathParameters['id']!;
-            return _PlaceholderScreen(title: 'Delivery: $id');
+            return RiderCurrentDeliveryScreen(orderId: id);
           },
         ),
         GoRoute(
           path: RouteNames.riderEarningsPath,
           name: RouteNames.riderEarnings,
-          builder: (context, state) =>
-              const _PlaceholderScreen(title: 'Rider Earnings'),
+          builder: (context, state) => const RiderEarningsScreen(),
         ),
         GoRoute(
           path: RouteNames.riderProfilePath,
           name: RouteNames.riderProfile,
-          builder: (context, state) =>
-              const _PlaceholderScreen(title: 'Rider Profile'),
+          builder: (context, state) => const RiderProfileScreen(),
         ),
 
         // ─── Admin Routes ─────────────────────────────────────────
@@ -269,13 +283,6 @@ class AppRouter {
           builder: (context, state) => const AdminPointsScreen(),
         ),
 
-        // ─── Common Routes ────────────────────────────────────────
-        GoRoute(
-          path: RouteNames.notificationsPath,
-          name: RouteNames.notifications,
-          builder: (context, state) =>
-              const _PlaceholderScreen(title: 'Notifications'),
-        ),
       ],
     );
   }
@@ -308,21 +315,5 @@ class AppRouter {
   }
 }
 
-/// Temporary placeholder screen used until real feature screens are implemented.
-///
-/// Will be replaced by actual screen widgets during feature development.
-class _PlaceholderScreen extends StatelessWidget {
-  final String title;
 
-  const _PlaceholderScreen({required this.title});
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: Text(title)),
-      body: Center(
-        child: Text(title, style: Theme.of(context).textTheme.headlineMedium),
-      ),
-    );
-  }
-}

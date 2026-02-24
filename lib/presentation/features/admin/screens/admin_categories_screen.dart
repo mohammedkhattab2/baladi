@@ -1,4 +1,5 @@
 import 'dart:ui';
+import 'dart:io';
 
 import 'package:baladi/core/di/injection_container.dart';
 import 'package:baladi/core/network/api_client.dart';
@@ -17,6 +18,7 @@ import 'package:baladi/presentation/features/admin/shell/admin_shell.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:image_picker/image_picker.dart';
 
 /// Admin screen for managing categories (create / edit / delete).
 ///
@@ -209,6 +211,15 @@ class _AdminCategoriesView extends StatelessWidget {
           : '',
     );
 
+    // Collect existing slugs to help the admin avoid duplicates.
+    final currentState = context.read<AdminCategoriesCubit>().state;
+    final existingSlugs = switch (currentState) {
+      AdminCategoriesLoaded s => s.categories.map((c) => c.slug).toList(),
+      AdminCategoriesActionSuccess s =>
+        s.categories.map((c) => c.slug).toList(),
+      _ => <String>[],
+    };
+
     await showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
@@ -217,8 +228,12 @@ class _AdminCategoriesView extends StatelessWidget {
       barrierColor: Colors.black.withValues(alpha:  0.65),
       elevation: 0,
       builder: (ctx) {
-        return Stack(
-          children: [
+        String? imagePath;
+
+        return StatefulBuilder(
+          builder: (ctx, setState) {
+            return Stack(
+              children: [
             // الخلفية: نفس الجريدينت الأساسي بتاع هوية Baladi (admin / welcome)
             Container(
               decoration: const BoxDecoration(
@@ -441,7 +456,8 @@ class _AdminCategoriesView extends StatelessWidget {
                                 const _FormLabel(text: 'المسار (Slug)'),
                                 AppTextField(
                                   controller: slugController,
-                                  label: 'مثال: restaurants',
+                                  label: 'المسار (Slug)',
+                                  hint: 'مثال: restaurants',
                                   helperText:
                                       'حروف إنجليزية صغيرة، أرقام، وشرطات فقط (مثال: restaurants)',
                                   validator: (value) {
@@ -456,6 +472,49 @@ class _AdminCategoriesView extends StatelessWidget {
                                     return null;
                                   },
                                 ),
+                                if (existingSlugs.isNotEmpty) ...[
+                                  SizedBox(height: 8.h),
+                                  Text(
+                                    'المسارات المستخدمة من قبل (اضغط للاختيار):',
+                                    style: TextStyle(
+                                      fontFamily: AppTextStyles.fontFamily,
+                                      fontSize: 11.sp,
+                                      color: AppColors.textSecondary
+                                          .withValues(alpha: 0.9),
+                                    ),
+                                  ),
+                                  SizedBox(height: 6.h),
+                                  SizedBox(
+                                    height: 32.h,
+                                    child: ListView.separated(
+                                      scrollDirection: Axis.horizontal,
+                                      itemCount: existingSlugs.toSet().length,
+                                      separatorBuilder: (_, __) =>
+                                          SizedBox(width: 6.w),
+                                      itemBuilder: (context, index) {
+                                        final uniqueSlugs = existingSlugs
+                                            .toSet()
+                                            .toList()
+                                          ..sort();
+                                        final slug = uniqueSlugs[index];
+                                        return ActionChip(
+                                          label: Text(
+                                            slug,
+                                            style: TextStyle(
+                                              fontFamily:
+                                                  AppTextStyles.fontFamily,
+                                              fontSize: 11.sp,
+                                            ),
+                                          ),
+                                          backgroundColor: AppColors.surfaceVariant,
+                                          onPressed: () {
+                                            slugController.text = slug;
+                                          },
+                                        );
+                                      },
+                                    ),
+                                  ),
+                                ],
                                 SizedBox(height: 16.h),
                                 Divider(
                                   height: 1,
@@ -510,6 +569,95 @@ class _AdminCategoriesView extends StatelessWidget {
                                         decimal: false,
                                       ),
                                 ),
+                                SizedBox(height: 12.h),
+                                const _FormLabel(text: 'صورة التصنيف'),
+                                GestureDetector(
+                                  onTap: () async {
+                                    final picker = ImagePicker();
+                                    final picked = await picker.pickImage(
+                                      source: ImageSource.gallery,
+                                      imageQuality: 85,
+                                    );
+                                    if (picked != null) {
+                                      setState(() {
+                                        imagePath = picked.path;
+                                      });
+                                    }
+                                  },
+                                  child: Container(
+                                    width: double.infinity,
+                                    decoration: BoxDecoration(
+                                      borderRadius: BorderRadius.circular(14.r),
+                                      border: Border.all(
+                                        color: AppColors.primary.withValues(alpha: 0.45),
+                                        width: 1.2,
+                                      ),
+                                      color: Colors.white.withValues(alpha: 0.03),
+                                    ),
+                                    padding: EdgeInsets.all(10.r),
+                                    child: Row(
+                                      children: [
+                                        Container(
+                                          width: 40.r,
+                                          height: 40.r,
+                                          decoration: BoxDecoration(
+                                            borderRadius: BorderRadius.circular(12.r),
+                                            color: AppColors.primary.withValues(alpha: 0.15),
+                                          ),
+                                          child: Icon(
+                                            Icons.image_rounded,
+                                            color: AppColors.primaryLight,
+                                            size: 22.r,
+                                          ),
+                                        ),
+                                        SizedBox(width: 10.w),
+                                        Expanded(
+                                          child: Column(
+                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            children: [
+                                              Text(
+                                                imagePath == null
+                                                    ? 'اختر صورة من المعرض'
+                                                    : 'تم اختيار صورة',
+                                                style: TextStyle(
+                                                  fontFamily: AppTextStyles.fontFamily,
+                                                  fontSize: 13.sp,
+                                                  fontWeight: FontWeight.w600,
+                                                  color: AppColors.textPrimary,
+                                                ),
+                                              ),
+                                              SizedBox(height: 4.h),
+                                              Text(
+                                                imagePath == null
+                                                    ? 'اضغط هنا لاختيار صورة تعبر عن هذا التصنيف'
+                                                    : imagePath!,
+                                                maxLines: 1,
+                                                overflow: TextOverflow.ellipsis,
+                                                style: TextStyle(
+                                                  fontFamily: AppTextStyles.fontFamily,
+                                                  fontSize: 11.sp,
+                                                  color: AppColors.textSecondary.withValues(alpha: 0.9),
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                        if (imagePath != null) ...[
+                                          SizedBox(width: 8.w),
+                                          ClipRRect(
+                                            borderRadius: BorderRadius.circular(10.r),
+                                            child: Image.file(
+                                              File(imagePath!),
+                                              width: 42.r,
+                                              height: 42.r,
+                                              fit: BoxFit.cover,
+                                            ),
+                                          ),
+                                        ],
+                                      ],
+                                    ),
+                                  ),
+                                ),
                               ],
                             ),
                           ),
@@ -547,13 +695,33 @@ class _AdminCategoriesView extends StatelessWidget {
                                     shadowColor: AppColors.primary.withValues(alpha: 0.3),
                                   ),
                                   onPressed: () async {
-                                    if (!(formKey.currentState?.validate() ??
-                                        false)) {
+                                    // Validate base form fields first
+                                    if (!(formKey.currentState?.validate() ?? false)) {
                                       return;
                                     }
 
-                                    final sortOrder =
-                                        int.tryParse(
+                                    // For create flow, require an image to be picked
+                                    if (!isEdit && (imagePath == null || imagePath!.isEmpty)) {
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                        SnackBar(
+                                          behavior: SnackBarBehavior.floating,
+                                          margin: EdgeInsets.all(16.r),
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.circular(16.r),
+                                          ),
+                                          content: Text(
+                                            'من فضلك اختر صورة للتصنيف قبل الحفظ',
+                                            style: TextStyle(
+                                              fontFamily: AppTextStyles.fontFamily,
+                                            ),
+                                          ),
+                                          backgroundColor: AppColors.error,
+                                        ),
+                                      );
+                                      return;
+                                    }
+
+                                    final sortOrder = int.tryParse(
                                           sortOrderController.text.trim(),
                                         ) ??
                                         0;
@@ -562,19 +730,14 @@ class _AdminCategoriesView extends StatelessWidget {
                                       'name': nameController.text.trim(),
                                       'name_ar': nameArController.text.trim(),
                                       'slug': slugController.text.trim(),
-                                      if (descriptionController.text
-                                          .trim()
-                                          .isNotEmpty)
-                                        'description': descriptionController
-                                            .text
-                                            .trim(),
+                                      if (descriptionController.text.trim().isNotEmpty)
+                                        'description': descriptionController.text.trim(),
                                       'sort_order': sortOrder,
                                     };
 
                                     Navigator.of(ctx).pop();
 
-                                    final cubit = context
-                                        .read<AdminCategoriesCubit>();
+                                    final cubit = context.read<AdminCategoriesCubit>();
                                     if (isEdit) {
                                       await cubit.updateCategory(
                                         categoryId: category.id,
@@ -583,6 +746,7 @@ class _AdminCategoriesView extends StatelessWidget {
                                     } else {
                                       await cubit.createCategory(
                                         payload: payload,
+                                        imagePath: imagePath!,
                                       );
                                     }
                                   },
@@ -607,6 +771,8 @@ class _AdminCategoriesView extends StatelessWidget {
               ),
             ),
           ],
+        );
+          },
         );
       },
     );

@@ -27,28 +27,91 @@ class ShopSettlementModel extends ShopSettlement {
   });
 
   /// Creates a [ShopSettlementModel] from a JSON map.
+  ///
+  /// Backend may return:
+  /// - Plain string IDs: `shop_id: "..."`, `period_id: "..."`, `id: "..."`.
+  /// - Nested objects: `shop_id: { id/_id: "..." }`, `period_id: { id/_id: "..." }`.
+  /// - Different timestamp keys or missing fields.
   factory ShopSettlementModel.fromJson(Map<String, dynamic> json) {
+    String _extractId(dynamic value) {
+      if (value == null) return '';
+      if (value is String) return value;
+      if (value is Map<String, dynamic>) {
+        final dynamic inner =
+            value['id'] ?? value['_id'] ?? value['value'] ?? value['code'];
+        return inner?.toString() ?? '';
+      }
+      return value.toString();
+    }
+
+    // Support both `id` and `_id` for settlement identifier.
+    final String id = _extractId(json['id'] ?? json['_id']);
+
+    // shopId and periodId might be plain strings or nested objects.
+    final String shopId = _extractId(json['shop_id']);
+    final String periodId = _extractId(json['period_id']);
+
+    final int totalOrders = json['total_orders'] as int? ?? 0;
+    final int completedOrders = json['completed_orders'] as int? ?? 0;
+    final int cancelledOrders = json['cancelled_orders'] as int? ?? 0;
+
+    final double grossSales = (json['gross_sales'] as num?)?.toDouble() ?? 0;
+    final double totalCommission =
+        (json['total_commission'] as num?)?.toDouble() ?? 0;
+    final double pointsDiscounts =
+        (json['points_discounts'] as num?)?.toDouble() ?? 0;
+    final double freeDeliveryCost =
+        (json['free_delivery_cost'] as num?)?.toDouble() ?? 0;
+    final double adsCost = (json['ads_cost'] as num?)?.toDouble() ?? 0;
+    final double netAmount = (json['net_amount'] as num?)?.toDouble() ?? 0;
+
+    // Status might be a string or a nested object; handle both safely.
+    SettlementStatus status = SettlementStatus.pending;
+    final dynamic rawStatus = json['status'];
+    if (rawStatus is String) {
+      status = SettlementStatus.fromValue(rawStatus);
+    } else if (rawStatus is Map<String, dynamic>) {
+      final dynamic statusValue =
+          rawStatus['value'] ?? rawStatus['code'] ?? rawStatus['status'];
+      if (statusValue is String) {
+        status = SettlementStatus.fromValue(statusValue);
+      }
+    }
+
+    DateTime? settledAt;
+    final dynamic settledAtRaw = json['settled_at'] ?? json['settledAt'];
+    if (settledAtRaw is String) {
+      settledAt = DateTime.tryParse(settledAtRaw);
+    }
+
+    final String? notes = json['notes'] as String?;
+
+    // createdAt may be under different keys and might be absent.
+    DateTime createdAt;
+    final dynamic createdAtRaw = json['created_at'] ?? json['createdAt'];
+    if (createdAtRaw is String) {
+      createdAt = DateTime.parse(createdAtRaw);
+    } else {
+      createdAt = DateTime.now();
+    }
+
     return ShopSettlementModel(
-      id: json['id'] as String,
-      shopId: json['shop_id'] as String,
-      periodId: json['period_id'] as String,
-      totalOrders: json['total_orders'] as int? ?? 0,
-      completedOrders: json['completed_orders'] as int? ?? 0,
-      cancelledOrders: json['cancelled_orders'] as int? ?? 0,
-      grossSales: (json['gross_sales'] as num?)?.toDouble() ?? 0,
-      totalCommission: (json['total_commission'] as num?)?.toDouble() ?? 0,
-      pointsDiscounts: (json['points_discounts'] as num?)?.toDouble() ?? 0,
-      freeDeliveryCost: (json['free_delivery_cost'] as num?)?.toDouble() ?? 0,
-      adsCost: (json['ads_cost'] as num?)?.toDouble() ?? 0,
-      netAmount: (json['net_amount'] as num?)?.toDouble() ?? 0,
-      status: json['status'] != null
-          ? SettlementStatus.fromValue(json['status'] as String)
-          : SettlementStatus.pending,
-      settledAt: json['settled_at'] != null
-          ? DateTime.parse(json['settled_at'] as String)
-          : null,
-      notes: json['notes'] as String?,
-      createdAt: DateTime.parse(json['created_at'] as String),
+      id: id,
+      shopId: shopId,
+      periodId: periodId,
+      totalOrders: totalOrders,
+      completedOrders: completedOrders,
+      cancelledOrders: cancelledOrders,
+      grossSales: grossSales,
+      totalCommission: totalCommission,
+      pointsDiscounts: pointsDiscounts,
+      freeDeliveryCost: freeDeliveryCost,
+      adsCost: adsCost,
+      netAmount: netAmount,
+      status: status,
+      settledAt: settledAt,
+      notes: notes,
+      createdAt: createdAt,
     );
   }
 

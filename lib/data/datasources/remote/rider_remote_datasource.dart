@@ -78,13 +78,15 @@ class RiderRemoteDatasourceImpl implements RiderRemoteDatasource {
     int page = 1,
     int perPage = 20,
   }) async {
-    final response = await _apiClient.get<List<OrderModel>>(
+    // Backend returns: { success, data: [ ...orders... ], meta: { ... } }
+    // and expects "limit" for pagination (see getAvailableOrdersSchema).
+    final response = await _apiClient.getList<OrderModel>(
       ApiEndpoints.riderAvailableOrders,
       queryParameters: {
         'page': page.toString(),
-        'per_page': perPage.toString(),
+        'limit': perPage.toString(),
       },
-      fromJson: (json) => _parseList(json, OrderModel.fromJson),
+      fromJson: (json) => OrderModel.fromJson(json),
     );
     return response.data ?? [];
   }
@@ -94,13 +96,15 @@ class RiderRemoteDatasourceImpl implements RiderRemoteDatasource {
     int page = 1,
     int perPage = 20,
   }) async {
-    final response = await _apiClient.get<List<OrderModel>>(
+    // Backend returns: { success, data: [ ...orders... ], meta: { ... } }
+    // and expects "limit" for pagination (see getMyOrdersSchema).
+    final response = await _apiClient.getList<OrderModel>(
       ApiEndpoints.riderOrders,
       queryParameters: {
         'page': page.toString(),
-        'per_page': perPage.toString(),
+        'limit': perPage.toString(),
       },
-      fromJson: (json) => _parseList(json, OrderModel.fromJson),
+      fromJson: (json) => OrderModel.fromJson(json),
     );
     return response.data ?? [];
   }
@@ -128,25 +132,16 @@ class RiderRemoteDatasourceImpl implements RiderRemoteDatasource {
     int page = 1,
     int perPage = 20,
   }) async {
-    final response = await _apiClient.get<List<RiderSettlementModel>>(
+    // Backend returns: { success, data: [ ...settlements... ], meta: { ... } }
+    // and expects "limit" for pagination (see getSettlementsSchema).
+    final response = await _apiClient.getList<RiderSettlementModel>(
       ApiEndpoints.riderSettlements,
       queryParameters: {
         'page': page.toString(),
-        'per_page': perPage.toString(),
+        'limit': perPage.toString(),
       },
-      fromJson: (json) => _parseList(json, RiderSettlementModel.fromJson),
+      fromJson: (json) => RiderSettlementModel.fromJson(json),
     );
     return response.data ?? [];
-  }
-
-  /// Parses a list of items from the standard API list response format.
-  static List<T> _parseList<T>(
-    Map<String, dynamic> json,
-    T Function(Map<String, dynamic>) fromJson,
-  ) {
-    final items = json['items'] as List<dynamic>? ?? [];
-    return items
-        .map((e) => fromJson(e as Map<String, dynamic>))
-        .toList();
   }
 }

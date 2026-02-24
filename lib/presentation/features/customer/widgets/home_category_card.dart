@@ -24,18 +24,18 @@ class HomeCategoryCard extends StatelessWidget {
           color: Colors.white,
           borderRadius: BorderRadius.circular(20.r),
           border: Border.all(
-            color: cardColor.withOpacity(0.1),
+            color: cardColor.withValues(alpha:  0.1),
             width: 1.5,
           ),
           boxShadow: [
             BoxShadow(
-              color: cardColor.withOpacity(0.12),
+              color: cardColor.withValues(alpha: 0.12),
               blurRadius: 16,
               offset: const Offset(0, 6),
               spreadRadius: 0,
             ),
             BoxShadow(
-              color: const Color(0xFF0A1628).withOpacity(0.04),
+              color: const Color(0xFF0A1628).withValues(alpha: 0.04),
               blurRadius: 8,
               offset: const Offset(0, 2),
             ),
@@ -55,8 +55,8 @@ class HomeCategoryCard extends StatelessWidget {
                     begin: Alignment.topCenter,
                     end: Alignment.bottomCenter,
                     colors: [
-                      cardColor.withOpacity(0.08),
-                      cardColor.withOpacity(0.0),
+                      cardColor.withValues(alpha: 0.08),
+                      cardColor.withValues(alpha: 0.0),
                     ],
                   ),
                   borderRadius: BorderRadius.only(
@@ -78,18 +78,18 @@ class HomeCategoryCard extends StatelessWidget {
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
                       colors: [
-                        cardColor.withOpacity(0.15),
-                        cardColor.withOpacity(0.08),
+                        cardColor.withValues(alpha: 0.15),
+                        cardColor.withValues(alpha: 0.08),
                       ],
                     ),
                     borderRadius: BorderRadius.circular(16.r),
                     border: Border.all(
-                      color: cardColor.withOpacity(0.2),
+                      color: cardColor.withValues(alpha: 0.2),
                       width: 1,
                     ),
                     boxShadow: [
                       BoxShadow(
-                        color: cardColor.withOpacity(0.2),
+                        color: cardColor.withValues(alpha: 0.2),
                         blurRadius: 12,
                         offset: const Offset(0, 4),
                       ),
@@ -145,7 +145,7 @@ class HomeCategoryCard extends StatelessWidget {
         end: Alignment.bottomRight,
         colors: [
           color,
-          color.withOpacity(0.7),
+          color.withValues(alpha: 0.7),
         ],
       ).createShader(bounds),
       child: Icon(iconData, color: Colors.white, size: 28.r),

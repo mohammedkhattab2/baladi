@@ -503,12 +503,12 @@ class _ParticlesPainter extends CustomPainter {
       final glowSize = particle.size * (1 + pulseValue * 0.3);
 
       final glowPaint = Paint()
-        ..color = particle.color.withOpacity(particle.opacity * 0.3)
+        ..color = particle.color.withValues(alpha:  particle.opacity * 0.3)
         ..maskFilter = MaskFilter.blur(BlurStyle.normal, glowSize * 3);
       canvas.drawCircle(Offset(x, y), glowSize * 2, glowPaint);
 
       final corePaint = Paint()
-        ..color = particle.color.withOpacity(particle.opacity * 0.8)
+        ..color = particle.color.withValues(alpha:  particle.opacity * 0.8)
         ..maskFilter = MaskFilter.blur(BlurStyle.normal, glowSize * 0.5);
       canvas.drawCircle(Offset(x, y), glowSize, corePaint);
     }
@@ -586,7 +586,7 @@ class _LuxuryHeader extends StatelessWidget {
                       color: Colors.white,
                       shadows: [
                         Shadow(
-                          color: AppColors.primary.withOpacity(0.5),
+                          color: AppColors.primary.withValues(alpha: 0.5),
                           blurRadius: 20,
                         ),
                       ],
@@ -599,10 +599,10 @@ class _LuxuryHeader extends StatelessWidget {
                   style: TextStyle(
                     fontFamily: AppTextStyles.fontFamily,
                     fontSize: 15.sp,
-                    color: Colors.white.withOpacity(0.8),
+                    color: Colors.white.withValues(alpha: 0.8),
                     shadows: [
                       Shadow(
-                        color: Colors.black.withOpacity(0.3),
+                        color: Colors.black.withValues(alpha: 0.3),
                         blurRadius: 10,
                       ),
                     ],
@@ -620,15 +620,15 @@ class _LuxuryHeader extends StatelessWidget {
                         borderRadius: BorderRadius.circular(2.r),
                         gradient: LinearGradient(
                           colors: [
-                            AppColors.secondary.withOpacity(0.5),
+                            AppColors.secondary.withValues(alpha: 0.5),
                             AppColors.secondary,
-                            AppColors.secondary.withOpacity(0.5),
+                            AppColors.secondary.withValues(alpha: 0.5),
                           ],
                         ),
                         boxShadow: [
                           BoxShadow(
                             color:
-                                AppColors.secondary.withOpacity(0.6 * pulseValue),
+                                AppColors.secondary.withValues(alpha: 0.6 * pulseValue),
                             blurRadius: 15 * pulseValue,
                             spreadRadius: 2,
                           ),
@@ -682,14 +682,14 @@ class _GlowingBackButtonState extends State<_GlowingBackButton> {
             height: 44.r,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: Colors.white.withOpacity(_isPressed ? 0.25 : 0.15),
+              color: Colors.white.withValues(alpha: _isPressed ? 0.25 : 0.15),
               border: Border.all(
-                color: Colors.white.withOpacity(0.3),
+                color: Colors.white.withValues(alpha: 0.3),
                 width: 1,
               ),
               boxShadow: [
                 BoxShadow(
-                  color: AppColors.primary.withOpacity(0.3 * pulseValue),
+                  color: AppColors.primary.withValues(alpha: 0.3 * pulseValue),
                   blurRadius: 15 * pulseValue,
                   spreadRadius: 2,
                 ),
@@ -729,17 +729,17 @@ class _GlassmorphicFormContainer extends StatelessWidget {
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
                 colors: [
-                  Colors.white.withOpacity(0.15),
-                  Colors.white.withOpacity(0.08),
+                  Colors.white.withValues(alpha: 0.15),
+                  Colors.white.withValues(alpha: 0.08),
                 ],
               ),
               border: Border.all(
-                color: Colors.white.withOpacity(0.2),
+                color: Colors.white.withValues(alpha: 0.2),
                 width: 1.5,
               ),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.2),
+                  color: Colors.black.withValues(alpha: 0.2),
                   blurRadius: 30,
                   offset: const Offset(0, 15),
                 ),
@@ -786,13 +786,13 @@ class _LuxuryRoleSelector extends StatelessWidget {
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
                       colors: [
-                        AppColors.primary.withOpacity(0.8),
-                        AppColors.primaryLight.withOpacity(0.6),
+                        AppColors.primary.withValues(alpha: 0.8),
+                        AppColors.primaryLight.withValues(alpha: 0.6),
                       ],
                     ),
                     boxShadow: [
                       BoxShadow(
-                        color: AppColors.primary.withOpacity(0.4 * pulseValue),
+                        color: AppColors.primary.withValues(alpha: 0.4 * pulseValue),
                         blurRadius: 10 * pulseValue,
                         spreadRadius: 1,
                       ),
@@ -814,7 +814,7 @@ class _LuxuryRoleSelector extends StatelessWidget {
                     color: Colors.white,
                     shadows: [
                       Shadow(
-                        color: Colors.black.withOpacity(0.3),
+                        color: Colors.black.withValues(alpha: 0.3),
                         blurRadius: 5,
                       ),
                     ],
@@ -917,21 +917,21 @@ class _LuxuryRoleChipState extends State<_LuxuryRoleChip> {
                       end: Alignment.bottomRight,
                       colors: [
                         widget.color,
-                        widget.color.withOpacity(0.7),
+                        widget.color.withValues(alpha: 0.7),
                       ],
                     )
                   : null,
-              color: widget.isSelected ? null : Colors.white.withOpacity(0.1),
+              color: widget.isSelected ? null : Colors.white.withValues(alpha: 0.1),
               border: Border.all(
                 color: widget.isSelected
-                    ? widget.color.withOpacity(0.8)
-                    : Colors.white.withOpacity(0.2),
+                    ? widget.color.withValues(alpha: 0.8)
+                    : Colors.white.withValues(alpha: 0.2),
                 width: widget.isSelected ? 2 : 1,
               ),
               boxShadow: widget.isSelected
                   ? [
                       BoxShadow(
-                        color: widget.color.withOpacity(0.4 * pulseValue),
+                        color: widget.color.withValues(alpha: 0.4 * pulseValue),
                         blurRadius: 15 * pulseValue,
                         spreadRadius: 2,
                       ),
@@ -945,7 +945,7 @@ class _LuxuryRoleChipState extends State<_LuxuryRoleChip> {
                   widget.icon,
                   color: widget.isSelected
                       ? Colors.white
-                      : Colors.white.withOpacity(0.6),
+                      : Colors.white.withValues(alpha: 0.6),
                   size: 28.r,
                 ),
                 SizedBox(height: 8.h),
@@ -958,7 +958,7 @@ class _LuxuryRoleChipState extends State<_LuxuryRoleChip> {
                         widget.isSelected ? FontWeight.w600 : FontWeight.w500,
                     color: widget.isSelected
                         ? Colors.white
-                        : Colors.white.withOpacity(0.6),
+                        : Colors.white.withValues(alpha: 0.6),
                   ),
                   textAlign: TextAlign.center,
                 ),
@@ -1033,10 +1033,10 @@ class _LuxuryTextFieldState extends State<_LuxuryTextField> {
             fontFamily: AppTextStyles.fontFamily,
             fontSize: 14.sp,
             fontWeight: FontWeight.w600,
-            color: Colors.white.withOpacity(0.9),
+            color: Colors.white.withValues(alpha: 0.9),
             shadows: [
               Shadow(
-                color: Colors.black.withOpacity(0.3),
+                color: Colors.black.withValues(alpha: 0.3),
                 blurRadius: 5,
               ),
             ],
@@ -1054,7 +1054,7 @@ class _LuxuryTextFieldState extends State<_LuxuryTextField> {
                 boxShadow: _isFocused
                     ? [
                         BoxShadow(
-                          color: AppColors.primary.withOpacity(0.4 * pulseValue),
+                          color: AppColors.primary.withValues(alpha: 0.4 * pulseValue),
                           blurRadius: 20 * pulseValue,
                           spreadRadius: 2,
                         ),
@@ -1077,7 +1077,7 @@ class _LuxuryTextFieldState extends State<_LuxuryTextField> {
                   hintStyle: TextStyle(
                     fontFamily: AppTextStyles.fontFamily,
                     fontSize: 14.sp,
-                    color: Colors.white.withOpacity(0.4),
+                    color: Colors.white.withValues(alpha: 0.4),
                   ),
                   errorText: widget.errorText,
                   errorStyle: TextStyle(
@@ -1086,12 +1086,12 @@ class _LuxuryTextFieldState extends State<_LuxuryTextField> {
                     color: AppColors.error,
                   ),
                   filled: true,
-                  fillColor: Colors.white.withOpacity(_isFocused ? 0.15 : 0.1),
+                  fillColor: Colors.white.withValues(alpha: _isFocused ? 0.15 : 0.1),
                   prefixIcon: Icon(
                     widget.prefixIcon,
                     color: _isFocused
                         ? AppColors.secondary
-                        : Colors.white.withOpacity(0.6),
+                        : Colors.white.withValues(alpha: 0.6),
                     size: 22.r,
                   ),
                   suffixIcon: widget.suffixIcon,
@@ -1100,28 +1100,28 @@ class _LuxuryTextFieldState extends State<_LuxuryTextField> {
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(16.r),
                     borderSide: BorderSide(
-                      color: Colors.white.withOpacity(0.3),
+                      color: Colors.white.withValues(alpha: 0.3),
                       width: 1.5,
                     ),
                   ),
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(16.r),
                     borderSide: BorderSide(
-                      color: Colors.white.withOpacity(0.2),
+                      color: Colors.white.withValues(alpha: 0.2),
                       width: 1.5,
                     ),
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(16.r),
                     borderSide: BorderSide(
-                      color: AppColors.secondary.withOpacity(0.8),
+                      color: AppColors.secondary.withValues(alpha: 0.8),
                       width: 2,
                     ),
                   ),
                   errorBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(16.r),
                     borderSide: BorderSide(
-                      color: AppColors.error.withOpacity(0.8),
+                      color: AppColors.error.withValues(alpha: 0.8),
                       width: 1.5,
                     ),
                   ),
@@ -1165,18 +1165,18 @@ class _RememberMeRow extends StatelessWidget {
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(6.r),
               color: rememberMe
-                  ? AppColors.primary.withOpacity(0.8)
-                  : Colors.white.withOpacity(0.1),
+                  ? AppColors.primary.withValues(alpha: 0.8)
+                  : Colors.white.withValues(alpha: 0.1),
               border: Border.all(
                 color: rememberMe
                     ? AppColors.primary
-                    : Colors.white.withOpacity(0.3),
+                    : Colors.white.withValues(alpha: 0.3),
                 width: 1.5,
               ),
               boxShadow: rememberMe
                   ? [
                       BoxShadow(
-                        color: AppColors.primary.withOpacity(0.4),
+                        color: AppColors.primary.withValues(alpha: 0.4),
                         blurRadius: 10,
                         spreadRadius: 1,
                       ),
@@ -1200,7 +1200,7 @@ class _RememberMeRow extends StatelessWidget {
             style: TextStyle(
               fontFamily: AppTextStyles.fontFamily,
               fontSize: 14.sp,
-              color: Colors.white.withOpacity(0.8),
+              color: Colors.white.withValues(alpha: 0.8),
             ),
           ),
         ),
@@ -1260,8 +1260,8 @@ class _GlowingButtonState extends State<_GlowingButton> {
                 end: Alignment.bottomRight,
                 colors: isDisabled
                     ? [
-                        AppColors.primary.withOpacity(0.5),
-                        AppColors.primaryLight.withOpacity(0.5),
+                        AppColors.primary.withValues(alpha: 0.5),
+                        AppColors.primaryLight.withValues(alpha: 0.5),
                       ]
                     : [
                         AppColors.primary,
@@ -1272,13 +1272,13 @@ class _GlowingButtonState extends State<_GlowingButton> {
                   ? []
                   : [
                       BoxShadow(
-                        color: AppColors.primary.withOpacity(0.5 * pulseValue),
+                        color: AppColors.primary.withValues(alpha: 0.5 * pulseValue),
                         blurRadius: 25 * pulseValue,
                         spreadRadius: 2,
                         offset: const Offset(0, 5),
                       ),
                       BoxShadow(
-                        color: AppColors.secondary.withOpacity(0.2 * pulseValue),
+                        color: AppColors.secondary.withValues(alpha: 0.2 * pulseValue),
                         blurRadius: 40 * pulseValue,
                         spreadRadius: 0,
                       ),
@@ -1341,7 +1341,7 @@ class _BackToHomeLink extends StatelessWidget {
           Icon(
             Icons.arrow_back_ios_new_rounded,
             size: 14.r,
-            color: Colors.white.withOpacity(0.7),
+            color: Colors.white.withValues(alpha: 0.7),
           ),
           SizedBox(width: 6.w),
           Text(
@@ -1349,7 +1349,7 @@ class _BackToHomeLink extends StatelessWidget {
             style: TextStyle(
               fontFamily: AppTextStyles.fontFamily,
               fontSize: 14.sp,
-              color: Colors.white.withOpacity(0.7),
+              color: Colors.white.withValues(alpha: 0.7),
             ),
           ),
         ],
@@ -1377,12 +1377,12 @@ class _GlowingLoader extends StatelessWidget {
             shape: BoxShape.circle,
             boxShadow: [
               BoxShadow(
-                color: AppColors.primary.withOpacity(0.5 * pulseValue),
+                color: AppColors.primary.withValues(alpha: 0.5 * pulseValue),
                 blurRadius: 30 * pulseValue,
                 spreadRadius: 10,
               ),
               BoxShadow(
-                color: AppColors.secondary.withOpacity(0.3 * pulseValue),
+                color: AppColors.secondary.withValues(alpha: 0.3 * pulseValue),
                 blurRadius: 50 * pulseValue,
                 spreadRadius: 5,
               ),
@@ -1396,7 +1396,7 @@ class _GlowingLoader extends StatelessWidget {
                 end: Alignment.bottomRight,
                 colors: [
                   AppColors.surface,
-                  AppColors.surface.withOpacity(0.9),
+                  AppColors.surface.withValues(alpha: 0.9),
                 ],
               ),
             ),

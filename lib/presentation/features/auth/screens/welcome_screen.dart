@@ -506,7 +506,7 @@ class _LuxuryBrandSection extends StatelessWidget {
                   letterSpacing: 4,
                   shadows: [
                     Shadow(
-                      color: AppColors.primary.withOpacity(0.5),
+                      color: AppColors.primary.withValues(alpha:  0.5),
                       blurRadius: 20,
                     ),
                     Shadow(
@@ -528,11 +528,11 @@ class _LuxuryBrandSection extends StatelessWidget {
                 fontFamily: AppTextStyles.fontFamily,
                 fontSize: 16.sp,
                 fontWeight: FontWeight.w400,
-                color: Colors.white.withOpacity(0.85),
+                color: Colors.white.withValues(alpha: 0.85),
                 letterSpacing: 1,
                 shadows: [
                   Shadow(
-                    color: Colors.black.withOpacity(0.3),
+                    color: Colors.black.withValues(alpha: 0.3),
                     blurRadius: 10,
                   ),
                 ],
@@ -551,15 +551,15 @@ class _LuxuryBrandSection extends StatelessWidget {
                   borderRadius: BorderRadius.circular(2.r),
                   gradient: LinearGradient(
                     colors: [
-                      AppColors.secondary.withOpacity(0.5),
+                      AppColors.secondary.withValues(alpha: 0.5),
                       AppColors.secondary,
-                      AppColors.secondary.withOpacity(0.5),
+                      AppColors.secondary.withValues(alpha: 0.5),
                     ],
                   ),
                   boxShadow: [
                     BoxShadow(
                       color: AppColors.secondary
-                          .withOpacity(0.6 * pulseAnimation.value),
+                          .withValues(alpha: 0.6 * pulseAnimation.value),
                       blurRadius: 15 * pulseAnimation.value,
                       spreadRadius: 2,
                     ),
@@ -601,7 +601,7 @@ class _LuxuryRoleSelection extends StatelessWidget {
               color: Colors.white,
               shadows: [
                 Shadow(
-                  color: Colors.black.withOpacity(0.3),
+                  color: Colors.black.withValues(alpha: 0.3),
                   blurRadius: 10,
                 ),
               ],
@@ -614,8 +614,8 @@ class _LuxuryRoleSelection extends StatelessWidget {
             title: 'عميل',
             subtitle: 'تصفح المتاجر واطلب للتوصيل',
             gradientColors: [
-              AppColors.primary.withOpacity(0.8),
-              AppColors.primaryLight.withOpacity(0.6),
+              AppColors.primary.withValues(alpha: 0.8),
+              AppColors.primaryLight.withValues(alpha: 0.6),
             ],
             glowColor: AppColors.primary,
             onTap: onCustomerTap,
@@ -628,8 +628,8 @@ class _LuxuryRoleSelection extends StatelessWidget {
             title: 'فريق العمل',
             subtitle: 'متجر • سائق توصيل • مدير',
             gradientColors: [
-              AppColors.secondary.withOpacity(0.8),
-              AppColors.secondaryLight.withOpacity(0.6),
+              AppColors.secondary.withValues(alpha: 0.8),
+              AppColors.secondaryLight.withValues(alpha: 0.6),
             ],
             glowColor: AppColors.secondary,
             onTap: onStaffTap,
@@ -729,13 +729,13 @@ class _GlassmorphicRoleCardState extends State<_GlassmorphicRoleCard>
                   // Glow effect
                   BoxShadow(
                     color:
-                        widget.glowColor.withOpacity(0.3 * _glowAnimation.value),
+                        widget.glowColor.withValues(alpha: 0.3 * _glowAnimation.value),
                     blurRadius: 25 * _glowAnimation.value,
                     spreadRadius: 2,
                   ),
                   // Soft shadow
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.2),
+                    color: Colors.black.withValues(alpha: 0.2),
                     blurRadius: 20,
                     offset: const Offset(0, 10),
                   ),
@@ -754,12 +754,12 @@ class _GlassmorphicRoleCardState extends State<_GlassmorphicRoleCard>
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
                         colors: [
-                          Colors.white.withOpacity(0.2),
-                          Colors.white.withOpacity(0.1),
+                          Colors.white.withValues(alpha: 0.2),
+                          Colors.white.withValues(alpha: 0.1),
                         ],
                       ),
                       border: Border.all(
-                        color: Colors.white.withOpacity(0.3),
+                        color: Colors.white.withValues(alpha: 0.3),
                         width: 1.5,
                       ),
                     ),
@@ -778,7 +778,7 @@ class _GlassmorphicRoleCardState extends State<_GlassmorphicRoleCard>
                             ),
                             boxShadow: [
                               BoxShadow(
-                                color: widget.glowColor.withOpacity(0.4),
+                                color: widget.glowColor.withValues(alpha: 0.4),
                                 blurRadius: 15,
                                 spreadRadius: 2,
                               ),
@@ -805,7 +805,7 @@ class _GlassmorphicRoleCardState extends State<_GlassmorphicRoleCard>
                                   color: Colors.white,
                                   shadows: [
                                     Shadow(
-                                      color: Colors.black.withOpacity(0.3),
+                                      color: Colors.black.withValues(alpha: 0.3),
                                       blurRadius: 5,
                                     ),
                                   ],
@@ -817,7 +817,7 @@ class _GlassmorphicRoleCardState extends State<_GlassmorphicRoleCard>
                                 style: TextStyle(
                                   fontFamily: AppTextStyles.fontFamily,
                                   fontSize: 13.sp,
-                                  color: Colors.white.withOpacity(0.8),
+                                  color: Colors.white.withValues(alpha: 0.8),
                                 ),
                               ),
                             ],
@@ -829,7 +829,7 @@ class _GlassmorphicRoleCardState extends State<_GlassmorphicRoleCard>
                           height: 36.r,
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
-                            color: Colors.white.withOpacity(0.2),
+                            color: Colors.white.withValues(alpha: 0.2),
                           ),
                           child: Icon(
                             Icons.arrow_forward_ios_rounded,
@@ -865,7 +865,7 @@ class _LuxuryFooter extends StatelessWidget {
             fontFamily: AppTextStyles.fontFamily,
             fontSize: 13.sp,
             fontWeight: FontWeight.w500,
-            color: Colors.white.withOpacity(0.6),
+            color: Colors.white.withValues(alpha: 0.6),
             letterSpacing: 2,
           ),
         ),
@@ -875,7 +875,7 @@ class _LuxuryFooter extends StatelessWidget {
           style: TextStyle(
             fontFamily: AppTextStyles.fontFamily,
             fontSize: 11.sp,
-            color: Colors.white.withOpacity(0.4),
+            color: Colors.white.withValues(alpha: 0.4),
           ),
         ),
       ],
@@ -902,12 +902,12 @@ class _GlowingLoader extends StatelessWidget {
             shape: BoxShape.circle,
             boxShadow: [
               BoxShadow(
-                color: AppColors.primary.withOpacity(0.5 * pulseValue),
+                color: AppColors.primary.withValues(alpha: 0.5 * pulseValue),
                 blurRadius: 30 * pulseValue,
                 spreadRadius: 10,
               ),
               BoxShadow(
-                color: AppColors.secondary.withOpacity(0.3 * pulseValue),
+                color: AppColors.secondary.withValues(alpha: 0.3 * pulseValue),
                 blurRadius: 50 * pulseValue,
                 spreadRadius: 5,
               ),
@@ -921,7 +921,7 @@ class _GlowingLoader extends StatelessWidget {
                 end: Alignment.bottomRight,
                 colors: [
                   AppColors.surface,
-                  AppColors.surface.withOpacity(0.9),
+                  AppColors.surface.withValues(alpha: 0.9),
                 ],
               ),
             ),

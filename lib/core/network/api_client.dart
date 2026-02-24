@@ -226,6 +226,43 @@ class ApiClient {
     });
   }
 
+  /// Uploads multiple files using multipart form data.
+  ///
+  /// ```dart
+  /// final response = await client.uploadMultipleFiles(
+  ///   '/admin/shops',
+  ///   files: {
+  ///     'logo': '/path/to/logo.jpg',
+  ///     'cover_image': '/path/to/cover.jpg',
+  ///   },
+  ///   data: {'name': 'Shop Name', 'phone': '01234567890'},
+  /// );
+  /// ```
+  Future<ApiResponse<T>> uploadMultipleFiles<T>(
+    String path, {
+    required Map<String, String> files,
+    Map<String, dynamic>? data,
+    T Function(Map<String, dynamic>)? fromJson,
+  }) async {
+    return _execute(() async {
+      final Map<String, dynamic> formDataMap = {...?data};
+      
+      // Add files to form data
+      for (final entry in files.entries) {
+        formDataMap[entry.key] = await MultipartFile.fromFile(entry.value);
+      }
+      
+      final formData = FormData.fromMap(formDataMap);
+
+      final response = await _dio.post<Map<String, dynamic>>(
+        path,
+        data: formData,
+        options: Options(contentType: 'multipart/form-data'),
+      );
+      return _parseResponse<T>(response, fromJson);
+    });
+  }
+
   /// Closes the underlying Dio client.
   void dispose() {
     _dio.close();
