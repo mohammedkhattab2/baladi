@@ -181,9 +181,7 @@ class _CustomerRegisterScreenState extends State<CustomerRegisterScreen>
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (_) => getIt<AuthCubit>(),
-      child: BlocConsumer<AuthCubit, AuthState>(
+    return BlocConsumer<AuthCubit, AuthState>(
         listener: _onAuthStateChanged,
         builder: (context, state) {
           final isLoading = state is AuthLoading;
@@ -428,8 +426,7 @@ class _CustomerRegisterScreenState extends State<CustomerRegisterScreen>
             ),
           );
         },
-      ),
-    );
+      );
   }
 
   void _onAuthStateChanged(BuildContext context, AuthState state) {

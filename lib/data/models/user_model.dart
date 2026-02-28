@@ -2,8 +2,10 @@
 //
 // Maps between the API JSON representation and the domain User entity.
 
+import '../../domain/entities/shop.dart';
 import '../../domain/entities/user.dart';
 import '../../domain/enums/user_role.dart';
+import 'shop_model.dart';
 
 /// Data model for [User] with JSON serialization support.
 class UserModel extends User {
@@ -16,6 +18,7 @@ class UserModel extends User {
     super.isActive,
     required super.createdAt,
     required super.updatedAt,
+    super.shop,
   });
 
   /// Creates a [UserModel] from a JSON map.
@@ -24,6 +27,13 @@ class UserModel extends User {
   /// user objects returned by the auth endpoints (id, phone/username, role only).
   factory UserModel.fromJson(Map<String, dynamic> json) {
     final now = DateTime.now();
+    Shop? shop;
+
+    // Check if shop data is included
+    if (json['shop'] != null && json['shop'] is Map<String, dynamic>) {
+      shop = ShopModel.fromJson(json['shop'] as Map<String, dynamic>);
+    }
+
     return UserModel(
       id: json['id'] as String,
       role: UserRole.values.firstWhere(
@@ -40,6 +50,7 @@ class UserModel extends User {
       updatedAt: json['updated_at'] != null
           ? DateTime.parse(json['updated_at'] as String)
           : now,
+      shop: shop,
     );
   }
 
@@ -54,6 +65,7 @@ class UserModel extends User {
       isActive: user.isActive,
       createdAt: user.createdAt,
       updatedAt: user.updatedAt,
+      shop: user.shop,
     );
   }
 
@@ -68,6 +80,10 @@ class UserModel extends User {
       'is_active': isActive,
       'created_at': createdAt.toIso8601String(),
       'updated_at': updatedAt.toIso8601String(),
+      if (shop != null)
+        'shop': shop is ShopModel
+            ? (shop as ShopModel).toJson()
+            : ShopModel.fromEntity(shop!).toJson(),
     };
   }
 }

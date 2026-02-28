@@ -8,6 +8,7 @@ import 'package:injectable/injectable.dart';
 
 import '../../../core/constants/app_constants.dart';
 import '../../../core/usecase/usecase.dart';
+import '../../../domain/entities/user.dart' as domain;
 import '../../../domain/repositories/admin_repository.dart';
 import '../../../domain/usecases/admin/adjust_points.dart';
 import '../../../domain/usecases/admin/close_week.dart';
@@ -138,31 +139,57 @@ class AdminCubit extends Cubit<AdminState> {
 
   /// Toggles a user's active status.
   ///
-  /// [role] is the optional role filter currently applied in the UI so that
-  /// after toggling we reload the list with the same filter instead of
-  /// resetting to "all users". This keeps the UX consistent with the
-  /// Manage Users flow described in the architecture docs.
+  /// Updates the user in the current list without reloading everything.
   Future<void> toggleUserStatus({
     required String userId,
     required bool isActive,
     String? role,
     int perPage = AppConstants.defaultPageSize,
   }) async {
-    emit(const AdminActionLoading());
+    final currentState = state;
+    if (currentState is! AdminUsersLoaded) {
+      return;
+    }
 
+    // Find and update the user in the current list
+    final updatedUsers = currentState.users.map((user) {
+      if (user.id == userId) {
+        // Update the user's active status
+        return domain.User(
+          id: user.id,
+          username: user.username,
+          phone: user.phone,
+          role: user.role,
+          isActive: isActive,
+          createdAt: user.createdAt,
+          updatedAt: DateTime.now(),
+          fcmToken: user.fcmToken,
+          shop: user.shop,
+        );
+      }
+      return user;
+    }).toList();
+
+    // Emit the updated list immediately for instant UI update
+    emit(AdminUsersLoaded(
+      users: updatedUsers,
+      currentPage: currentState.currentPage,
+      hasMore: currentState.hasMore,
+    ));
+
+    // Make the API call
     final result = await _adminRepository.toggleUserStatus(
       userId: userId,
       isActive: isActive,
     );
 
     result.fold(
-      onSuccess: (_) async {
-        await loadUsers(
-          role: role,
-          perPage: perPage,
-        );
+      onSuccess: (_) {
+        // Success - the list is already updated
       },
       onFailure: (failure) {
+        // On failure, revert to the original list
+        emit(currentState);
         emit(AdminError(message: failure.message));
       },
     );
@@ -171,6 +198,47 @@ class AdminCubit extends Cubit<AdminState> {
   // ---------------------------------------------------------------------------
   // User password management
   // ---------------------------------------------------------------------------
+
+  /// Resets a customer's PIN code.
+  Future<void> resetCustomerPin({
+    required String userId,
+    required String newPin,
+  }) async {
+    // Store current state
+    final currentState = state;
+    
+    final result = await _adminRepository.resetCustomerPin(
+      userId: userId,
+      newPin: newPin,
+    );
+
+    result.fold(
+      onSuccess: (_) {
+        // Emit a temporary success state
+        emit(const AdminUserPasswordReset(
+          message: 'تم إعادة تعيين رمز الدخول بنجاح',
+        ));
+        
+        // After a brief delay, restore the previous state if it was UsersLoaded
+        Future.delayed(const Duration(milliseconds: 300), () {
+          if (currentState is AdminUsersLoaded && state is AdminUserPasswordReset) {
+            emit(currentState);
+          }
+        });
+      },
+      onFailure: (failure) {
+        // Emit error state temporarily
+        emit(AdminError(message: failure.message));
+        
+        // Restore state after showing error
+        Future.delayed(const Duration(milliseconds: 300), () {
+          if (currentState is AdminUsersLoaded && state is AdminError) {
+            emit(currentState);
+          }
+        });
+      },
+    );
+  }
 
   /// Resets a staff user's password (shop / rider / admin).
   ///
@@ -181,8 +249,9 @@ class AdminCubit extends Cubit<AdminState> {
     required String userId,
     required String newPassword,
   }) async {
-    emit(const AdminActionLoading());
-
+    // Store current state
+    final currentState = state;
+    
     final result = await _resetUserPassword(
       ResetUserPasswordParams(
         userId: userId,
@@ -192,10 +261,28 @@ class AdminCubit extends Cubit<AdminState> {
 
     result.fold(
       onSuccess: (_) {
-        emit(const AdminUserPasswordReset());
+        // Emit a temporary success state
+        emit(const AdminUserPasswordReset(
+          message: 'تم إعادة تعيين كلمة المرور بنجاح',
+        ));
+        
+        // After a brief delay, restore the previous state if it was UsersLoaded
+        Future.delayed(const Duration(milliseconds: 300), () {
+          if (currentState is AdminUsersLoaded && state is AdminUserPasswordReset) {
+            emit(currentState);
+          }
+        });
       },
       onFailure: (failure) {
+        // Emit error state temporarily
         emit(AdminError(message: failure.message));
+        
+        // Restore state after showing error
+        Future.delayed(const Duration(milliseconds: 300), () {
+          if (currentState is AdminUsersLoaded && state is AdminError) {
+            emit(currentState);
+          }
+        });
       },
     );
   }

@@ -4,6 +4,7 @@ import 'package:baladi/core/theme/app_colors.dart';
 import 'package:baladi/core/theme/app_text_styles.dart';
 import 'package:baladi/core/utils/formatters.dart';
 import 'package:baladi/domain/entities/user.dart';
+import 'package:baladi/domain/entities/shop.dart';
 import 'package:baladi/domain/enums/user_role.dart';
 import 'package:baladi/domain/repositories/auth_repository.dart';
 import 'package:baladi/presentation/common/widgets/app_card.dart';
@@ -43,6 +44,7 @@ class _AdminUsersViewState extends State<_AdminUsersView> {
   final _searchController = TextEditingController();
   final _scrollController = ScrollController();
   String _searchQuery = '';
+  AdminUsersLoaded? _lastUsersState; // Store the last users state
 
   @override
   void initState() {
@@ -126,6 +128,9 @@ class _AdminUsersViewState extends State<_AdminUsersView> {
                   SizedBox(height: 8.h),
                   Expanded(
                     child: BlocConsumer<AdminCubit, AdminState>(
+                      // Only listen for temporary states (errors and success messages)
+                      listenWhen: (previous, current) =>
+                        current is AdminError || current is AdminUserPasswordReset,
                       listener: (context, state) {
                         if (state is AdminError) {
                           ScaffoldMessenger.of(context).showSnackBar(
@@ -133,9 +138,7 @@ class _AdminUsersViewState extends State<_AdminUsersView> {
                               behavior: SnackBarBehavior.floating,
                               margin: EdgeInsets.all(16.r),
                               shape: RoundedRectangleBorder(
-                                borderRadius: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(14.r),
-                                ).borderRadius,
+                                borderRadius: BorderRadius.circular(14.r),
                               ),
                               backgroundColor: AppColors.error,
                               content: Text(
@@ -166,11 +169,24 @@ class _AdminUsersViewState extends State<_AdminUsersView> {
                           );
                         }
                       },
+                      // Only rebuild for states that actually affect the UI
+                      buildWhen: (previous, current) {
+                        // Save the users state when we get it
+                        if (current is AdminUsersLoaded) {
+                          _lastUsersState = current;
+                          return true;
+                        }
+                        // Only rebuild for loading state or error when we don't have users
+                        return current is AdminLoading ||
+                               (current is AdminError && _lastUsersState == null);
+                      },
                       builder: (context, state) {
-                        if (state is AdminLoading) {
+                        if (state is AdminLoading && _lastUsersState == null) {
                           return const Center(child: LoadingWidget());
                         }
-                        if (state is AdminError) {
+                        
+                        // Show error screen only if we don't have any loaded users
+                        if (state is AdminError && _lastUsersState == null) {
                           return Center(
                             child: ConstrainedBox(
                               constraints: BoxConstraints(maxWidth: 520.w),
@@ -181,9 +197,12 @@ class _AdminUsersViewState extends State<_AdminUsersView> {
                             ),
                           );
                         }
-                        if (state is AdminUsersLoaded) {
-                          return _buildUsersList(state);
+                        
+                        // Always show the last users state if available
+                        if (_lastUsersState != null) {
+                          return _buildUsersList(_lastUsersState!);
                         }
+                        
                         return const SizedBox.shrink();
                       },
                     ),
@@ -389,291 +408,693 @@ class _AdminUsersViewState extends State<_AdminUsersView> {
 
     await showDialog<void>(
       context: context,
+      barrierDismissible: false,
+      barrierColor: Colors.black87,
       builder: (ctx) {
-        return AlertDialog(
-          title: Text(
-            'إعادة تعيين كلمة المرور',
-            style: TextStyle(
-              fontFamily: AppTextStyles.fontFamily,
-              fontSize: 18.sp,
-              fontWeight: FontWeight.bold,
+        return Dialog(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          child: Container(
+            constraints: BoxConstraints(maxWidth: 400.w),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(24.r),
+              gradient: const LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  Color(0xFF1A2332),
+                  Color(0xFF0F1720),
+                ],
+              ),
+              border: Border.all(
+                color: Colors.white.withValues(alpha: 0.15),
+                width: 1.5,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.6),
+                  blurRadius: 30,
+                  offset: const Offset(0, 15),
+                ),
+                BoxShadow(
+                  color: AppColors.info.withValues(alpha: 0.2),
+                  blurRadius: 40,
+                  offset: const Offset(0, 20),
+                ),
+              ],
             ),
-          ),
-          content: Form(
-            key: formKey,
             child: Column(
               mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  'سيتم تعيين كلمة مرور جديدة لحساب ${_getUserDisplayName(user)}.\n'
-                  'يجب أن تحتوي كلمة المرور على 8 أحرف على الأقل، وحرف كبير، وحرف صغير، ورقم.',
-                  style: TextStyle(
-                    fontFamily: AppTextStyles.fontFamily,
-                    fontSize: 12.sp,
-                    color: AppColors.textSecondary,
+                // Header with icon
+                Container(
+                  padding: EdgeInsets.all(24.w),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.vertical(top: Radius.circular(24.r)),
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                        AppColors.info.withValues(alpha: 0.15),
+                        Colors.transparent,
+                      ],
+                    ),
+                  ),
+                  child: Column(
+                    children: [
+                      Container(
+                        width: 72.r,
+                        height: 72.r,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          gradient: LinearGradient(
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                            colors: [
+                              AppColors.info,
+                              AppColors.info.withValues(alpha: 0.7),
+                            ],
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: AppColors.info.withValues(alpha: 0.4),
+                              blurRadius: 20,
+                              spreadRadius: 2,
+                            ),
+                          ],
+                        ),
+                        child: Icon(
+                          Icons.lock_reset_rounded,
+                          color: Colors.white,
+                          size: 36.r,
+                        ),
+                      ),
+                      SizedBox(height: 16.h),
+                      Text(
+                        'إعادة تعيين كلمة المرور',
+                        style: TextStyle(
+                          fontFamily: AppTextStyles.fontFamily,
+                          fontSize: 20.sp,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-                SizedBox(height: 12.h),
-                AppTextField(
-                  controller: controller,
-                  label: 'كلمة المرور الجديدة',
-                  obscureText: true,
-                  validator: (value) {
-                    final password = value?.trim() ?? '';
-                    if (password.isEmpty) {
-                      return 'من فضلك أدخل كلمة المرور الجديدة';
-                    }
-                    if (password.length < 8) {
-                      return 'كلمة المرور يجب أن تكون 8 أحرف على الأقل';
-                    }
-                    final hasUpper = password.contains(RegExp(r'[A-Z]'));
-                    final hasLower = password.contains(RegExp(r'[a-z]'));
-                    final hasDigit = password.contains(RegExp(r'\d'));
-                    if (!hasUpper || !hasLower || !hasDigit) {
-                      return 'يجب أن تحتوي على حرف كبير، حرف صغير، ورقم';
-                    }
-                    return null;
-                  },
+                
+                // Content
+                Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 24.w),
+                  child: Form(
+                    key: formKey,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // User info badge
+                        Container(
+                          padding: EdgeInsets.all(12.r),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withValues(alpha: 0.05),
+                            borderRadius: BorderRadius.circular(12.r),
+                            border: Border.all(
+                              color: Colors.white.withValues(alpha: 0.1),
+                            ),
+                          ),
+                          child: Row(
+                            children: [
+                              Icon(
+                                _getRoleIcon(user.role),
+                                color: _getRoleColor(user.role),
+                                size: 20.r,
+                              ),
+                              SizedBox(width: 8.w),
+                              Expanded(
+                                child: Text(
+                                  _getUserDisplayName(user),
+                                  style: TextStyle(
+                                    fontFamily: AppTextStyles.fontFamily,
+                                    fontSize: 14.sp,
+                                    fontWeight: FontWeight.w600,
+                                    color: Colors.white,
+                                  ),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        SizedBox(height: 16.h),
+                        
+                        // Password requirements info
+                        Container(
+                          padding: EdgeInsets.all(12.w),
+                          decoration: BoxDecoration(
+                            color: AppColors.warning.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(12.r),
+                            border: Border.all(
+                              color: AppColors.warning.withValues(alpha: 0.3),
+                            ),
+                          ),
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Icon(
+                                Icons.info_outline_rounded,
+                                color: AppColors.warning,
+                                size: 20.r,
+                              ),
+                              SizedBox(width: 8.w),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      'متطلبات كلمة المرور:',
+                                      style: TextStyle(
+                                        fontFamily: AppTextStyles.fontFamily,
+                                        fontSize: 13.sp,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                    SizedBox(height: 4.h),
+                                    _buildRequirement('8 أحرف على الأقل'),
+                                    _buildRequirement('حرف كبير واحد على الأقل'),
+                                    _buildRequirement('حرف صغير واحد على الأقل'),
+                                    _buildRequirement('رقم واحد على الأقل'),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        SizedBox(height: 16.h),
+                        
+                        // Password field with modern styling
+                        AppTextField(
+                          controller: controller,
+                          label: 'كلمة المرور الجديدة',
+                          hint: '••••••••',
+                          obscureText: true,
+                          validator: (value) {
+                            final password = value?.trim() ?? '';
+                            if (password.isEmpty) {
+                              return 'من فضلك أدخل كلمة المرور الجديدة';
+                            }
+                            if (password.length < 8) {
+                              return 'كلمة المرور يجب أن تكون 8 أحرف على الأقل';
+                            }
+                            final hasUpper = password.contains(RegExp(r'[A-Z]'));
+                            final hasLower = password.contains(RegExp(r'[a-z]'));
+                            final hasDigit = password.contains(RegExp(r'\d'));
+                            if (!hasUpper || !hasLower || !hasDigit) {
+                              return 'يجب أن تحتوي على حرف كبير، حرف صغير، ورقم';
+                            }
+                            return null;
+                          },
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                
+                SizedBox(height: 24.h),
+                
+                // Actions
+                Container(
+                  padding: EdgeInsets.all(20.w),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.vertical(bottom: Radius.circular(24.r)),
+                    border: Border(
+                      top: BorderSide(
+                        color: Colors.white.withValues(alpha: 0.1),
+                        width: 1,
+                      ),
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Material(
+                          color: Colors.transparent,
+                          child: InkWell(
+                            onTap: () => Navigator.of(ctx).pop(),
+                            borderRadius: BorderRadius.circular(14.r),
+                            child: Container(
+                              height: 48.h,
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(14.r),
+                                border: Border.all(
+                                  color: Colors.white.withValues(alpha: 0.3),
+                                  width: 1.5,
+                                ),
+                              ),
+                              child: Center(
+                                child: Text(
+                                  'إلغاء',
+                                  style: TextStyle(
+                                    fontFamily: AppTextStyles.fontFamily,
+                                    fontSize: 15.sp,
+                                    fontWeight: FontWeight.w600,
+                                    color: Colors.white70,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                      SizedBox(width: 12.w),
+                      Expanded(
+                        child: Material(
+                          color: Colors.transparent,
+                          child: InkWell(
+                            onTap: () async {
+                              if (!formKey.currentState!.validate()) {
+                                return;
+                              }
+                              final password = controller.text.trim();
+                              Navigator.of(ctx).pop();
+                              await context.read<AdminCubit>().resetUserPassword(
+                                    userId: user.id,
+                                    newPassword: password,
+                                  );
+                            },
+                            borderRadius: BorderRadius.circular(14.r),
+                            child: Container(
+                              height: 48.h,
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(14.r),
+                                gradient: LinearGradient(
+                                  colors: [
+                                    AppColors.info,
+                                    AppColors.info.withValues(alpha: 0.8),
+                                  ],
+                                ),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: AppColors.info.withValues(alpha: 0.3),
+                                    blurRadius: 12,
+                                    offset: const Offset(0, 6),
+                                  ),
+                                ],
+                              ),
+                              child: Center(
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(
+                                      Icons.lock_reset_rounded,
+                                      color: Colors.white,
+                                      size: 20.r,
+                                    ),
+                                    SizedBox(width: 8.w),
+                                    Text(
+                                      'تأكيد التغيير',
+                                      style: TextStyle(
+                                        fontFamily: AppTextStyles.fontFamily,
+                                        fontSize: 15.sp,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ],
             ),
           ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(ctx).pop(),
-              child: Text(
-                'إلغاء',
-                style: TextStyle(
-                  fontFamily: AppTextStyles.fontFamily,
-                  color: AppColors.textSecondary,
-                ),
-              ),
-            ),
-            TextButton(
-              onPressed: () async {
-                if (!formKey.currentState!.validate()) {
-                  return;
-                }
-                final password = controller.text.trim();
-                Navigator.of(ctx).pop();
-                await context.read<AdminCubit>().resetUserPassword(
-                      userId: user.id,
-                      newPassword: password,
-                    );
-              },
-              child: Text(
-                'تأكيد',
-                style: TextStyle(
-                  fontFamily: AppTextStyles.fontFamily,
-                  color: AppColors.primary,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ),
-          ],
         );
       },
     );
   }
 
   Future<void> _showResetCustomerPinDialog(User user) async {
-    final phone = user.phone;
-    if (phone == null || phone.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Text('لا يوجد رقم هاتف مسجّل لهذا العميل'),
-          backgroundColor: AppColors.error,
-        ),
-      );
-      return;
-    }
-
-    final authRepository = getIt<AuthRepository>();
-
-    // Step 1: fetch security question for this phone
-    final questionResult =
-        await authRepository.getSecurityQuestion(phone: phone);
-
-    String? securityQuestion;
-    questionResult.fold(
-      onSuccess: (q) => securityQuestion = q,
-      onFailure: (failure) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(failure.message),
-            backgroundColor: AppColors.error,
-          ),
-        );
-      },
-    );
-
-    if (securityQuestion == null) {
-      return;
-    }
-
-    final answerController = TextEditingController();
     final pinController = TextEditingController();
     final formKey = GlobalKey<FormState>();
 
     await showDialog<void>(
       context: context,
+      barrierDismissible: false,
+      barrierColor: Colors.black87,
       builder: (ctx) {
-        return AlertDialog(
-          title: Text(
-            'إعادة تعيين رمز الدخول للعميل',
-            style: TextStyle(
-              fontFamily: AppTextStyles.fontFamily,
-              fontSize: 18.sp,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          content: Form(
-            key: formKey,
-            child: SingleChildScrollView(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'سيتم تعيين PIN جديد لحساب ${_getUserDisplayName(user)}.\n'
-                    'تأكّد أن لديك موافقة العميل وأنك أدخلت الإجابة الصحيحة للسؤال السري.',
-                    style: TextStyle(
-                      fontFamily: AppTextStyles.fontFamily,
-                      fontSize: 12.sp,
-                      color: AppColors.textSecondary,
-                    ),
-                  ),
-                  SizedBox(height: 12.h),
-                  Text(
-                    'رقم الهاتف',
-                    style: TextStyle(
-                      fontFamily: AppTextStyles.fontFamily,
-                      fontSize: 12.sp,
-                      color: AppColors.textSecondary,
-                    ),
-                  ),
-                  SizedBox(height: 4.h),
-                  Text(
-                    Formatters.formatPhone(phone),
-                    style: TextStyle(
-                      fontFamily: AppTextStyles.fontFamily,
-                      fontSize: 14.sp,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.textPrimary,
-                    ),
-                  ),
-                  SizedBox(height: 12.h),
-                  Text(
-                    'السؤال السري',
-                    style: TextStyle(
-                      fontFamily: AppTextStyles.fontFamily,
-                      fontSize: 12.sp,
-                      color: AppColors.textSecondary,
-                    ),
-                  ),
-                  SizedBox(height: 4.h),
-                  Text(
-                    securityQuestion!,
-                    style: TextStyle(
-                      fontFamily: AppTextStyles.fontFamily,
-                      fontSize: 14.sp,
-                      color: AppColors.textPrimary,
-                    ),
-                  ),
-                  SizedBox(height: 12.h),
-                  AppTextField(
-                    controller: answerController,
-                    label: 'إجابة السؤال السري',
-                    validator: (value) {
-                      final answer = value?.trim() ?? '';
-                      if (answer.isEmpty) {
-                        return 'من فضلك أدخل إجابة السؤال السري';
-                      }
-                      return null;
-                    },
-                  ),
-                  SizedBox(height: 12.h),
-                  AppTextField(
-                    controller: pinController,
-                    label: 'الـ PIN الجديد (4 أرقام)',
-                    keyboardType: TextInputType.number,
-                    obscureText: true,
-                    validator: (value) {
-                      final pin = value?.trim() ?? '';
-                      if (pin.isEmpty) {
-                        return 'من فضلك أدخل الـ PIN الجديد';
-                      }
-                      if (pin.length != 4 || int.tryParse(pin) == null) {
-                        return 'الـ PIN يجب أن يكون 4 أرقام';
-                      }
-                      return null;
-                    },
-                  ),
+        return Dialog(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          child: Container(
+            constraints: BoxConstraints(maxWidth: 400.w),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(24.r),
+              gradient: const LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  Color(0xFF1A2332),
+                  Color(0xFF0F1720),
                 ],
               ),
+              border: Border.all(
+                color: Colors.white.withValues(alpha: 0.15),
+                width: 1.5,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.6),
+                  blurRadius: 30,
+                  offset: const Offset(0, 15),
+                ),
+                BoxShadow(
+                  color: AppColors.info.withValues(alpha: 0.2),
+                  blurRadius: 40,
+                  offset: const Offset(0, 20),
+                ),
+              ],
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Header with icon
+                Container(
+                  padding: EdgeInsets.all(24.w),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.vertical(top: Radius.circular(24.r)),
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                        AppColors.info.withValues(alpha: 0.15),
+                        Colors.transparent,
+                      ],
+                    ),
+                  ),
+                  child: Column(
+                    children: [
+                      Container(
+                        width: 72.r,
+                        height: 72.r,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          gradient: LinearGradient(
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                            colors: [
+                              AppColors.info,
+                              AppColors.info.withValues(alpha: 0.7),
+                            ],
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: AppColors.info.withValues(alpha: 0.4),
+                              blurRadius: 20,
+                              spreadRadius: 2,
+                            ),
+                          ],
+                        ),
+                        child: Icon(
+                          Icons.pin_rounded,
+                          color: Colors.white,
+                          size: 36.r,
+                        ),
+                      ),
+                      SizedBox(height: 16.h),
+                      Text(
+                        'إعادة تعيين رمز الدخول',
+                        style: TextStyle(
+                          fontFamily: AppTextStyles.fontFamily,
+                          fontSize: 20.sp,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                
+                // Content
+                Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 24.w),
+                  child: Form(
+                    key: formKey,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // User info badge
+                        Container(
+                          padding: EdgeInsets.all(12.r),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withValues(alpha: 0.05),
+                            borderRadius: BorderRadius.circular(12.r),
+                            border: Border.all(
+                              color: Colors.white.withValues(alpha: 0.1),
+                            ),
+                          ),
+                          child: Row(
+                            children: [
+                              Icon(
+                                Icons.person_rounded,
+                                color: AppColors.primary,
+                                size: 20.r,
+                              ),
+                              SizedBox(width: 8.w),
+                              Expanded(
+                                child: Text(
+                                  _getUserDisplayName(user),
+                                  style: TextStyle(
+                                    fontFamily: AppTextStyles.fontFamily,
+                                    fontSize: 14.sp,
+                                    fontWeight: FontWeight.w600,
+                                    color: Colors.white,
+                                  ),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        SizedBox(height: 16.h),
+                        
+                        // PIN requirements info
+                        Container(
+                          padding: EdgeInsets.all(12.w),
+                          decoration: BoxDecoration(
+                            color: AppColors.warning.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(12.r),
+                            border: Border.all(
+                              color: AppColors.warning.withValues(alpha: 0.3),
+                            ),
+                          ),
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Icon(
+                                Icons.info_outline_rounded,
+                                color: AppColors.warning,
+                                size: 20.r,
+                              ),
+                              SizedBox(width: 8.w),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      'رمز الدخول الجديد:',
+                                      style: TextStyle(
+                                        fontFamily: AppTextStyles.fontFamily,
+                                        fontSize: 13.sp,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                    SizedBox(height: 4.h),
+                                    _buildRequirement('يجب أن يكون 4 أرقام فقط'),
+                                    _buildRequirement('لا يمكن استخدام أحرف أو رموز'),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        SizedBox(height: 16.h),
+                        
+                        // PIN field with modern styling
+                        AppTextField(
+                          controller: pinController,
+                          label: 'رمز الدخول الجديد',
+                          hint: '••••',
+                          keyboardType: TextInputType.number,
+                          obscureText: true,
+                          maxLength: 4,
+                          textAlign: TextAlign.center,
+                          validator: (value) {
+                            final pin = value?.trim() ?? '';
+                            if (pin.isEmpty) {
+                              return 'من فضلك أدخل رمز الدخول الجديد';
+                            }
+                            if (pin.length != 4 || int.tryParse(pin) == null) {
+                              return 'رمز الدخول يجب أن يكون 4 أرقام';
+                            }
+                            return null;
+                          },
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                
+                SizedBox(height: 24.h),
+                
+                // Actions
+                Container(
+                  padding: EdgeInsets.all(20.w),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.vertical(bottom: Radius.circular(24.r)),
+                    border: Border(
+                      top: BorderSide(
+                        color: Colors.white.withValues(alpha: 0.1),
+                        width: 1,
+                      ),
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Material(
+                          color: Colors.transparent,
+                          child: InkWell(
+                            onTap: () => Navigator.of(ctx).pop(),
+                            borderRadius: BorderRadius.circular(14.r),
+                            child: Container(
+                              height: 48.h,
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(14.r),
+                                border: Border.all(
+                                  color: Colors.white.withValues(alpha: 0.3),
+                                  width: 1.5,
+                                ),
+                              ),
+                              child: Center(
+                                child: Text(
+                                  'إلغاء',
+                                  style: TextStyle(
+                                    fontFamily: AppTextStyles.fontFamily,
+                                    fontSize: 15.sp,
+                                    fontWeight: FontWeight.w600,
+                                    color: Colors.white70,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                      SizedBox(width: 12.w),
+                      Expanded(
+                        child: Material(
+                          color: Colors.transparent,
+                          child: InkWell(
+                            onTap: () async {
+                              if (!formKey.currentState!.validate()) {
+                                return;
+                              }
+
+                              final newPin = pinController.text.trim();
+                              Navigator.of(ctx).pop();
+
+                              await context.read<AdminCubit>().resetCustomerPin(
+                                userId: user.id,
+                                newPin: newPin,
+                              );
+                            },
+                            borderRadius: BorderRadius.circular(14.r),
+                            child: Container(
+                              height: 48.h,
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(14.r),
+                                gradient: LinearGradient(
+                                  colors: [
+                                    AppColors.info,
+                                    AppColors.info.withValues(alpha: 0.8),
+                                  ],
+                                ),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: AppColors.info.withValues(alpha: 0.3),
+                                    blurRadius: 12,
+                                    offset: const Offset(0, 6),
+                                  ),
+                                ],
+                              ),
+                              child: Center(
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(
+                                      Icons.pin_rounded,
+                                      color: Colors.white,
+                                      size: 20.r,
+                                    ),
+                                    SizedBox(width: 8.w),
+                                    Text(
+                                      'تأكيد التغيير',
+                                      style: TextStyle(
+                                        fontFamily: AppTextStyles.fontFamily,
+                                        fontSize: 15.sp,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ),
           ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(ctx).pop(),
-              child: Text(
-                'إلغاء',
-                style: TextStyle(
-                  fontFamily: AppTextStyles.fontFamily,
-                  color: AppColors.textSecondary,
-                ),
-              ),
-            ),
-            TextButton(
-              onPressed: () async {
-                if (!formKey.currentState!.validate()) {
-                  return;
-                }
-
-                final answer = answerController.text.trim();
-                final newPin = pinController.text.trim();
-
-                Navigator.of(ctx).pop();
-
-                final resetResult = await authRepository.resetPin(
-                  phone: phone,
-                  securityAnswer: answer,
-                  newPin: newPin,
-                );
-
-                resetResult.fold(
-                  onSuccess: (_) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: const Text(
-                            'تم إعادة تعيين رمز الدخول (PIN) بنجاح'),
-                        backgroundColor: AppColors.success,
-                      ),
-                    );
-                  },
-                  onFailure: (failure) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(failure.message),
-                        backgroundColor: AppColors.error,
-                      ),
-                    );
-                  },
-                );
-              },
-              child: Text(
-                'تأكيد',
-                style: TextStyle(
-                  fontFamily: AppTextStyles.fontFamily,
-                  color: AppColors.primary,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ),
-          ],
         );
       },
+    );
+  }
+
+  Widget _buildRequirement(String text) {
+    return Padding(
+      padding: EdgeInsets.only(bottom: 2.h),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            '• ',
+            style: TextStyle(
+              color: Colors.white60,
+              fontSize: 11.sp,
+            ),
+          ),
+          Expanded(
+            child: Text(
+              text,
+              style: TextStyle(
+                fontFamily: AppTextStyles.fontFamily,
+                fontSize: 11.sp,
+                color: Colors.white60,
+                height: 1.3,
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -681,107 +1102,356 @@ class _AdminUsersViewState extends State<_AdminUsersView> {
     await showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
-      backgroundColor: AppColors.surface,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20.r)),
-      ),
+      backgroundColor: Colors.transparent,
+      barrierColor: Colors.black87,
       builder: (ctx) {
-        return DraggableScrollableSheet(
-          initialChildSize: 0.5,
-          minChildSize: 0.4,
-          maxChildSize: 0.9,
-          expand: false,
-          builder: (context, scrollController) {
-            return SingleChildScrollView(
-              controller: scrollController,
-              padding: EdgeInsets.all(24.w),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Center(
-                    child: Container(
-                      width: 40.w,
-                      height: 4.h,
-                      decoration: BoxDecoration(
-                        color: AppColors.border,
-                        borderRadius: BorderRadius.circular(2.r),
+        return Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.vertical(top: Radius.circular(28.r)),
+            gradient: const LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                Color(0xFF1A2332),
+                Color(0xFF0F1720),
+              ],
+            ),
+            border: Border.all(
+              color: Colors.white.withValues(alpha: 0.15),
+              width: 1.5,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.8),
+                blurRadius: 40,
+                offset: const Offset(0, -10),
+              ),
+            ],
+          ),
+          child: DraggableScrollableSheet(
+            initialChildSize: 0.6,
+            minChildSize: 0.4,
+            maxChildSize: 0.95,
+            expand: false,
+            builder: (context, scrollController) {
+              return SingleChildScrollView(
+                controller: scrollController,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Drag Handle
+                    Center(
+                      child: Container(
+                        margin: EdgeInsets.only(top: 12.h),
+                        width: 48.w,
+                        height: 5.h,
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.3),
+                          borderRadius: BorderRadius.circular(2.5.r),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.white.withValues(alpha: 0.2),
+                              blurRadius: 10,
+                              spreadRadius: 2,
+                            ),
+                          ],
+                        ),
                       ),
                     ),
-                  ),
-                  SizedBox(height: 24.h),
-                  Row(
-                    children: [
-                      Container(
-                        width: 56.r,
-                        height: 56.r,
-                        decoration: BoxDecoration(
-                          color: _getRoleColor(user.role).withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(16.r),
+                    
+                    // Header Section
+                    Container(
+                      margin: EdgeInsets.all(20.w),
+                      padding: EdgeInsets.all(20.w),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(20.r),
+                        gradient: LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: [
+                            _getRoleColor(user.role).withValues(alpha: 0.15),
+                            Colors.transparent,
+                          ],
                         ),
-                        child: Icon(
-                          _getRoleIcon(user.role),
-                          color: _getRoleColor(user.role),
-                          size: 28.r,
+                        border: Border.all(
+                          color: _getRoleColor(user.role).withValues(alpha: 0.3),
+                          width: 1,
                         ),
                       ),
-                      SizedBox(width: 16.w),
-                      Expanded(
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 72.r,
+                            height: 72.r,
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                                colors: [
+                                  _getRoleColor(user.role),
+                                  _getRoleColor(user.role).withValues(alpha: 0.7),
+                                ],
+                              ),
+                              borderRadius: BorderRadius.circular(20.r),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: _getRoleColor(user.role).withValues(alpha: 0.4),
+                                  blurRadius: 20,
+                                  spreadRadius: 2,
+                                ),
+                              ],
+                            ),
+                            child: Icon(
+                              _getRoleIcon(user.role),
+                              color: Colors.white,
+                              size: 36.r,
+                            ),
+                          ),
+                          SizedBox(width: 20.w),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  _getUserDisplayName(user),
+                                  style: TextStyle(
+                                    fontFamily: AppTextStyles.fontFamily,
+                                    fontSize: 20.sp,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white,
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                                SizedBox(height: 8.h),
+                                Row(
+                                  children: [
+                                    _RoleBadge(role: user.role),
+                                    SizedBox(width: 10.w),
+                                    _StatusBadge(isActive: user.isActive),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    
+                    // User Details Section
+                    Container(
+                      margin: EdgeInsets.symmetric(horizontal: 20.w),
+                      padding: EdgeInsets.all(20.w),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(20.r),
+                        color: Colors.white.withValues(alpha: 0.05),
+                        border: Border.all(
+                          color: Colors.white.withValues(alpha: 0.1),
+                          width: 1,
+                        ),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Icon(
+                                Icons.info_outline_rounded,
+                                color: Colors.white70,
+                                size: 20.r,
+                              ),
+                              SizedBox(width: 8.w),
+                              Text(
+                                'معلومات الحساب',
+                                style: TextStyle(
+                                  fontFamily: AppTextStyles.fontFamily,
+                                  fontSize: 16.sp,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ],
+                          ),
+                          SizedBox(height: 16.h),
+                          _DetailItem(
+                            icon: Icons.fingerprint_rounded,
+                            label: 'المعرف',
+                            value: user.id,
+                            isMonospace: true,
+                          ),
+                          if (user.phone != null && user.phone!.isNotEmpty) ...[
+                            _DetailItem(
+                              icon: Icons.phone_rounded,
+                              label: 'رقم الهاتف',
+                              value: Formatters.formatPhone(user.phone!),
+                            ),
+                          ],
+                          if (user.username != null && user.username!.isNotEmpty) ...[
+                            _DetailItem(
+                              icon: Icons.person_rounded,
+                              label: 'اسم المستخدم',
+                              value: user.username!,
+                            ),
+                          ],
+                          _DetailItem(
+                            icon: Icons.calendar_today_rounded,
+                            label: 'تاريخ التسجيل',
+                            value: Formatters.formatDate(user.createdAt),
+                          ),
+                          _DetailItem(
+                            icon: Icons.update_rounded,
+                            label: 'آخر تحديث',
+                            value: Formatters.formatDateTime(user.updatedAt),
+                          ),
+                        ],
+                      ),
+                    ),
+                    
+                    // Shop Details Section (if applicable)
+                    if (user.role == UserRole.shop && user.shop != null) ...[
+                      Container(
+                        margin: EdgeInsets.all(20.w),
+                        padding: EdgeInsets.all(20.w),
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(20.r),
+                          gradient: LinearGradient(
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                            colors: [
+                              AppColors.secondary.withValues(alpha: 0.1),
+                              Colors.transparent,
+                            ],
+                          ),
+                          border: Border.all(
+                            color: AppColors.secondary.withValues(alpha: 0.3),
+                            width: 1,
+                          ),
+                        ),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(
-                              _getUserDisplayName(user),
-                              style: TextStyle(
-                                fontFamily: AppTextStyles.fontFamily,
-                                fontSize: 18.sp,
-                                fontWeight: FontWeight.bold,
-                                color: AppColors.textPrimary,
-                              ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                            SizedBox(height: 6.h),
                             Row(
                               children: [
-                                _RoleBadge(role: user.role),
+                                Icon(
+                                  Icons.storefront_rounded,
+                                  color: AppColors.secondary,
+                                  size: 20.r,
+                                ),
                                 SizedBox(width: 8.w),
-                                _StatusBadge(isActive: user.isActive),
+                                Text(
+                                  'معلومات المحل',
+                                  style: TextStyle(
+                                    fontFamily: AppTextStyles.fontFamily,
+                                    fontSize: 16.sp,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white,
+                                  ),
+                                ),
                               ],
+                            ),
+                            SizedBox(height: 16.h),
+                            _DetailItem(
+                              icon: Icons.store_rounded,
+                              label: 'اسم المحل',
+                              value: user.shop!.displayName,
+                              valueColor: AppColors.secondary,
+                            ),
+                            if (user.shop!.categoryId.isNotEmpty) ...[
+                              _DetailItem(
+                                icon: Icons.category_rounded,
+                                label: 'القسم',
+                                value: user.shop!.categoryId,
+                              ),
+                            ],
+                            if (user.shop!.address != null && user.shop!.address!.isNotEmpty) ...[
+                              _DetailItem(
+                                icon: Icons.location_on_rounded,
+                                label: 'العنوان',
+                                value: user.shop!.address!,
+                              ),
+                            ],
+                            if (user.shop!.phone != null && user.shop!.phone!.isNotEmpty) ...[
+                              _DetailItem(
+                                icon: Icons.phone_in_talk_rounded,
+                                label: 'هاتف المحل',
+                                value: Formatters.formatPhone(user.shop!.phone!),
+                              ),
+                            ],
+                            _DetailItem(
+                              icon: Icons.percent_rounded,
+                              label: 'نسبة العمولة',
+                              value: '${(user.shop!.commissionRate * 100).toStringAsFixed(0)}%',
+                              valueColor: AppColors.info,
+                            ),
+                            _DetailItem(
+                              icon: Icons.shopping_cart_rounded,
+                              label: 'الحد الأدنى للطلب',
+                              value: Formatters.formatCurrency(user.shop!.minOrderAmount),
+                              valueColor: AppColors.warning,
+                            ),
+                            _DetailItem(
+                              icon: user.shop!.isOpen ? Icons.door_front_door : Icons.door_back_door,
+                              label: 'حالة المحل',
+                              value: user.shop!.isOpen ? 'مفتوح' : 'مغلق',
+                              valueColor: user.shop!.isOpen ? AppColors.success : AppColors.error,
                             ),
                           ],
                         ),
                       ),
                     ],
-                  ),
-                  SizedBox(height: 24.h),
-                  _UserDetailRow(
-                    label: 'المعرف',
-                    value: user.id,
-                  ),
-                  if (user.phone != null && user.phone!.isNotEmpty) ...[
-                    _UserDetailRow(
-                      label: 'رقم الهاتف',
-                      value: Formatters.formatPhone(user.phone!),
+                    
+                    // Actions Section
+                    Container(
+                      margin: EdgeInsets.all(20.w),
+                      child: Row(
+                        children: [
+                          if (user.role == UserRole.customer) ...[
+                            Expanded(
+                              child: _ActionButton(
+                                icon: Icons.pin_rounded,
+                                label: 'إعادة تعيين PIN',
+                                color: AppColors.info,
+                                onTap: () async {
+                                  Navigator.pop(ctx);
+                                  await _showResetCustomerPinDialog(user);
+                                },
+                              ),
+                            ),
+                          ] else ...[
+                            Expanded(
+                              child: _ActionButton(
+                                icon: Icons.lock_reset_rounded,
+                                label: 'إعادة تعيين كلمة المرور',
+                                color: AppColors.info,
+                                onTap: () async {
+                                  Navigator.pop(ctx);
+                                  await _showResetPasswordDialog(user);
+                                },
+                              ),
+                            ),
+                          ],
+                          SizedBox(width: 12.w),
+                          Expanded(
+                            child: _ActionButton(
+                              icon: user.isActive ? Icons.block_rounded : Icons.check_circle_rounded,
+                              label: user.isActive ? 'تعطيل الحساب' : 'تفعيل الحساب',
+                              color: user.isActive ? AppColors.error : AppColors.success,
+                              onTap: () {
+                                Navigator.pop(ctx);
+                                _showToggleDialog(user);
+                              },
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
+                    
+                    SizedBox(height: 20.h),
                   ],
-                  if (user.username != null && user.username!.isNotEmpty) ...[
-                    _UserDetailRow(
-                      label: 'اسم المستخدم',
-                      value: user.username!,
-                    ),
-                  ],
-                  _UserDetailRow(
-                    label: 'تاريخ التسجيل',
-                    value: Formatters.formatDate(user.createdAt),
-                  ),
-                  _UserDetailRow(
-                    label: 'آخر تحديث',
-                    value: Formatters.formatDateTime(user.updatedAt),
-                  ),
-                ],
-              ),
-            );
-          },
+                ),
+              );
+            },
+          ),
         );
       },
     );
@@ -790,54 +1460,303 @@ class _AdminUsersViewState extends State<_AdminUsersView> {
   void _showToggleDialog(User user) {
     showDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(
-          user.isActive ? 'تعطيل الحساب' : 'تفعيل الحساب',
-          style: TextStyle(
-            fontFamily: AppTextStyles.fontFamily,
-            fontSize: 18.sp,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        content: Text(
-          user.isActive
-              ? 'هل تريد تعطيل حساب ${_getUserDisplayName(user)}؟'
-              : 'هل تريد تفعيل حساب ${_getUserDisplayName(user)}؟',
-          style: TextStyle(
-            fontFamily: AppTextStyles.fontFamily,
-            fontSize: 14.sp,
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: Text(
-              "إلغاء",
-              style: TextStyle(
-                fontFamily: AppTextStyles.fontFamily,
-                color: AppColors.textSecondary,
+      barrierDismissible: false,
+      barrierColor: Colors.black87,
+      builder: (ctx) => Dialog(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        child: Container(
+          constraints: BoxConstraints(maxWidth: 400.w),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(24.r),
+            gradient: const LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                Color(0xFF1A2332),
+                Color(0xFF0F1720),
+              ],
+            ),
+            border: Border.all(
+              color: Colors.white.withValues(alpha: 0.15),
+              width: 1.5,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.6),
+                blurRadius: 30,
+                offset: const Offset(0, 15),
               ),
-            ),
+              BoxShadow(
+                color: user.isActive
+                    ? AppColors.error.withValues(alpha: 0.2)
+                    : AppColors.success.withValues(alpha: 0.2),
+                blurRadius: 40,
+                offset: const Offset(0, 20),
+              ),
+            ],
           ),
-          TextButton(
-            onPressed: () {
-              Navigator.pop(ctx);
-              context.read<AdminCubit>().toggleUserStatus(
-                userId: user.id,
-                isActive: !user.isActive,
-                role: _selectedRole,
-              );
-            },
-            child: Text(
-              user.isActive ? 'تعطيل' : 'تفعيل',
-              style: TextStyle(
-                fontFamily: AppTextStyles.fontFamily,
-                color: user.isActive ? AppColors.error : AppColors.success,
-                fontWeight: FontWeight.w600,
-              )
-            ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Header with icon
+              Container(
+                padding: EdgeInsets.all(24.w),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.vertical(top: Radius.circular(24.r)),
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      user.isActive
+                          ? AppColors.error.withValues(alpha: 0.15)
+                          : AppColors.success.withValues(alpha: 0.15),
+                      Colors.transparent,
+                    ],
+                  ),
+                ),
+                child: Column(
+                  children: [
+                    Container(
+                      width: 72.r,
+                      height: 72.r,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        gradient: LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: user.isActive
+                              ? [AppColors.error, AppColors.error.withValues(alpha: 0.7)]
+                              : [AppColors.success, AppColors.success.withValues(alpha: 0.7)],
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: user.isActive
+                                ? AppColors.error.withValues(alpha: 0.4)
+                                : AppColors.success.withValues(alpha: 0.4),
+                            blurRadius: 20,
+                            spreadRadius: 2,
+                          ),
+                        ],
+                      ),
+                      child: Icon(
+                        user.isActive ? Icons.block_rounded : Icons.check_circle_rounded,
+                        color: Colors.white,
+                        size: 36.r,
+                      ),
+                    ),
+                    SizedBox(height: 16.h),
+                    Text(
+                      user.isActive ? 'تعطيل الحساب' : 'تفعيل الحساب',
+                      style: TextStyle(
+                        fontFamily: AppTextStyles.fontFamily,
+                        fontSize: 20.sp,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              
+              // Content
+              Padding(
+                padding: EdgeInsets.symmetric(horizontal: 24.w),
+                child: Column(
+                  children: [
+                    Text(
+                      user.isActive
+                          ? 'هل أنت متأكد من تعطيل حساب'
+                          : 'هل أنت متأكد من تفعيل حساب',
+                      style: TextStyle(
+                        fontFamily: AppTextStyles.fontFamily,
+                        fontSize: 15.sp,
+                        color: Colors.white70,
+                        height: 1.5,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    SizedBox(height: 8.h),
+                    Container(
+                      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(12.r),
+                        border: Border.all(
+                          color: Colors.white.withValues(alpha: 0.2),
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            _getRoleIcon(user.role),
+                            color: _getRoleColor(user.role),
+                            size: 20.r,
+                          ),
+                          SizedBox(width: 8.w),
+                          Text(
+                            _getUserDisplayName(user),
+                            style: TextStyle(
+                              fontFamily: AppTextStyles.fontFamily,
+                              fontSize: 16.sp,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    if (user.isActive) ...[
+                      SizedBox(height: 16.h),
+                      Container(
+                        padding: EdgeInsets.all(12.w),
+                        decoration: BoxDecoration(
+                          color: AppColors.error.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(12.r),
+                          border: Border.all(
+                            color: AppColors.error.withValues(alpha: 0.3),
+                          ),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.info_outline_rounded,
+                              color: AppColors.error,
+                              size: 20.r,
+                            ),
+                            SizedBox(width: 8.w),
+                            Expanded(
+                              child: Text(
+                                'سيتم منع المستخدم من الدخول للتطبيق',
+                                style: TextStyle(
+                                  fontFamily: AppTextStyles.fontFamily,
+                                  fontSize: 12.sp,
+                                  color: Colors.white70,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+              
+              SizedBox(height: 24.h),
+              
+              // Actions
+              Container(
+                padding: EdgeInsets.all(20.w),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.vertical(bottom: Radius.circular(24.r)),
+                  border: Border(
+                    top: BorderSide(
+                      color: Colors.white.withValues(alpha: 0.1),
+                      width: 1,
+                    ),
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Material(
+                        color: Colors.transparent,
+                        child: InkWell(
+                          onTap: () => Navigator.pop(ctx),
+                          borderRadius: BorderRadius.circular(14.r),
+                          child: Container(
+                            height: 48.h,
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(14.r),
+                              border: Border.all(
+                                color: Colors.white.withValues(alpha: 0.3),
+                                width: 1.5,
+                              ),
+                            ),
+                            child: Center(
+                              child: Text(
+                                'إلغاء',
+                                style: TextStyle(
+                                  fontFamily: AppTextStyles.fontFamily,
+                                  fontSize: 15.sp,
+                                  fontWeight: FontWeight.w600,
+                                  color: Colors.white70,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                    SizedBox(width: 12.w),
+                    Expanded(
+                      child: Material(
+                        color: Colors.transparent,
+                        child: InkWell(
+                          onTap: () {
+                            Navigator.pop(ctx);
+                            context.read<AdminCubit>().toggleUserStatus(
+                              userId: user.id,
+                              isActive: !user.isActive,
+                              role: _selectedRole,
+                            );
+                          },
+                          borderRadius: BorderRadius.circular(14.r),
+                          child: Container(
+                            height: 48.h,
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(14.r),
+                              gradient: LinearGradient(
+                                colors: user.isActive
+                                    ? [AppColors.error, AppColors.error.withValues(alpha: 0.8)]
+                                    : [AppColors.success, AppColors.success.withValues(alpha: 0.8)],
+                              ),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: user.isActive
+                                      ? AppColors.error.withValues(alpha: 0.3)
+                                      : AppColors.success.withValues(alpha: 0.3),
+                                  blurRadius: 12,
+                                  offset: const Offset(0, 6),
+                                ),
+                              ],
+                            ),
+                            child: Center(
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    user.isActive
+                                        ? Icons.block_rounded
+                                        : Icons.check_circle_rounded,
+                                    color: Colors.white,
+                                    size: 20.r,
+                                  ),
+                                  SizedBox(width: 8.w),
+                                  Text(
+                                    user.isActive ? 'تعطيل' : 'تفعيل',
+                                    style: TextStyle(
+                                      fontFamily: AppTextStyles.fontFamily,
+                                      fontSize: 15.sp,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
@@ -1012,15 +1931,33 @@ class _UseCard extends StatelessWidget {
                 Row(
                   children: [
                     Expanded(
-                      child: Text(
-                        _getUserDisplayName(user),
-                        style: TextStyle(
-                          fontFamily: AppTextStyles.fontFamily,
-                          fontSize: 14.sp,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.white,
-                        ),
-                        overflow: TextOverflow.ellipsis,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            _getUserDisplayName(user),
+                            style: TextStyle(
+                              fontFamily: AppTextStyles.fontFamily,
+                              fontSize: 14.sp,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.white,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          if (user.role == UserRole.shop && user.shop != null) ...[
+                            SizedBox(height: 2.h),
+                            Text(
+                              'صاحب ${user.shop!.displayName}',
+                              style: TextStyle(
+                                fontFamily: AppTextStyles.fontFamily,
+                                fontSize: 12.sp,
+                                color: AppColors.secondary,
+                                fontWeight: FontWeight.w500,
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ],
+                        ],
                       ),
                     ),
                     _StatusBadge(isActive: user.isActive),
@@ -1234,17 +2171,24 @@ class _RoleBadge extends StatelessWidget {
   Widget build(BuildContext context) {
     final baseColor = _getColor();
     return Container(
-      padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 2.h),
+      padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 3.h),
       decoration: BoxDecoration(
-        color: baseColor.withValues(alpha: 0.20),
-        borderRadius: BorderRadius.circular(6.r),
+        color: baseColor,
+        borderRadius: BorderRadius.circular(8.r),
+        boxShadow: [
+          BoxShadow(
+            color: baseColor.withValues(alpha: 0.4),
+            blurRadius: 6,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
       child: Text(
         role.labelAr,
         style: TextStyle(
           fontFamily: AppTextStyles.fontFamily,
-          fontSize: 10.sp,
-          fontWeight: FontWeight.w500,
+          fontSize: 11.sp,
+          fontWeight: FontWeight.bold,
           color: Colors.white,
         ),
       ),
@@ -1275,18 +2219,26 @@ class _StatusBadge extends StatelessWidget {
   Widget build(BuildContext context) {
     final baseColor = isActive ? AppColors.success : AppColors.error;
     return Container(
-      padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
+      padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
       decoration: BoxDecoration(
-        color: baseColor.withValues(alpha: 0.20),
-        borderRadius: BorderRadius.circular(6.r),
+        color: baseColor,
+        borderRadius: BorderRadius.circular(8.r),
+        boxShadow: [
+          BoxShadow(
+            color: baseColor.withValues(alpha: 0.4),
+            blurRadius: 6,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
       child: Text(
         isActive ? 'نشط' : 'معطل',
         style: TextStyle(
           fontFamily: AppTextStyles.fontFamily,
-          fontSize: 10.sp,
-          fontWeight: FontWeight.w600,
+          fontSize: 11.sp,
+          fontWeight: FontWeight.bold,
           color: Colors.white,
+          letterSpacing: 0.5,
         ),
       ),
     );
@@ -1334,6 +2286,137 @@ class _FilterChip extends StatelessWidget {
             fontSize: 13.sp,
             fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
             color: textColor,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _DetailItem extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final String value;
+  final Color? valueColor;
+  final bool isMonospace;
+
+  const _DetailItem({
+    required this.icon,
+    required this.label,
+    required this.value,
+    this.valueColor,
+    this.isMonospace = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: EdgeInsets.only(bottom: 12.h),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            padding: EdgeInsets.all(8.r),
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(10.r),
+            ),
+            child: Icon(
+              icon,
+              color: Colors.white60,
+              size: 18.r,
+            ),
+          ),
+          SizedBox(width: 12.w),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  style: TextStyle(
+                    fontFamily: AppTextStyles.fontFamily,
+                    fontSize: 12.sp,
+                    color: Colors.white60,
+                  ),
+                ),
+                SizedBox(height: 4.h),
+                Text(
+                  value,
+                  style: TextStyle(
+                    fontFamily: isMonospace ? 'monospace' : AppTextStyles.fontFamily,
+                    fontSize: 14.sp,
+                    fontWeight: FontWeight.w600,
+                    color: valueColor ?? Colors.white,
+                    letterSpacing: isMonospace ? 0.5 : 0,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ActionButton extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final Color color;
+  final VoidCallback onTap;
+
+  const _ActionButton({
+    required this.icon,
+    required this.label,
+    required this.color,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(16.r),
+        child: Container(
+          padding: EdgeInsets.symmetric(vertical: 16.h),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(16.r),
+            gradient: LinearGradient(
+              colors: [
+                color,
+                color.withValues(alpha: 0.8),
+              ],
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: color.withValues(alpha: 0.3),
+                blurRadius: 12,
+                offset: const Offset(0, 6),
+              ),
+            ],
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                icon,
+                color: Colors.white,
+                size: 20.r,
+              ),
+              SizedBox(width: 8.w),
+              Text(
+                label,
+                style: TextStyle(
+                  fontFamily: AppTextStyles.fontFamily,
+                  fontSize: 14.sp,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
+              ),
+            ],
           ),
         ),
       ),

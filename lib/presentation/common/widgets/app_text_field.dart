@@ -110,6 +110,10 @@ class AppTextField extends StatefulWidget {
   /// Whether to fill the background.
   final bool filled;
 
+  /// Optional label text color.
+  /// If not provided, uses the default from AppTextStyles.labelLarge.
+  final Color? labelColor;
+
   const AppTextField({
     super.key,
     this.label,
@@ -140,6 +144,7 @@ class AppTextField extends StatefulWidget {
     this.textCapitalization = TextCapitalization.none,
     this.textAlign = TextAlign.start,
     this.filled = true,
+    this.labelColor,
   });
 
   /// Creates a phone number input field.
@@ -172,7 +177,8 @@ class AppTextField extends StatefulWidget {
         helperText = null,
         textCapitalization = TextCapitalization.none,
         textAlign = TextAlign.start,
-        filled = true;
+        filled = true,
+        labelColor = null;
 
   /// Creates a PIN input field.
   const AppTextField.pin({
@@ -204,7 +210,8 @@ class AppTextField extends StatefulWidget {
         helperText = null,
         textCapitalization = TextCapitalization.none,
         textAlign = TextAlign.center,
-        filled = true;
+        filled = true,
+        labelColor = null;
 
   /// Creates a multiline text area field.
   const AppTextField.textArea({
@@ -236,7 +243,8 @@ class AppTextField extends StatefulWidget {
         helperText = null,
         textCapitalization = TextCapitalization.sentences,
         textAlign = TextAlign.start,
-        filled = true;
+        filled = true,
+        labelColor = null;
 
   @override
   State<AppTextField> createState() => _AppTextFieldState();
@@ -261,7 +269,9 @@ class _AppTextFieldState extends State<AppTextField> {
         if (widget.label != null) ...[
           Text(
             widget.label!,
-            style: AppTextStyles.labelLarge,
+            style: widget.labelColor != null
+                ? AppTextStyles.labelLarge.copyWith(color: widget.labelColor)
+                : AppTextStyles.labelLarge,
           ),
           const SizedBox(height: 8),
         ],

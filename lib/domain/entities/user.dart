@@ -6,6 +6,7 @@
 import 'package:equatable/equatable.dart';
 
 import '../enums/user_role.dart';
+import 'shop.dart';
 
 /// Base user entity shared across all roles.
 ///
@@ -36,6 +37,9 @@ class User extends Equatable {
   /// Last update timestamp.
   final DateTime updatedAt;
 
+  /// Associated shop entity (only for shop owners).
+  final Shop? shop;
+
   const User({
     required this.id,
     required this.role,
@@ -45,6 +49,7 @@ class User extends Equatable {
     this.isActive = true,
     required this.createdAt,
     required this.updatedAt,
+    this.shop,
   });
 
   /// Returns the display identifier — phone for customers, username for staff.
@@ -60,5 +65,6 @@ class User extends Equatable {
         isActive,
         createdAt,
         updatedAt,
+        shop,
       ];
 }

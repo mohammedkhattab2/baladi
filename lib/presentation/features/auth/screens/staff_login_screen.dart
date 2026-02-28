@@ -197,9 +197,7 @@ class _StaffLoginScreenState extends State<StaffLoginScreen>
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (_) => getIt<AuthCubit>(),
-      child: BlocConsumer<AuthCubit, AuthState>(
+    return BlocConsumer<AuthCubit, AuthState>(
         listener: _onAuthStateChanged,
         builder: (context, state) {
           final isLoading = state is AuthLoading;
@@ -351,8 +349,7 @@ class _StaffLoginScreenState extends State<StaffLoginScreen>
             ),
           );
         },
-      ),
-    );
+      );
   }
 
   Future<void> _saveRememberMePreference() async {

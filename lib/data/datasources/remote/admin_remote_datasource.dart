@@ -8,6 +8,7 @@ import 'package:injectable/injectable.dart';
 
 import '../../../core/network/api_client.dart';
 import '../../../core/network/api_endpoints.dart';
+import '../../../domain/enums/user_role.dart';
 import '../../models/order_model.dart';
 import '../../models/rider_model.dart';
 import '../../models/shop_model.dart';
@@ -118,6 +119,16 @@ abstract class AdminRemoteDatasource {
     required String userId,
     required String newPassword,
   });
+
+  /// Resets a customer's PIN code.
+  ///
+  /// Backend endpoint:
+  ///   POST /api/admin/users/:userId/reset-pin
+  ///   { "new_pin": "..." }
+  Future<void> resetCustomerPin({
+    required String userId,
+    required String newPin,
+  });
 }
 
 /// Implementation of [AdminRemoteDatasource] using [ApiClient].
@@ -148,6 +159,8 @@ class AdminRemoteDatasourceImpl implements AdminRemoteDatasource {
       ApiEndpoints.adminUsers,
       queryParameters: {
         if (role != null) 'role': role,
+        // Request shop data to be included for shop users
+        'include_shop': true,
       },
     );
     final data = response.data;
@@ -483,24 +496,35 @@ class AdminRemoteDatasourceImpl implements AdminRemoteDatasource {
     // Backend route:
     //   PUT /api/admin/users/:userId/activate
     //   { "is_active": true/false }
-    final response = await _apiClient.put(
+    final response = await _apiClient.dio.put(
       '${ApiEndpoints.adminUsers}/$userId/activate',
-      body: {'is_active': isActive},
-      fromJson: (json) {
-        // admin.controller returns:
-        // {
-        //   success: true,
-        //   data: {
-        //     message: 'User ...',
-        //     user: { id, role, is_active }
-        //   }
-        // }
-        final data = (json['data'] as Map<String, dynamic>?);
-        final userJson = data?['user'] as Map<String, dynamic>? ?? json;
-        return UserModel.fromJson(userJson);
-      },
+      data: {'is_active': isActive},
     );
-    return response.data!;
+    
+    // Backend returns:
+    // {
+    //   success: true,
+    //   data: {
+    //     message: 'User ...',
+    //     user: { id, role, is_active }
+    //   }
+    // }
+    
+    // Extract the limited user info from response
+    final responseData = response.data as Map<String, dynamic>?;
+    final data = responseData?['data'] as Map<String, dynamic>?;
+    final userJson = data?['user'] as Map<String, dynamic>?;
+    
+    // Create a minimal user model with safe defaults
+    final minimalUser = <String, dynamic>{
+      'id': userJson?['id'] ?? userId,
+      'role': userJson?['role'] ?? 'customer',
+      'is_active': userJson?['is_active'] ?? isActive,
+      'created_at': DateTime.now().toIso8601String(),
+      'updated_at': DateTime.now().toIso8601String(),
+    };
+    
+    return UserModel.fromJson(minimalUser);
   }
 
   @override
@@ -515,6 +539,22 @@ class AdminRemoteDatasourceImpl implements AdminRemoteDatasource {
       '${ApiEndpoints.adminUsers}/$userId/reset-password',
       body: {
         'new_password': newPassword,
+      },
+    );
+  }
+
+  @override
+  Future<void> resetCustomerPin({
+    required String userId,
+    required String newPin,
+  }) async {
+    // Backend route:
+    //   POST /api/admin/users/:userId/reset-pin
+    //   Body: { "new_pin": "..." }
+    await _apiClient.post<void>(
+      '${ApiEndpoints.adminUsers}/$userId/reset-pin',
+      body: {
+        'new_pin': newPin,
       },
     );
   }

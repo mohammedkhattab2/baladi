@@ -206,4 +206,17 @@ abstract class AdminRepository {
     required String userId,
     required String newPassword,
   });
+
+  /// Resets a customer's PIN code.
+  ///
+  /// - [userId]: The customer's unique identifier.
+  /// - [newPin]: The new 4-digit PIN code.
+  ///
+  /// Backend:
+  ///   POST /api/admin/users/:userId/reset-pin
+  ///   Body: { "new_pin": "..." }
+  Future<Result<void>> resetCustomerPin({
+    required String userId,
+    required String newPin,
+  });
 }

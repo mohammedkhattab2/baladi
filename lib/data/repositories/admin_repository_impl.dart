@@ -324,4 +324,23 @@ class AdminRepositoryImpl implements AdminRepository {
       ),
     );
   }
+
+  @override
+  Future<Result<void>> resetCustomerPin({
+    required String userId,
+    required String newPin,
+  }) async {
+    if (!await _networkInfo.isConnected) {
+      return const ResultFailure(
+        NetworkFailure(message: 'لا يوجد اتصال بالإنترنت'),
+      );
+    }
+
+    return Result.guard(
+      () => _remoteDatasource.resetCustomerPin(
+        userId: userId,
+        newPin: newPin,
+      ),
+    );
+  }
 }

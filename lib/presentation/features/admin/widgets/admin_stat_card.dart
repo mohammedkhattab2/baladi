@@ -10,6 +10,8 @@ class AdminStatCard extends StatelessWidget {
   final String label;
   final String? trend;
   final bool? isTrendPositive;
+  final VoidCallback? onTap;
+  
   const AdminStatCard({
     super.key,
     required this.icon,
@@ -18,12 +20,12 @@ class AdminStatCard extends StatelessWidget {
     required this.label,
     this.trend,
     this.isTrendPositive,
+    this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: EdgeInsets.all(16.r),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(16.r),
         gradient: LinearGradient(
@@ -51,7 +53,15 @@ class AdminStatCard extends StatelessWidget {
           ),
         ],
       ),
-      child: Column(
+      child: Material(
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(16.r),
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(16.r),
+          child: Padding(
+            padding: EdgeInsets.all(16.r),
+            child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
@@ -137,7 +147,10 @@ class AdminStatCard extends StatelessWidget {
               color: Colors.white70,
             ),
           )
-        ],
+            ],
+          ),
+          ),
+        ),
       ),
     );
   }

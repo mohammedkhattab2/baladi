@@ -126,13 +126,11 @@ class _WelcomeScreenState extends State<WelcomeScreen>
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (_) => getIt<AuthCubit>(),
-      child: BlocConsumer<AuthCubit, AuthState>(
-        listener: _onAuthStateChanged,
-        builder: (context, state) {
-          final isLoading = state is AuthLoading;
-          return Scaffold(
+    return BlocConsumer<AuthCubit, AuthState>(
+      listener: _onAuthStateChanged,
+      builder: (context, state) {
+        final isLoading = state is AuthLoading;
+        return Scaffold(
             body: Stack(
               children: [
                 // Animated gradient background
@@ -208,10 +206,9 @@ class _WelcomeScreenState extends State<WelcomeScreen>
                     ),
                   ),
               ],
-            ),
-          );
-        },
-      ),
+          ),
+        );
+      },
     );
   }
 

@@ -199,9 +199,7 @@ class _PinRecoveryScreenState extends State<PinRecoveryScreen>
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (_) => getIt<AuthCubit>(),
-      child: BlocConsumer<AuthCubit, AuthState>(
+    return BlocConsumer<AuthCubit, AuthState>(
         listener: _onStateChanged,
         builder: (context, state) {
           final isLoading = state is AuthLoading;
@@ -344,8 +342,7 @@ class _PinRecoveryScreenState extends State<PinRecoveryScreen>
             ),
           );
         },
-      ),
-    );
+      );
   }
 
   void _onStateChanged(BuildContext context, AuthState state) {

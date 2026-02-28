@@ -320,174 +320,223 @@ class _AdminShopViewState extends State<_AdminShopView> {
       isScrollControlled: true,
       useSafeArea: true,
       backgroundColor: Colors.transparent,
-      barrierColor: Colors.black.withValues(alpha: 0.65),
+      barrierColor: Colors.black.withValues(alpha: 0.85),
       elevation: 0,
       builder: (ctx) {
-        return Stack(
-          children: [
-            // Background gradient
-            Container(
-              decoration: const BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [
-                    Color(0xFF0D1B2A),
-                    Color(0xFF1B263B),
-                    Color(0xFF2D5A27),
-                    Color(0xFF1A3A16),
-                  ],
-                  stops: [0.0, 0.35, 0.7, 1.0],
-                ),
-              ),
-            ),
-            // Glow orbs
-            Positioned(
-              top: -40,
-              left: -20,
-              child: _GlowOrb(
-                size: 140,
-                color: AppColors.primary,
-                opacity: 0.22,
-              ),
-            ),
-            Positioned(
-              bottom: 80,
-              right: -16,
-              child: _GlowOrb(
-                size: 120,
-                color: AppColors.secondary,
-                opacity: 0.20,
-              ),
-            ),
-            Align(
-              alignment: Alignment.bottomCenter,
-              child: _GlassBottomSheet(
-                child: Padding(
-                  padding: EdgeInsets.only(
-                    left: 16.w,
-                    right: 16.w,
-                    top: 18.h,
-                    bottom: MediaQuery.of(ctx).viewInsets.bottom + 22.h,
+        return DraggableScrollableSheet(
+          initialChildSize: 0.9,
+          minChildSize: 0.5,
+          maxChildSize: 0.95,
+          expand: false,
+          builder: (context, scrollController) {
+            return ClipRRect(
+              borderRadius: BorderRadius.vertical(top: Radius.circular(32.r)),
+              child: BackdropFilter(
+                filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+                child: Container(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.vertical(top: Radius.circular(32.r)),
+                    gradient: const LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                        Color(0xFF1A2332),
+                        Color(0xFF0F1720),
+                      ],
+                    ),
+                    border: Border.all(
+                      color: Colors.white.withValues(alpha: 0.18),
+                      width: 1.5,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.8),
+                        blurRadius: 40,
+                        offset: const Offset(0, -10),
+                      ),
+                      BoxShadow(
+                        color: AppColors.primary.withValues(alpha: 0.15),
+                        blurRadius: 30,
+                        offset: const Offset(0, -5),
+                      ),
+                    ],
                   ),
-                  child: Form(
-                    key: formKey,
-                    child: SingleChildScrollView(
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Center(
-                            child: Container(
-                              width: 48.w,
-                              height: 5.h,
-                              decoration: BoxDecoration(
-                                color: Colors.white.withValues(alpha: 0.35),
-                                borderRadius: BorderRadius.circular(100.r),
-                              ),
-                            ),
-                          ),
-                          SizedBox(height: 18.h),
-                          // Header
-                          Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Container(
-                                padding: EdgeInsets.all(10.r),
-                                decoration: BoxDecoration(
-                                  shape: BoxShape.circle,
-                                  gradient: const LinearGradient(
-                                    begin: Alignment.topLeft,
-                                    end: Alignment.bottomRight,
-                                    colors: [
-                                      AppColors.primary,
-                                      AppColors.primaryLight,
-                                    ],
-                                  ),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: AppColors.primary
-                                          .withValues(alpha: 0.45),
-                                      blurRadius: 18,
-                                      offset: const Offset(0, 8),
-                                    ),
-                                  ],
-                                ),
-                                child: Icon(
-                                  isEdit
-                                      ? Icons.edit_rounded
-                                      : Icons.storefront_rounded,
-                                  color: Colors.white,
-                                  size: 20.r,
-                                ),
-                              ),
-                              SizedBox(height: 10.h),
-                              Text(
-                                isEdit ? 'تعديل بيانات المحل' : 'إضافة محل جديد',
-                                textAlign: TextAlign.center,
-                                style: TextStyle(
-                                  fontFamily: AppTextStyles.fontFamily,
-                                  fontSize: 18.sp,
-                                  fontWeight: FontWeight.w700,
-                                  color: Colors.white,
-                                  letterSpacing: 0.3,
-                                ),
-                              ),
-                              SizedBox(height: 4.h),
-                              Text(
-                                isEdit
-                                    ? 'قم بتحديث بيانات المحل الحالية'
-                                    : 'أنشئ متجرًا جديداً للمنصة',
-                                textAlign: TextAlign.center,
-                                style: TextStyle(
-                                  fontFamily: AppTextStyles.fontFamily,
-                                  fontSize: 12.sp,
-                                  color: Colors.white.withValues(alpha: 0.85),
-                                ),
-                              ),
-                            ],
-                          ),
-                          SizedBox(height: 20.h),
-                          // Inner glass card for fields
-                          Container(
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(20.r),
-                              gradient: LinearGradient(
-                                begin: Alignment.topLeft,
-                                end: Alignment.bottomRight,
-                                colors: [
-                                  Colors.white.withValues(alpha: 0.14),
-                                  Colors.white.withValues(alpha: 0.06),
-                                ],
-                              ),
-                              border: Border.all(
-                                color: Colors.white.withValues(alpha: 0.24),
-                                width: 1.2,
-                              ),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withValues(alpha: 0.45),
-                                  blurRadius: 22,
-                                  offset: const Offset(0, 12),
-                                ),
-                                BoxShadow(
-                                  color:
-                                      AppColors.primary.withValues(alpha: 0.28),
-                                  blurRadius: 28,
-                                  offset: const Offset(0, 14),
-                                ),
-                              ],
-                            ),
-                            padding: EdgeInsets.symmetric(
-                              horizontal: 14.w,
-                              vertical: 16.h,
-                            ),
+                  child: Stack(
+                    children: [
+                      // Decorative glow effects
+                      Positioned(
+                        top: -50,
+                        right: -30,
+                        child: _GlowOrb(
+                          size: 180,
+                          color: isEdit ? AppColors.secondary : AppColors.primary,
+                          opacity: 0.15,
+                        ),
+                      ),
+                      Positioned(
+                        bottom: 100,
+                        left: -40,
+                        child: _GlowOrb(
+                          size: 150,
+                          color: isEdit ? AppColors.primary : AppColors.secondary,
+                          opacity: 0.12,
+                        ),
+                      ),
+                      // Content
+                      Padding(
+                        padding: EdgeInsets.only(
+                          bottom: MediaQuery.of(ctx).viewInsets.bottom,
+                        ),
+                        child: Form(
+                          key: formKey,
+                          child: SingleChildScrollView(
+                            controller: scrollController,
+                            padding: EdgeInsets.symmetric(horizontal: 20.w),
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                AppTextField(
+                                // Drag handle
+                                Center(
+                                  child: Container(
+                                    margin: EdgeInsets.only(top: 12.h, bottom: 20.h),
+                                    width: 50.w,
+                                    height: 5.h,
+                                    decoration: BoxDecoration(
+                                      color: Colors.white.withValues(alpha: 0.25),
+                                      borderRadius: BorderRadius.circular(100.r),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: Colors.white.withValues(alpha: 0.1),
+                                          blurRadius: 10,
+                                          spreadRadius: 2,
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                                // Header Section
+                                Container(
+                                  padding: EdgeInsets.all(24.r),
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(24.r),
+                                    gradient: LinearGradient(
+                                      begin: Alignment.topLeft,
+                                      end: Alignment.bottomRight,
+                                      colors: [
+                                        isEdit
+                                          ? AppColors.secondary.withValues(alpha: 0.15)
+                                          : AppColors.primary.withValues(alpha: 0.15),
+                                        Colors.transparent,
+                                      ],
+                                    ),
+                                    border: Border.all(
+                                      color: isEdit
+                                        ? AppColors.secondary.withValues(alpha: 0.25)
+                                        : AppColors.primary.withValues(alpha: 0.25),
+                                      width: 1,
+                                    ),
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      Container(
+                                        width: 56.r,
+                                        height: 56.r,
+                                        decoration: BoxDecoration(
+                                          shape: BoxShape.circle,
+                                          gradient: LinearGradient(
+                                            begin: Alignment.topLeft,
+                                            end: Alignment.bottomRight,
+                                            colors: isEdit ? [
+                                              AppColors.secondary,
+                                              AppColors.secondary.withValues(alpha: 0.8),
+                                            ] : [
+                                              AppColors.primary,
+                                              AppColors.primaryLight,
+                                            ],
+                                          ),
+                                          boxShadow: [
+                                            BoxShadow(
+                                              color: isEdit
+                                                ? AppColors.secondary.withValues(alpha: 0.4)
+                                                : AppColors.primary.withValues(alpha: 0.4),
+                                              blurRadius: 20,
+                                              spreadRadius: 2,
+                                            ),
+                                          ],
+                                        ),
+                                        child: Icon(
+                                          isEdit
+                                              ? Icons.edit_rounded
+                                              : Icons.storefront_rounded,
+                                          color: Colors.white,
+                                          size: 28.r,
+                                        ),
+                                      ),
+                                      SizedBox(width: 16.w),
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                              isEdit ? 'تعديل بيانات المحل' : 'إضافة محل جديد',
+                                              style: TextStyle(
+                                                fontFamily: AppTextStyles.fontFamily,
+                                                fontSize: 20.sp,
+                                                fontWeight: FontWeight.w800,
+                                                color: Colors.white,
+                                                letterSpacing: 0.3,
+                                              ),
+                                            ),
+                                            SizedBox(height: 4.h),
+                                            Text(
+                                              isEdit
+                                                  ? 'قم بتحديث بيانات المحل الحالية'
+                                                  : 'أنشئ متجرًا جديداً للمنصة',
+                                              style: TextStyle(
+                                                fontFamily: AppTextStyles.fontFamily,
+                                                fontSize: 13.sp,
+                                                color: Colors.white,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                SizedBox(height: 24.h),
+                                // Fields container with enhanced glassmorphism
+                                Container(
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(24.r),
+                                    gradient: LinearGradient(
+                                      begin: Alignment.topLeft,
+                                      end: Alignment.bottomRight,
+                                      colors: [
+                                        Colors.white.withValues(alpha: 0.08),
+                                        Colors.white.withValues(alpha: 0.04),
+                                      ],
+                                    ),
+                                    border: Border.all(
+                                      color: Colors.white.withValues(alpha: 0.15),
+                                      width: 1,
+                                    ),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.black.withValues(alpha: 0.25),
+                                        blurRadius: 20,
+                                        offset: const Offset(0, 8),
+                                      ),
+                                    ],
+                                  ),
+                                  padding: EdgeInsets.all(20.r),
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      AppTextField(
                     controller: nameController,
                     label: 'اسم المحل (بالإنجليزية)',
+                    labelColor: Colors.white,
                     validator: (value) {
                       if (value == null || value.trim().isEmpty) {
                         return 'من فضلك أدخل اسم المحل';
@@ -499,6 +548,7 @@ class _AdminShopViewState extends State<_AdminShopView> {
                   AppTextField(
                     controller: nameArController,
                     label: 'اسم المحل (بالعربية)',
+                    labelColor: Colors.white,
                     validator: (value) {
                       if (value == null || value.trim().isEmpty) {
                         return 'من فضلك أدخل اسم المحل بالعربية';
@@ -531,25 +581,74 @@ class _AdminShopViewState extends State<_AdminShopView> {
                       ],
                     ),
                   ] else ...[
+                    Text(
+                      'فئة المحل',
+                      style: TextStyle(
+                        fontFamily: AppTextStyles.fontFamily,
+                        fontSize: 14.sp,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.white,
+                      ),
+                    ),
+                    SizedBox(height: 8.h),
                     DropdownButtonFormField<String>(
                       initialValue: categoryIdController.text.isNotEmpty
                           ? categoryIdController.text
                           : null,
                       decoration: InputDecoration(
-                        labelText: 'فئة المحل',
+                        hintText: 'اختر الفئة',
                         helperText: _categories.isEmpty
                             ? 'لا توجد تصنيفات متاحة، قم بإضافتها من شاشة التصنيفات'
                             : null,
+                        contentPadding: EdgeInsets.symmetric(
+                          horizontal: 16.w,
+                          vertical: 12.h,
+                        ),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12.r),
+                          borderSide: BorderSide(
+                            color: Colors.white.withValues(alpha: 0.3),
+                          ),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12.r),
+                          borderSide: BorderSide(
+                            color: Colors.white.withValues(alpha: 0.3),
+                          ),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12.r),
+                          borderSide: BorderSide(
+                            color: AppColors.primary,
+                            width: 1.5,
+                          ),
+                        ),
+                        filled: true,
+                        fillColor: Colors.white.withValues(alpha: 0.08),
+                      ),
+                      dropdownColor: const Color(0xFF1A2332),
+                      style: TextStyle(
+                        fontFamily: AppTextStyles.fontFamily,
+                        fontSize: 14.sp,
+                        color: Colors.white,
+                      ),
+                      icon: Icon(
+                        Icons.arrow_drop_down,
+                        color: Colors.white.withValues(alpha: 0.7),
                       ),
                       items: _categories
                           .map(
                             (c) => DropdownMenuItem<String>(
                               value: c.id,
-                              child: Text(
-                                c.nameAr,
-                                style: TextStyle(
-                                  fontFamily: AppTextStyles.fontFamily,
-                                  fontSize: 14.sp,
+                              child: Container(
+                                padding: EdgeInsets.symmetric(vertical: 2.h),
+                                child: Text(
+                                  c.nameAr,
+                                  style: TextStyle(
+                                    fontFamily: AppTextStyles.fontFamily,
+                                    fontSize: 14.sp,
+                                    color: Colors.white,
+                                  ),
                                 ),
                               ),
                             ),
@@ -601,6 +700,7 @@ class _AdminShopViewState extends State<_AdminShopView> {
                   AppTextField(
                     controller: phoneController,
                     label: 'رقم الهاتف',
+                    labelColor: Colors.white,
                     keyboardType: TextInputType.phone,
                     validator: (value) {
                       if (value == null || value.trim().isEmpty) {
@@ -613,11 +713,13 @@ class _AdminShopViewState extends State<_AdminShopView> {
                   AppTextField(
                     controller: addressController,
                     label: 'العنوان',
+                    labelColor: Colors.white,
                   ),
                   SizedBox(height: 8.h),
                   AppTextField(
                     controller: commissionController,
                     label: 'نسبة العمولة (%)',
+                    labelColor: Colors.white,
                     keyboardType:
                         const TextInputType.numberWithOptions(decimal: true),
                     validator: (value) {
@@ -635,6 +737,7 @@ class _AdminShopViewState extends State<_AdminShopView> {
                   AppTextField(
                     controller: minOrderController,
                     label: 'الحد الأدنى للطلب (اختياري)',
+                    labelColor: Colors.white,
                     keyboardType:
                         const TextInputType.numberWithOptions(decimal: true),
                   ),
@@ -655,7 +758,7 @@ class _AdminShopViewState extends State<_AdminShopView> {
                     style: TextStyle(
                       fontFamily: AppTextStyles.fontFamily,
                       fontSize: 11.sp,
-                      color: Colors.white.withValues(alpha: 0.8),
+                      color: Colors.white,
                     ),
                   ),
                   SizedBox(height: 10.h),
@@ -666,7 +769,7 @@ class _AdminShopViewState extends State<_AdminShopView> {
                       fontFamily: AppTextStyles.fontFamily,
                       fontSize: 12.sp,
                       fontWeight: FontWeight.w600,
-                      color: Colors.white.withValues(alpha: 0.9),
+                      color: Colors.white,
                     ),
                   ),
                   SizedBox(height: 6.h),
@@ -733,7 +836,7 @@ class _AdminShopViewState extends State<_AdminShopView> {
                                   style: TextStyle(
                                     fontFamily: AppTextStyles.fontFamily,
                                     fontSize: 11.sp,
-                                    color: Colors.white.withValues(alpha: 0.8),
+                                    color: Colors.white,
                                   ),
                                 ),
                               ],
@@ -763,7 +866,7 @@ class _AdminShopViewState extends State<_AdminShopView> {
                       fontFamily: AppTextStyles.fontFamily,
                       fontSize: 12.sp,
                       fontWeight: FontWeight.w600,
-                      color: Colors.white.withValues(alpha: 0.9),
+                      color: Colors.white,
                     ),
                   ),
                   SizedBox(height: 6.h),
@@ -831,7 +934,7 @@ class _AdminShopViewState extends State<_AdminShopView> {
                                   style: TextStyle(
                                     fontFamily: AppTextStyles.fontFamily,
                                     fontSize: 11.sp,
-                                    color: Colors.white.withValues(alpha: 0.8),
+                                    color: Colors.white,
                                   ),
                                 ),
                               ],
@@ -861,7 +964,6 @@ class _AdminShopViewState extends State<_AdminShopView> {
                         fontFamily: AppTextStyles.fontFamily,
                         fontSize: 14.sp,
                         fontWeight: FontWeight.w600,
-                        // توحيد لون العنوان مع الهوية الداكنة (أبيض صريح)
                         color: Colors.white,
                       ),
                     ),
@@ -869,6 +971,7 @@ class _AdminShopViewState extends State<_AdminShopView> {
                     AppTextField(
                       controller: ownerNameController,
                       label: 'اسم صاحب المحل',
+                      labelColor: Colors.white,
                       validator: (value) {
                         if (value == null || value.trim().isEmpty) {
                           return 'من فضلك أدخل اسم صاحب المحل';
@@ -880,6 +983,7 @@ class _AdminShopViewState extends State<_AdminShopView> {
                     AppTextField(
                       controller: ownerUsernameController,
                       label: 'اسم المستخدم (للدخول للتطبيق)',
+                      labelColor: Colors.white,
                       validator: (value) {
                         final v = value?.trim() ?? '';
                         if (v.isEmpty) {
@@ -895,6 +999,7 @@ class _AdminShopViewState extends State<_AdminShopView> {
                     AppTextField(
                       controller: ownerPhoneController,
                       label: 'رقم جوال صاحب المحل',
+                      labelColor: Colors.white,
                       keyboardType: TextInputType.phone,
                       validator: (value) {
                         if (value == null || value.trim().isEmpty) {
@@ -907,6 +1012,7 @@ class _AdminShopViewState extends State<_AdminShopView> {
                     AppTextField(
                       controller: ownerPasswordController,
                       label: 'كلمة مرور الحساب',
+                      labelColor: Colors.white,
                       obscureText: true,
                       validator: (value) {
                         final password = value?.trim() ?? '';
@@ -928,41 +1034,50 @@ class _AdminShopViewState extends State<_AdminShopView> {
                       },
                     ),
                   ],
-                  SizedBox(height: 16.h),
-                                Row(
-                                  mainAxisAlignment: MainAxisAlignment.end,
-                                  children: [
-                                    TextButton(
-                                      onPressed: () => Navigator.of(ctx).pop(),
-                                      style: TextButton.styleFrom(
-                                        foregroundColor:
-                                            Colors.white.withValues(alpha: 0.7),
-                                      ),
-                                      child: Text(
-                                        'إلغاء',
-                                        style: TextStyle(
-                                          fontFamily: AppTextStyles.fontFamily,
-                                          fontSize: 13.sp,
-                                        ),
-                                      ),
-                                    ),
-                                    SizedBox(width: 8.w),
-                                    Expanded(
-                                      child: ElevatedButton(
-                                        style: ElevatedButton.styleFrom(
-                                          padding: EdgeInsets.symmetric(
-                                            vertical: 12.h,
-                                          ),
-                                          elevation: 0,
-                                          shape: RoundedRectangleBorder(
-                                            borderRadius:
-                                                BorderRadius.circular(16.r),
-                                          ),
-                                          backgroundColor: AppColors.primary,
-                                          shadowColor: AppColors.primary
-                                              .withValues(alpha: 0.3),
-                                        ),
-                                        onPressed: () async {
+                  SizedBox(height: 24.h),
+                  // Action buttons with enhanced styling
+                  Row(
+                    children: [
+                      // Cancel button
+                      Expanded(
+                                     child: Material(
+                                       color: Colors.transparent,
+                                       child: InkWell(
+                                         onTap: () => Navigator.of(ctx).pop(),
+                                         borderRadius: BorderRadius.circular(16.r),
+                                         child: Container(
+                                           height: 52.h,
+                                           decoration: BoxDecoration(
+                                             borderRadius: BorderRadius.circular(16.r),
+                                             border: Border.all(
+                                               color: Colors.white.withValues(alpha: 0.2),
+                                               width: 1.5,
+                                             ),
+                                           ),
+                                           child: Center(
+                                             child: Text(
+                                               'إلغاء',
+                                               style: TextStyle(
+                                                 fontFamily: AppTextStyles.fontFamily,
+                                                 fontSize: 15.sp,
+                                                 fontWeight: FontWeight.w600,
+                                                 color: Colors.white,
+                                               ),
+                                             ),
+                                           ),
+                                         ),
+                                       ),
+                                     ),
+                                   ),
+                                   SizedBox(width: 12.w),
+                                   // Submit button
+                                   Expanded(
+                                     flex: 2,
+                                     child: Material(
+                                       color: Colors.transparent,
+                                       child: InkWell(
+                                         borderRadius: BorderRadius.circular(16.r),
+                                         onTap: () async {
                              if (!formKey.currentState!.validate()) {
                                return;
                              }
@@ -1024,6 +1139,29 @@ class _AdminShopViewState extends State<_AdminShopView> {
 
                              final cubit = context.read<AdminCubit>();
                              if (isEdit) {
+                               // Debug log to check shop ID
+                               print('Updating shop with ID: ${shop.id}');
+                               
+                               if (shop.id.isEmpty) {
+                                 ScaffoldMessenger.of(context).showSnackBar(
+                                   SnackBar(
+                                     behavior: SnackBarBehavior.floating,
+                                     margin: EdgeInsets.all(16.r),
+                                     shape: RoundedRectangleBorder(
+                                       borderRadius: BorderRadius.circular(16.r),
+                                     ),
+                                     content: Text(
+                                       'خطأ: معرف المحل غير صحيح',
+                                       style: TextStyle(
+                                         fontFamily: AppTextStyles.fontFamily,
+                                       ),
+                                     ),
+                                     backgroundColor: AppColors.error,
+                                   ),
+                                 );
+                                 return;
+                               }
+                               
                                await cubit.updateShopAsAdmin(
                                  shopId: shop.id,
                                  payload: {
@@ -1063,33 +1201,77 @@ class _AdminShopViewState extends State<_AdminShopView> {
                                );
                              }
                                            },
-                                        child: Text(
-                                          isEdit ? 'تحديث' : 'حفظ',
-                                          style: TextStyle(
-                                            fontFamily: AppTextStyles.fontFamily,
-                                            fontSize: 14.sp,
-                                            fontWeight: FontWeight.w600,
-                                            color: Colors.white,
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ],
-        );
-      },
-    );
+                                         child: Container(
+                                           height: 52.h,
+                                           decoration: BoxDecoration(
+                                             borderRadius: BorderRadius.circular(16.r),
+                                             gradient: LinearGradient(
+                                               colors: isEdit ? [
+                                                 AppColors.secondary,
+                                                 AppColors.secondary.withValues(alpha: 0.8),
+                                               ] : [
+                                                 AppColors.primary,
+                                                 AppColors.primaryLight,
+                                               ],
+                                             ),
+                                             boxShadow: [
+                                               BoxShadow(
+                                                 color: isEdit
+                                                   ? AppColors.secondary.withValues(alpha: 0.3)
+                                                   : AppColors.primary.withValues(alpha: 0.3),
+                                                 blurRadius: 12,
+                                                 offset: const Offset(0, 6),
+                                               ),
+                                             ],
+                                           ),
+                                           child: Center(
+                                             child: Row(
+                                               mainAxisAlignment: MainAxisAlignment.center,
+                                               children: [
+                                                 Icon(
+                                                   isEdit
+                                                     ? Icons.update_rounded
+                                                     : Icons.save_rounded,
+                                                   color: Colors.white,
+                                                   size: 20.r,
+                                                 ),
+                                                 SizedBox(width: 8.w),
+                                                 Text(
+                                                   isEdit ? 'تحديث البيانات' : 'حفظ المحل',
+                                                   style: TextStyle(
+                                                     fontFamily: AppTextStyles.fontFamily,
+                                                     fontSize: 15.sp,
+                                                     fontWeight: FontWeight.bold,
+                                                     color: Colors.white,
+                                                   ),
+                                                 ),
+                                               ],
+                                             ),
+                                           ),
+                                         ),
+                                       ),
+                                     ),
+                                   ),
+                                 ],
+                               ),
+                               SizedBox(height: 24.h),
+                             ],
+                           ),
+                         ),
+                       ],
+                     ),
+                   ),
+                 ),
+               ),
+             ],
+           ),
+         ),
+       ),
+     );
+         },
+       );
+     },
+   );
   }
 
   IconData _getCategoryIconForShop(Shop shop) {
@@ -1334,13 +1516,26 @@ class _ShopCard extends StatelessWidget {
                               overflow: TextOverflow.ellipsis,
                             ),
                           ),
-                          IconButton(
-                            onPressed: onEdit,
-                            icon: const Icon(
-                              Icons.edit,
-                              size: 18,
+                          Container(
+                            margin: EdgeInsets.only(left: 8.w),
+                            decoration: BoxDecoration(
+                              color: AppColors.primary.withValues(alpha: 0.12),
+                              borderRadius: BorderRadius.circular(8.r),
                             ),
-                            color: AppColors.primaryLight,
+                            child: IconButton(
+                              onPressed: onEdit,
+                              tooltip: 'تعديل بيانات المحل',
+                              icon: Icon(
+                                Icons.edit_rounded,
+                                size: 20.r,
+                              ),
+                              color: AppColors.primary,
+                              padding: EdgeInsets.all(8.r),
+                              constraints: BoxConstraints(
+                                minWidth: 36.r,
+                                minHeight: 36.r,
+                              ),
+                            ),
                           ),
                           _ShopStatusBadge(
                             isActive: shop.isActive,
@@ -1355,7 +1550,7 @@ class _ShopCard extends StatelessWidget {
                           style: TextStyle(
                             fontFamily: AppTextStyles.fontFamily,
                             fontSize: 12.sp,
-                            color: Colors.white.withValues(alpha: 0.8),
+                            color: Colors.white,
                           ),
                         ),
                       ],
@@ -1449,7 +1644,7 @@ class _InfoItem extends StatelessWidget {
           style: TextStyle(
             fontFamily: AppTextStyles.fontFamily,
             fontSize: 12.sp,
-            color: Colors.white.withValues(alpha: 0.75),
+            color: Colors.white,
           ),
         ),
         SizedBox(width: 4.w),
@@ -1599,10 +1794,46 @@ class _ShopDetailsSheet extends StatelessWidget {
                   style: TextStyle(
                     fontFamily: AppTextStyles.fontFamily,
                     fontSize: 14.sp,
-                    color: Colors.white.withValues(alpha: 0.85),
+                    color: Colors.white,
                   ),
                 ),
               ],
+              SizedBox(height: 32.h),
+              // Edit button in details sheet
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: () {
+                    Navigator.pop(context); // Close details sheet
+                    // Get the parent context and call edit method
+                    final parentState = context.findAncestorStateOfType<_AdminShopViewState>();
+                    if (parentState != null) {
+                      parentState._openEditShopForm(parentState.context, shop);
+                    }
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    padding: EdgeInsets.symmetric(vertical: 14.h),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12.r),
+                    ),
+                  ),
+                  icon: Icon(
+                    Icons.edit_rounded,
+                    size: 20.r,
+                    color: Colors.white,
+                  ),
+                  label: Text(
+                    'تعديل بيانات المحل',
+                    style: TextStyle(
+                      fontFamily: AppTextStyles.fontFamily,
+                      fontSize: 14.sp,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+              ),
             ],
           ),
         );
@@ -1630,7 +1861,7 @@ class _DetailRow extends StatelessWidget {
               style: TextStyle(
                 fontFamily: AppTextStyles.fontFamily,
                 fontSize: 14.sp,
-                color: Colors.white.withValues(alpha: 0.75),
+                color: Colors.white,
               ),
             ),
           ),
